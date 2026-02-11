@@ -1,0 +1,69 @@
+COPYRIGHT NOTICE
+================
+
+© 2026 MightyLabs. All Rights Reserved.
+
+GUILD WAR STRATEGY TOOL
+Where Winds Meet - GvG Battle Planner
+
+Created by: MightyLabs
+Contact: https://discordapp.com/users/91448874530504704
+
+PROTECTED WORK
+--------------
+This website and all its contents, including but not limited to:
+- Source code (HTML, CSS, JavaScript)
+- Design and layout
+- Graphics and images
+- User interface elements
+- Functionality and features
+- Documentation
+
+are protected by copyright law and international treaties.
+
+UNAUTHORIZED USE PROHIBITED
+---------------------------
+The following actions are STRICTLY PROHIBITED without written permission:
+
+✗ Copying, reproducing, or distributing this website or any part thereof
+✗ Using web scraping tools (HTTrack, WebCopy, Wget, etc.)
+✗ Reverse engineering the code or functionality
+✗ Creating derivative works based on this tool
+✗ Commercial use or monetization
+✗ Removal of copyright notices or attributions
+✗ Hosting modified or unmodified copies on other domains
+✗ Claiming authorship or ownership
+
+PERMITTED USE
+-------------
+✓ Personal use for guild strategy planning
+✓ Sharing the official URL with others
+✓ Exporting and importing your own strategy files
+✓ Using the tool as intended for Where Winds Meet gameplay
+
+LEGAL ACTION
+------------
+Violations of this copyright will be pursued to the fullest extent of the law.
+This includes but is not limited to:
+- DMCA takedown notices
+- Cease and desist orders
+- Legal prosecution for copyright infringement
+- Claims for damages
+
+TRADEMARK
+---------
+"MightyLabs" and associated branding are trademarks of the creator.
+Unauthorized use of these marks is prohibited.
+
+DISCLAIMER
+----------
+This tool is a fan-made project for the game "Where Winds Meet."
+It is not affiliated with or endorsed by the game developers.
+All game-related content and imagery belong to their respective owners.
+
+INQUIRIES
+---------
+For licensing, permissions, or other inquiries:
+Contact: MightyLabs via Discord (link above)
+
+Last Updated: February 12, 2026
