@@ -55,9 +55,13 @@
                     <span class="nav-icon">⚠️</span>
                     <span class="nav-text">Known Issues</span>
                 </button>
+                <button id="howToBtn" class="nav-btn">
+                    <span class="nav-icon">📖</span>
+                    <span class="nav-text">How To Use</span>
+                </button>
                 <button id="changelogBtn" class="nav-btn">
                     <span class="nav-icon">📋</span>
-                    <span class="nav-text">v1.9.0</span>
+                    <span class="nav-text">v1.10.0</span>
                 </button>
             </nav>
             
@@ -469,7 +473,123 @@
             </div>
         </div>
     </div>
-    
+
+    <!-- How To Guide Modal -->
+    <div id="howToModal" class="modal">
+        <div class="modal-content" style="max-width: 780px; max-height: 92vh;">
+            <div class="modal-header">
+                <h2>📖 How To Use — Strategy Map Guide</h2>
+                <button class="modal-close" id="closeHowToModal">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 72vh; overflow-y: auto; text-align: left;">
+
+                <!-- Quick Start -->
+                <div class="howto-section">
+                    <h3 class="howto-title">🚀 Quick Start</h3>
+                    <ol class="howto-list">
+                        <li>Load the page — your guild roster appears automatically in the left panel.</li>
+                        <li>Drag a player from the left panel onto the map to place them.</li>
+                        <li>Use the toolbar at the bottom to add objective markers, boss/tower/tree/goose icons, or draw arrows.</li>
+                        <li>When happy with the strategy, click <strong>📥 Export</strong> to save a JSON file.</li>
+                        <li>Share the JSON with your team — they can <strong>📤 Import</strong> it to see the same setup.</li>
+                        <li>Click <strong>📸</strong> to capture and download a screenshot.</li>
+                    </ol>
+                </div>
+
+                <!-- Navigation Bar -->
+                <div class="howto-section">
+                    <h3 class="howto-title">🔗 Navigation Bar</h3>
+                    <div class="howto-table">
+                        <div class="howto-row"><span class="howto-icon">💎</span><div><strong>Guild Info</strong> — Opens the Ethereal-Heart recruitment page.</div></div>
+                        <div class="howto-row"><span class="howto-icon">📥</span><div><strong>Export</strong> — Saves your entire current strategy (player positions, markers, drawings) as a <code>.json</code> file. Share this file for others to reload.</div></div>
+                        <div class="howto-row"><span class="howto-icon">📤</span><div><strong>Import</strong> — Two options:<br>
+                            &nbsp;&nbsp;• <em>Strategy File (.json)</em> — restores a previously exported layout.<br>
+                            &nbsp;&nbsp;• <em>Player Roster (.csv / .xlsx)</em> — loads players from a spreadsheet (see CSV section below).</div></div>
+                        <div class="howto-row"><span class="howto-icon">⌨️</span><div><strong>Hot Keys</strong> — Lists all keyboard shortcuts.</div></div>
+                        <div class="howto-row"><span class="howto-icon">⚠️</span><div><strong>Known Issues</strong> — Important notes about browser zoom and best practices.</div></div>
+                        <div class="howto-row"><span class="howto-icon">📖</span><div><strong>How To Use</strong> — This guide!</div></div>
+                        <div class="howto-row"><span class="howto-icon">📋</span><div><strong id="howtoVersionLabel">v1.10.0</strong> — Full version history and changelog.</div></div>
+                    </div>
+                </div>
+
+                <!-- Player Panel -->
+                <div class="howto-section">
+                    <h3 class="howto-title">👥 Left Panel — Player Roster</h3>
+                    <ul class="howto-list">
+                        <li><strong>Search bar</strong> — Filter players by name as you type.</li>
+                        <li><strong>Grouped by Team / All Players</strong> — Toggle between viewing players grouped into their teams or in a flat list.</li>
+                        <li><strong>Role filters</strong> — Click Tank, DPS, Healer, or Support to show only that role.</li>
+                        <li><strong>Drag to place</strong> — Drag any player card onto the map to place them. Their name label appears at the drop point.</li>
+                        <li><strong>Drag teams</strong> — You can drag a whole team group header to place all players together.</li>
+                        <li><strong>Unplace</strong> — Drag a placed marker off the map or click the × remove button to return them to the panel.</li>
+                        <li><strong>⚙️ Manage Players</strong> — Edit, delete, or add players manually. Use the pencil icon to change name, role, team, or weapons.</li>
+                        <li><strong>⚔️ Add Enemies</strong> — Places up to 5 generic enemy markers on the map for reference.</li>
+                    </ul>
+                </div>
+
+                <!-- Bottom Toolbar -->
+                <div class="howto-section">
+                    <h3 class="howto-title">🔧 Bottom Toolbar</h3>
+                    <div class="howto-table">
+                        <div class="howto-row"><span class="howto-icon">🎯</span><div><strong>Objective Marker</strong> — Opens a picker with 8 types: Attack ⚔️, Danger 💀, Defend 🛡️, Hold ✋, Yes ✅, No ❌, and more. Click a type then click the map to place it. Draggable.</div></div>
+                        <div class="howto-row"><span class="howto-icon"><img src="images/boss.png" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;"></span><div><strong>Boss</strong> — Places a boss marker. Click button then click anywhere on the map.</div></div>
+                        <div class="howto-row"><span class="howto-icon" style="display:flex;gap:2px;align-items:center;"><img src="images/tower_blue.png" style="width:18px;height:18px;object-fit:contain;"><img src="images/tower_red.png" style="width:18px;height:18px;object-fit:contain;"></span><div><strong>Towers</strong> (Blue / Red) — Places a tower icon for your team (blue) or enemy (red).</div></div>
+                        <div class="howto-row"><span class="howto-icon" style="display:flex;gap:2px;align-items:center;"><img src="images/tree_blue.png" style="width:18px;height:18px;object-fit:contain;"><img src="images/tree_red.png" style="width:18px;height:18px;object-fit:contain;"></span><div><strong>Trees</strong> (Blue / Red) — Same as towers but for tree/buff objectives.</div></div>
+                        <div class="howto-row"><span class="howto-icon" style="display:flex;gap:2px;align-items:center;"><img src="images/goose_blue.png" style="width:18px;height:18px;object-fit:contain;"><img src="images/goose_red.png" style="width:18px;height:18px;object-fit:contain;"></span><div><strong>Geese</strong> (Blue / Red) — Same pattern, for goose objectives.</div></div>
+                        <div class="howto-row"><span class="howto-icon">✏️</span><div><strong>Draw Mode</strong> — Toggle freehand drawing on the map (useful for arrows and zones). All drawings can be undone.</div></div>
+                        <div class="howto-row"><span class="howto-icon">↩️</span><div><strong>Undo / Redo</strong> — Step back or forward through drawing history.</div></div>
+                        <div class="howto-row"><span class="howto-icon">🧹</span><div><strong>Clear Drawings</strong> — Removes all freehand drawings instantly.</div></div>
+                        <div class="howto-row"><span class="howto-icon">⏱️</span><div><strong>Auto-delete toggle</strong> — When enabled, each drawing stroke disappears after ~10 seconds.</div></div>
+                        <div class="howto-row"><span class="howto-icon">📸</span><div><strong>Screenshot</strong> — Captures the map area (map background + all markers + drawings) and downloads as a PNG. Also saves to the gallery.</div></div>
+                        <div class="howto-row"><span class="howto-icon">🖼️</span><div><strong>Gallery</strong> — Opens the screenshot gallery. Shows thumbnails of up to 10 recent screenshots. Click any thumbnail to open the full-screen slideshow. Use ← → arrows or keyboard to navigate.</div></div>
+                        <div class="howto-row"><span class="howto-icon">❌</span><div><strong>Clear Map</strong> — Removes all placed players and markers from the map. Does not affect the player roster.</div></div>
+                    </div>
+                </div>
+
+                <!-- CSV Import -->
+                <div class="howto-section">
+                    <h3 class="howto-title">📊 Importing Players from CSV / Excel</h3>
+                    <p style="margin-bottom:12px;">Click <strong>📤 Import → Player Roster (.csv / .xlsx)</strong> and select your file. A preview will appear before you confirm.</p>
+                    <p style="margin-bottom: 10px;"><strong>Required column:</strong> <code>Name</code><br>
+                    <strong>Optional columns:</strong> <code>Role</code>, <code>Team</code>, <code>Weapon1</code>, <code>Weapon2</code></p>
+                    <p style="margin-bottom: 8px;">Column names are flexible — the importer recognises common variations (e.g. <em>Player, IGN, Username</em> for Name; <em>Class, Type</em> for Role; <em>Squad, Group</em> for Team).</p>
+                    <p style="margin-bottom: 8px;"><strong>Valid roles:</strong> Tank, DPS, Healer, Support — anything unrecognised defaults to DPS.</p>
+                    <p style="margin-bottom: 12px;"><strong>New teams:</strong> If your file contains team names that don't exist yet, they will be auto-created when you confirm.</p>
+
+                    <div class="howto-csv-block">
+                        <div class="howto-csv-header">
+                            📄 player_roster_template.csv — example format
+                        </div>
+                        <pre class="howto-csv-pre">Name,Role,Team,Weapon1,Weapon2
+Player1,Tank,ATTACK,Thundercry Blade,Nameless Spear
+Player2,Healer,BOSS TEAM,Panacea Fan,Soulshade Umbrella
+Player3,DPS,ASSASSINS,Nameless Sword,Nameless Spear
+Player4,Support,DEFENCE,Zither of the Verdant Strings,Lantern of the Verdant Path
+Player5,Tank,FLEX,Thundercry Blade,Greatsword of the Verdant Path</pre>
+                    </div>
+                    <p style="margin-top: 10px; font-size: 0.88rem; color: #888;">Tip: Build your roster in Excel, save as CSV, then import here. You can re-import anytime to update the roster without losing your strategy layout.</p>
+                </div>
+
+                <!-- Tips -->
+                <div class="howto-section">
+                    <h3 class="howto-title">💡 Tips & Best Practices</h3>
+                    <ul class="howto-list">
+                        <li>Keep your browser at <strong>100% zoom</strong> (Ctrl+0) while placing markers to avoid position drift.</li>
+                        <li><strong>Export before closing</strong> the tab — the map does not auto-save between sessions.</li>
+                        <li>Take a <strong>screenshot before and after</strong> adjustments so you can compare strategies in the gallery slideshow.</li>
+                        <li>Use <strong>Draw Mode + Auto-delete</strong> during live presentations to draw quick callout arrows that disappear automatically.</li>
+                        <li>The Export JSON file can be pasted into Discord so guildmates can load the exact same setup.</li>
+                        <li>On mobile the page is best used for <strong>viewing</strong> a shared strategy, not detailed editing.</li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="closeHowToModalBtn">Got it!</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Player Import Preview Modal -->
     <div id="playerImportModal" class="modal">
         <div class="modal-content" style="max-width: 750px; max-height: 90vh;">
@@ -531,12 +651,23 @@
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto; text-align: left;">
                 <div class="version-current">
-                    <h3>🎯 Current Version: 1.9.0</h3>
+                    <h3>🎯 Current Version: 1.10.0</h3>
                     <p class="version-date">Released: February 2026</p>
                 </div>
                 
                 <div class="changelog-section">
-                    <h4>Version 1.9.0 - Gallery Slideshow & UI Polish</h4>
+                    <h4>Version 1.10.0 - How To Guide, Guild Leader &amp; Role Badge Fixes</h4>
+                    <ul>
+                        <li>✨ Added full "How To Use" guide in navigation bar — covers every feature for new users</li>
+                        <li>✨ CSV template shown inline inside the guide for easy reference</li>
+                        <li>✨ Added Guild Leader section to Guild page (Alruna — with Discord button)</li>
+                        <li>🔧 Fixed role badge colours in Manage Players — Tank orange, Support yellow, DPS red, Healer green</li>
+                        <li>🎨 Role badge colours now consistent everywhere</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.9.0 - Gallery Slideshow &amp; UI Polish</h4>
                     <ul>
                         <li>✨ Screenshot gallery now shows compact thumbnails (up to 10 visible at once)</li>
                         <li>✨ Click any thumbnail to open full-screen slideshow lightbox</li>
