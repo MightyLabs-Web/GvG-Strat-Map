@@ -4162,3 +4162,141 @@ body { overscroll-behavior: contain; }
 
 .changelog-section li { color: #bbc8f0; font-size: 0.92rem; }
 
+
+/* ================================================================
+   ROLE BADGE SMALL - correct colours matching member list (v1.9)
+   Tank=orange, DPS=red, Healer=green, Support=yellow
+   ================================================================ */
+
+.role-badge-small {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 5px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #fff !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.role-badge-small.role-Tank,
+.role-badge-small.Tank {
+    background: linear-gradient(135deg, #ff9800, #f57c00) !important;
+    color: #000 !important;
+}
+
+.role-badge-small.role-DPS,
+.role-badge-small.DPS {
+    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+    color: #fff !important;
+}
+
+.role-badge-small.role-Healer,
+.role-badge-small.Healer {
+    background: linear-gradient(135deg, #2ecc71, #27ae60) !important;
+    color: #000 !important;
+}
+
+.role-badge-small.role-Support,
+.role-badge-small.Support {
+    background: linear-gradient(135deg, #f1c40f, #f39c12) !important;
+    color: #000 !important;
+}
+
+/* Also fix the main member list role-badge (Tank should be orange) */
+.role-badge.Tank {
+    background: linear-gradient(135deg, #ff9800, #f57c00) !important;
+    color: #000 !important;
+}
+
+/* ================================================================
+   HOW TO GUIDE MODAL STYLES
+   ================================================================ */
+
+.howto-section {
+    margin-bottom: 26px;
+    padding: 18px 20px;
+    background: rgba(255,255,255,0.03);
+    border-left: 3px solid rgba(102, 126, 234, 0.5);
+    border-radius: 0 10px 10px 0;
+}
+
+.howto-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #a8b8f0;
+    margin: 0 0 14px 0;
+    letter-spacing: 0.3px;
+}
+
+.howto-list {
+    margin: 0;
+    padding-left: 20px;
+    line-height: 2;
+    color: #c0cce8;
+    font-size: 0.92rem;
+}
+
+.howto-list li { margin-bottom: 4px; }
+
+.howto-table {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.howto-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    font-size: 0.9rem;
+    color: #c0cce8;
+    line-height: 1.6;
+}
+
+.howto-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    width: 28px;
+    text-align: center;
+    margin-top: 1px;
+}
+
+.howto-row code {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: monospace;
+    font-size: 0.82rem;
+    color: #a8c4ff;
+}
+
+.howto-csv-block {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.howto-csv-header {
+    padding: 8px 14px;
+    background: rgba(102,126,234,0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    font-size: 0.82rem;
+    color: #8fa0d8;
+    font-weight: 600;
+}
+
+.howto-csv-pre {
+    margin: 0;
+    padding: 12px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    color: #a8d8a8;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+}
