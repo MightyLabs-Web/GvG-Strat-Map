@@ -57,7 +57,7 @@
                 </button>
                 <button id="changelogBtn" class="nav-btn">
                     <span class="nav-icon">📋</span>
-                    <span class="nav-text">v1.8.0</span>
+                    <span class="nav-text">v1.9.0</span>
                 </button>
             </nav>
             
@@ -510,6 +510,18 @@
         </div>
     </div>
     
+    <!-- Lightbox Slideshow (outside all modals) -->
+    <div id="lightboxOverlay" class="lightbox-overlay">
+        <button class="lightbox-close" id="lightboxClose">&times;</button>
+        <div class="lightbox-img-wrap">
+            <button class="lightbox-btn lightbox-prev" id="lightboxPrev">&#8249;</button>
+            <img id="lightboxImg" src="" alt="Screenshot">
+            <button class="lightbox-btn lightbox-next" id="lightboxNext">&#8250;</button>
+        </div>
+        <div class="lightbox-counter" id="lightboxCounter">1 / 1</div>
+        <button class="lightbox-dl-btn" id="lightboxDownload">💾 Download</button>
+    </div>
+    
     <!-- Changelog Modal -->
     <div id="changelogModal" class="modal">
         <div class="modal-content" style="max-width: 700px; max-height: 90vh;">
@@ -519,29 +531,42 @@
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto; text-align: left;">
                 <div class="version-current">
-                    <h3>🎯 Current Version: 1.8.0</h3>
+                    <h3>🎯 Current Version: 1.9.0</h3>
                     <p class="version-date">Released: February 2026</p>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.9.0 - Gallery Slideshow & UI Polish</h4>
+                    <ul>
+                        <li>✨ Screenshot gallery now shows compact thumbnails (up to 10 visible at once)</li>
+                        <li>✨ Click any thumbnail to open full-screen slideshow lightbox</li>
+                        <li>✨ Slideshow supports left/right arrow buttons and keyboard navigation (← → Esc)</li>
+                        <li>✨ Download button available directly inside the slideshow view</li>
+                        <li>🎨 Restored clean navigation bar — plain text & icons, no bubble backgrounds</li>
+                        <li>🎨 All modals (Known Issues, Changelog, Gallery) now use matching glassmorphism style</li>
+                        <li>🔧 Gallery delete no longer requires a confirmation popup</li>
+                    </ul>
                 </div>
                 
                 <div class="changelog-section">
                     <h4>Version 1.8.0 - Player Roster Import & UI Fixes</h4>
                     <ul>
                         <li>✨ Added player roster import from CSV or Excel (.xlsx) files</li>
-                        <li>✨ Auto-generates team groups from imported team names</li>
-                        <li>🎨 Fixed glassmorphism to match top banner on all panels</li>
-                        <li>📸 Fixed screenshots — now correctly shows map image + all markers</li>
-                        <li>🔧 Fixed marker drag boundaries to map area only</li>
-                        <li>🎨 All panels now visually consistent with header style</li>
+                        <li>✨ Import previews players before confirming, with coloured role badges</li>
+                        <li>✨ Auto-generates team groups from any new team names found in the file</li>
+                        <li>🎨 Fixed glassmorphism to correctly match the top banner on all panels</li>
+                        <li>📸 Fixed screenshots — now composites map background + all markers correctly</li>
+                        <li>🔧 Fixed marker drag boundaries — markers now constrained to map area only</li>
                     </ul>
                 </div>
                 
                 <div class="changelog-section">
                     <h4>Version 1.7.0 - Screenshot Gallery</h4>
                     <ul>
-                        <li>✨ Added screenshot gallery (stores last 10 screenshots)</li>
-                        <li>✨ Added version history and changelog viewer</li>
-                        <li>📸 Screenshot button in toolbar</li>
-                        <li>🖼️ Gallery viewer with view, download, delete options</li>
+                        <li>✨ Added screenshot gallery storing the last 10 captures</li>
+                        <li>✨ Added version history and changelog viewer (this screen!)</li>
+                        <li>📸 Screenshot button added to bottom toolbar</li>
+                        <li>🖼️ Gallery supports individual view, download and delete</li>
                     </ul>
                 </div>
                 
