@@ -407,7 +407,11 @@ function renderMemberList() {
 
 // Render grouped view by team
 function renderGroupedView() {
-    TEAM_ORDER.forEach(teamName => {
+    // Build the full team order: start with TEAM_ORDER, then add any extra teams from members
+    const extraTeams = [...new Set(members.map(m => m.team).filter(t => t && t !== '' && !TEAM_ORDER.includes(t)))];
+    const dynamicTeamOrder = [...TEAM_ORDER, ...extraTeams];
+
+    dynamicTeamOrder.forEach(teamName => {
         // Get all team members first (not filtered yet)
         const allTeamMembers = members.filter(m => m.team === teamName);
         
@@ -469,9 +473,9 @@ function renderGroupedView() {
         memberList.appendChild(groupDiv);
     });
     
-    // Add unassigned players (those with empty team)
+    // Add unassigned players (those with empty team OR team literally named "Unassigned")
     const unassignedMembers = members.filter(m => {
-        if (!m.team || m.team === '') {
+        if (!m.team || m.team === '' || m.team.toLowerCase() === 'unassigned') {
             // Check if member is already placed individually
             if (isPlayerPlaced(m.id)) return false;
             
@@ -4144,34 +4148,12 @@ function showPlayerImportPreview(players, sampleRow) {
 function confirmPlayerImport() {
     if (!pendingImportedPlayers.length) return;
     
-    // Create new team names from imported players if needed
-    const importedTeams = [...new Set(pendingImportedPlayers.map(p => p.team).filter(t => t))];
-    
-    // Add any new teams (replace existing team slots or append)
-    importedTeams.forEach(teamName => {
-        if (!teamNames.includes(teamName)) {
-            // Find a slot to add (look for default/empty team name)
-            const emptyIdx = teamNames.findIndex(t => 
-                t === '' || t === `Team ${teamNames.indexOf(t)+1}` || 
-                ['FLEX','ATTACK','DEFENCE','TOP JUNGLE','BOT JUNGLE','GATE KEEPERS','BOSS TEAM','ASSASSINS'].includes(t) === false
-            );
-            if (emptyIdx >= 0 && teamNames.length < 30) {
-                teamNames.push(teamName);
-            } else {
-                teamNames.push(teamName);
-            }
-        }
-    });
-    
-    // Replace members array with imported players
-    members = pendingImportedPlayers.map(p => ({
+    // Replace members array with imported players, giving each a unique numeric id
+    members = pendingImportedPlayers.map((p, i) => ({
         ...p,
-        id: p.id || `player-${Date.now()}-${Math.random()}`,
+        id: i + 1,  // numeric id starting at 1
         placed: false
     }));
-    
-    // Save team names
-    saveTeamNames();
     
     // Re-render everything
     renderMemberList();
@@ -4181,10 +4163,8 @@ function confirmPlayerImport() {
     document.getElementById('playerImportModal').style.display = 'none';
     pendingImportedPlayers = [];
     
-    const teamMsg = importedTeams.length > 0 
-        ? ` Teams created: ${importedTeams.join(', ')}.` 
-        : '';
-    showNotification(`✅ Imported ${members.length} players!${teamMsg}`, 'success');
+    const importedTeams = [...new Set(members.map(p => p.team).filter(t => t && t.toLowerCase() !== 'unassigned'))];
+    showNotification(`✅ Imported ${members.length} players across ${importedTeams.length} teams!`, 'success');
 }
 
 function hidePlayerImportModal() {
