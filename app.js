@@ -123,6 +123,7 @@ const searchInput = document.getElementById('searchInput');
 const roleFilterButtons = document.querySelectorAll('.role-filter-btn');
 const viewToggleButtons = document.querySelectorAll('.view-toggle-btn');
 const clearMapBtn = document.getElementById('clearMapBtn');
+const screenshotBtn = document.getElementById('screenshotBtn');
 const exportBtn = document.getElementById('exportBtn');
 const importBtn = document.getElementById('importBtn');
 const importFileInput = document.getElementById('importFileInput');
@@ -585,29 +586,13 @@ function createMemberElement(member) {
 // Setup event listeners
 function setupEventListeners() {
     
-    // Menu dropdown toggle
-    const menuBtn = document.getElementById('menuBtn');
-    const menuContent = document.getElementById('menuContent');
-    
-    menuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        menuContent.classList.toggle('show');
-    });
-    
-    // Guild page button
+    // Guild page button (now in nav bar)
     const guildPageBtn = document.getElementById('guildPageBtn');
     if (guildPageBtn) {
         guildPageBtn.addEventListener('click', () => {
             window.location.href = 'guild.html';
         });
     }
-    
-    // Close menu when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.menu-dropdown')) {
-            menuContent.classList.remove('show');
-        }
-    });
     
     // Map area drop events
     mapArea.addEventListener('dragover', handleDragOver);
@@ -654,6 +639,9 @@ function setupEventListeners() {
     // Clear map button
     clearMapBtn.addEventListener('click', clearAllPlacements);
     
+    // Screenshot button
+    screenshotBtn.addEventListener('click', takeMapScreenshot);
+    
     // Export button
     exportBtn.addEventListener('click', exportPositions);
     
@@ -665,6 +653,12 @@ function setupEventListeners() {
     const hotKeyBtn = document.getElementById('hotKeyBtn');
     hotKeyBtn.addEventListener('click', showHotkeyHelp);
     
+    // Known Issues button
+    const knownIssuesBtn = document.getElementById('knownIssuesBtn');
+    if (knownIssuesBtn) {
+        knownIssuesBtn.addEventListener('click', showKnownIssues);
+    }
+    
     // Theme toggle button
     // Theme toggle removed - dark mode only
 // themeToggleBtn.addEventListener('click', toggleTheme);
@@ -674,6 +668,16 @@ function setupEventListeners() {
     
     // Hotkey modal
     closeHotkeyModalBtn.addEventListener('click', closeHotkeyHelp);
+    
+    // Known Issues modal close buttons
+    const closeKnownIssuesModal = document.getElementById('closeKnownIssuesModal');
+    const closeKnownIssuesModalBtn = document.getElementById('closeKnownIssuesModalBtn');
+    if (closeKnownIssuesModal) {
+        closeKnownIssuesModal.addEventListener('click', hideKnownIssues);
+    }
+    if (closeKnownIssuesModalBtn) {
+        closeKnownIssuesModalBtn.addEventListener('click', hideKnownIssues);
+    }
     
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyboardShortcut);
@@ -773,6 +777,31 @@ function showHotkeyHelp() {
 
 function closeHotkeyHelp() {
     hotkeyHelpModal.style.display = 'none';
+}
+
+// Known Issues modal functions
+function showKnownIssues() {
+    const modal = document.getElementById('knownIssuesModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function hideKnownIssues() {
+    const modal = document.getElementById('knownIssuesModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Click outside Known Issues modal to close
+const knownIssuesModal = document.getElementById('knownIssuesModal');
+if (knownIssuesModal) {
+    knownIssuesModal.addEventListener('click', (e) => {
+        if (e.target === knownIssuesModal) {
+            hideKnownIssues();
+        }
+    });
 }
 
 // Click outside modal to close
@@ -3305,6 +3334,117 @@ function renderMap() {
     
     // Update placeholder and counts
     updatePlaceholder();
+}
+
+// Take screenshot of map
+function takeMapScreenshot() {
+    // Check if html2canvas is loaded
+    if (typeof html2canvas === 'undefined') {
+        alert('Screenshot library not loaded. Please refresh the page and try again.');
+        return;
+    }
+    
+    // Show loading indicator
+    screenshotBtn.disabled = true;
+    screenshotBtn.innerHTML = '<span class="btn-icon">⏳</span>';
+    
+    // Temporarily hide remove buttons and tooltips for cleaner screenshot
+    const removeButtons = mapArea.querySelectorAll('.remove-btn');
+    const tooltips = mapArea.querySelectorAll('.member-tooltip, .group-tooltip');
+    
+    removeButtons.forEach(btn => btn.style.display = 'none');
+    tooltips.forEach(tooltip => tooltip.style.display = 'none');
+    
+    // Wait a moment for DOM to update
+    setTimeout(() => {
+        html2canvas(mapArea, {
+            backgroundColor: '#2c3e50',
+            scale: 2,
+            logging: false,
+            useCORS: false, // Disable CORS to avoid tainted canvas
+            allowTaint: false, // Don't allow tainted canvas
+            foreignObjectRendering: false, // Disable foreign object rendering
+            imageTimeout: 0,
+            windowWidth: mapArea.scrollWidth,
+            windowHeight: mapArea.scrollHeight,
+            onclone: (clonedDoc) => {
+                // Remove background image from cloned element to avoid CORS
+                const clonedMapArea = clonedDoc.getElementById('mapArea');
+                if (clonedMapArea) {
+                    clonedMapArea.style.backgroundImage = 'none';
+                }
+            }
+        }).then(canvas => {
+            // Convert to blob
+            canvas.toBlob(blob => {
+                if (!blob) {
+                    throw new Error('Failed to create image blob');
+                }
+                
+                // Create download link
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                link.download = `GvG-Strategy-${timestamp}.png`;
+                link.href = url;
+                link.click();
+                
+                // Cleanup
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+                
+                // Show buttons again
+                removeButtons.forEach(btn => btn.style.display = '');
+                tooltips.forEach(tooltip => tooltip.style.display = '');
+                
+                // Reset button
+                screenshotBtn.disabled = false;
+                screenshotBtn.innerHTML = '<span class="btn-icon">📸</span>';
+                
+                // Show success message
+                showNotification('Screenshot saved!', 'success');
+            }, 'image/png');
+        }).catch(error => {
+            console.error('Screenshot failed:', error);
+            console.error('Error details:', error.message);
+            
+            // Show buttons again
+            removeButtons.forEach(btn => btn.style.display = '');
+            tooltips.forEach(tooltip => tooltip.style.display = '');
+            
+            // Reset button
+            screenshotBtn.disabled = false;
+            screenshotBtn.innerHTML = '<span class="btn-icon">📸</span>';
+            
+            alert('Screenshot failed: ' + error.message + '\n\nTry using Print Screen key as alternative.');
+        });
+    }, 100);
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: ${type === 'success' ? '#2ecc71' : '#667eea'};
+        color: white;
+        padding: 15px 25px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 100000;
+        font-weight: 600;
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
 }
 
 // Export positions
