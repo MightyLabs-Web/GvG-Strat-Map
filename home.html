@@ -31,10 +31,22 @@
                     <span class="nav-icon">📥</span>
                     <span class="nav-text">Export</span>
                 </button>
-                <button id="importBtn" class="nav-btn">
-                    <span class="nav-icon">📤</span>
-                    <span class="nav-text">Import</span>
-                </button>
+                <div class="nav-import-wrapper" id="importWrapper">
+                    <button id="importBtn" class="nav-btn" title="Import options">
+                        <span class="nav-icon">📤</span>
+                        <span class="nav-text">Import</span>
+                    </button>
+                    <div class="import-dropdown" id="importDropdown">
+                        <button class="import-option-btn" id="importStrategyBtn">
+                            <span>📋</span> Strategy File (.json)
+                            <small>Restores full strategy including positions & markers</small>
+                        </button>
+                        <button class="import-option-btn" id="importPlayersBtn">
+                            <span>👥</span> Player Roster (.csv / .xlsx)
+                            <small>Import player names, roles, weapons & teams</small>
+                        </button>
+                    </div>
+                </div>
                 <button id="hotKeyBtn" class="nav-btn">
                     <span class="nav-icon">⌨️</span>
                     <span class="nav-text">Hot Keys</span>
@@ -43,9 +55,14 @@
                     <span class="nav-icon">⚠️</span>
                     <span class="nav-text">Known Issues</span>
                 </button>
+                <button id="changelogBtn" class="nav-btn">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">v1.8.0</span>
+                </button>
             </nav>
             
             <input type="file" id="importFileInput" accept=".json" style="display: none;">
+            <input type="file" id="importPlayersFileInput" accept=".csv,.xlsx,.xls" style="display: none;">
         </header>
         
         <div class="main-content">
@@ -147,6 +164,11 @@
                         
                         <button id="screenshotBtn" class="toolbar-btn screenshot-btn" title="Take Screenshot of Map">
                             <span class="btn-icon">📸</span>
+                        </button>
+                        
+                        <button id="galleryBtn" class="toolbar-btn gallery-btn" title="View Screenshot Gallery">
+                            <span class="btn-icon">🖼️</span>
+                            <span class="gallery-badge">0</span>
                         </button>
                         
                         <div class="toolbar-divider"></div>
@@ -448,6 +470,169 @@
         </div>
     </div>
     
+    <!-- Player Import Preview Modal -->
+    <div id="playerImportModal" class="modal">
+        <div class="modal-content" style="max-width: 750px; max-height: 90vh;">
+            <div class="modal-header">
+                <h2>👥 Import Player Roster</h2>
+                <button class="modal-close" id="closePlayerImportModal">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 65vh; overflow-y: auto;">
+                <div id="importPreviewInfo" class="import-preview-info"></div>
+                <div id="importPreviewTable"></div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between;">
+                <div style="font-size: 0.85rem; color: #999; text-align: left;">
+                    <strong>Required columns:</strong> Name, Role<br>
+                    <strong>Optional:</strong> Team, Weapon1, Weapon2
+                </div>
+                <div style="display:flex; gap: 10px;">
+                    <button class="btn-secondary" id="cancelPlayerImportBtn">Cancel</button>
+                    <button class="btn-primary" id="confirmPlayerImportBtn">✅ Import Players</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Screenshot Gallery Modal -->
+    <div id="screenshotGalleryModal" class="modal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh;">
+            <div class="modal-header">
+                <h2>🖼️ Screenshot Gallery</h2>
+                <button class="modal-close" id="closeGalleryModal">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <div id="galleryContainer" class="gallery-grid"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="closeGalleryModalBtn">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Changelog Modal -->
+    <div id="changelogModal" class="modal">
+        <div class="modal-content" style="max-width: 700px; max-height: 90vh;">
+            <div class="modal-header">
+                <h2>📋 Version History & Changelog</h2>
+                <button class="modal-close" id="closeChangelogModal">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto; text-align: left;">
+                <div class="version-current">
+                    <h3>🎯 Current Version: 1.8.0</h3>
+                    <p class="version-date">Released: February 2026</p>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.8.0 - Player Roster Import & UI Fixes</h4>
+                    <ul>
+                        <li>✨ Added player roster import from CSV or Excel (.xlsx) files</li>
+                        <li>✨ Auto-generates team groups from imported team names</li>
+                        <li>🎨 Fixed glassmorphism to match top banner on all panels</li>
+                        <li>📸 Fixed screenshots — now correctly shows map image + all markers</li>
+                        <li>🔧 Fixed marker drag boundaries to map area only</li>
+                        <li>🎨 All panels now visually consistent with header style</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.7.0 - Screenshot Gallery</h4>
+                    <ul>
+                        <li>✨ Added screenshot gallery (stores last 10 screenshots)</li>
+                        <li>✨ Added version history and changelog viewer</li>
+                        <li>📸 Screenshot button in toolbar</li>
+                        <li>🖼️ Gallery viewer with view, download, delete options</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.6.0 - Navigation & Known Issues</h4>
+                    <ul>
+                        <li>✨ Added "Known Issues" help section</li>
+                        <li>🎨 Redesigned navigation bar (clean text style)</li>
+                        <li>🔧 Fixed guild page navigation link</li>
+                        <li>📸 Added screenshot feature with download</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.5.0 - Objective Markers Expansion</h4>
+                    <ul>
+                        <li>✨ Added 4 new objective marker types (Defend, Hold, Yes, No)</li>
+                        <li>🔄 Renamed "EH Marker" to "Attack" and "Enemy" to "Danger"</li>
+                        <li>🎨 Improved objective marker modal layout (4x2 grid)</li>
+                        <li>🔧 Fixed marker positioning issues</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.4.0 - Role Badge Updates</h4>
+                    <ul>
+                        <li>🎨 Changed Tank role color from blue to orange</li>
+                        <li>🎨 Updated all role badges to black text with black borders</li>
+                        <li>🔧 Fixed role colors in Manage Players modal</li>
+                        <li>✨ Consistent role colors across map and UI</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.3.0 - Map Responsiveness</h4>
+                    <ul>
+                        <li>📱 Improved mobile responsiveness</li>
+                        <li>🎨 Fixed map scaling on different resolutions</li>
+                        <li>🔧 Added boundary constraints for markers</li>
+                        <li>✨ Markers can no longer be dragged off screen</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.2.0 - Security & Branding</h4>
+                    <ul>
+                        <li>🔒 Added comprehensive security measures</li>
+                        <li>🔒 Disabled right-click and developer tools</li>
+                        <li>📝 Added copyright protection (MightyLabs)</li>
+                        <li>✨ Updated branding and links</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.1.0 - Guild Page & Import/Export</h4>
+                    <ul>
+                        <li>✨ Added Ethereal Heart guild recruitment page</li>
+                        <li>📤 Implemented strategy export/import system</li>
+                        <li>🔧 Fixed empty team marker imports</li>
+                        <li>🎨 Professional glassmorphism redesign</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.0.0 - Initial Release</h4>
+                    <ul>
+                        <li>🎮 Core guild war strategy mapping tool</li>
+                        <li>👥 Player management system (30 players max)</li>
+                        <li>🎯 8 team groups with drag-and-drop</li>
+                        <li>🎯 Objective markers (DPS, Healer, Attack, Danger)</li>
+                        <li>🐉 Boss, Tower, Tree, and Goose markers</li>
+                        <li>✏️ Drawing tools with undo/redo</li>
+                        <li>⌨️ Keyboard shortcuts</li>
+                        <li>🌙 Dark theme</li>
+                    </ul>
+                </div>
+                
+                <div style="margin-top: 30px; padding: 20px; background: rgba(102, 126, 234, 0.1); border-radius: 8px; border-left: 4px solid #667eea;">
+                    <p style="margin: 0; font-size: 0.9rem; color: #999;">
+                        <strong>Created by:</strong> MightyLabs<br>
+                        <strong>For:</strong> Ethereal-Heart Guild<br>
+                        <strong>Game:</strong> Where Winds Meet
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="closeChangelogModalBtn">Close</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Security Measures -->
     <script>
     // Copyright Protection - MightyLabs 2026
@@ -509,6 +694,8 @@
     
     <!-- html2canvas for screenshot functionality -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- SheetJS for Excel/CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <script src="data.js"></script>
     <script src="app.js"></script>
