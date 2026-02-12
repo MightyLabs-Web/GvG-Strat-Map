@@ -127,6 +127,7 @@ const screenshotBtn = document.getElementById('screenshotBtn');
 const exportBtn = document.getElementById('exportBtn');
 const importBtn = document.getElementById('importBtn');
 const importFileInput = document.getElementById('importFileInput');
+const importPlayersFileInput = document.getElementById('importPlayersFileInput');
 const playerCount = document.getElementById('playerCount');
 const placedCount = document.getElementById('placedCount');
 const addObjectiveBtn = document.getElementById('addObjectiveBtn');
@@ -367,6 +368,7 @@ function init() {
     
     loadTeamNames();
     loadThemePreference();
+    loadScreenshotGallery(); // Load saved screenshots
     renderMemberList();
     setupEventListeners();
     
@@ -378,6 +380,7 @@ function init() {
     initializeCanvas();
     setupClickOutsideHandler();
     setupPlayerManagementHandlers();
+    updateGalleryBadge(); // Update screenshot count
     
     // Render default markers on the map
     renderMap();
@@ -646,8 +649,35 @@ function setupEventListeners() {
     exportBtn.addEventListener('click', exportPositions);
     
     // Import button
-    importBtn.addEventListener('click', importPositions);
+    // Import button - shows dropdown with two options
+    importBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const dropdown = document.getElementById('importDropdown');
+        dropdown.classList.toggle('show');
+    });
+    
+    // Close import dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        const wrapper = document.getElementById('importWrapper');
+        if (wrapper && !wrapper.contains(e.target)) {
+            document.getElementById('importDropdown').classList.remove('show');
+        }
+    });
+    
+    // Import Strategy option
+    document.getElementById('importStrategyBtn').addEventListener('click', () => {
+        document.getElementById('importDropdown').classList.remove('show');
+        importFileInput.click();
+    });
+    
+    // Import Players option
+    document.getElementById('importPlayersBtn').addEventListener('click', () => {
+        document.getElementById('importDropdown').classList.remove('show');
+        importPlayersFileInput.click();
+    });
+    
     importFileInput.addEventListener('change', handleImportFile);
+    importPlayersFileInput.addEventListener('change', handlePlayersFileImport);
     
     // Hot Key button
     const hotKeyBtn = document.getElementById('hotKeyBtn');
@@ -657,6 +687,18 @@ function setupEventListeners() {
     const knownIssuesBtn = document.getElementById('knownIssuesBtn');
     if (knownIssuesBtn) {
         knownIssuesBtn.addEventListener('click', showKnownIssues);
+    }
+    
+    // Changelog button
+    const changelogBtn = document.getElementById('changelogBtn');
+    if (changelogBtn) {
+        changelogBtn.addEventListener('click', showChangelog);
+    }
+    
+    // Gallery button
+    const galleryBtn = document.getElementById('galleryBtn');
+    if (galleryBtn) {
+        galleryBtn.addEventListener('click', showScreenshotGallery);
     }
     
     // Theme toggle button
@@ -677,6 +719,41 @@ function setupEventListeners() {
     }
     if (closeKnownIssuesModalBtn) {
         closeKnownIssuesModalBtn.addEventListener('click', hideKnownIssues);
+    }
+    
+    // Gallery modal close buttons
+    const closeGalleryModal = document.getElementById('closeGalleryModal');
+    const closeGalleryModalBtn = document.getElementById('closeGalleryModalBtn');
+    if (closeGalleryModal) {
+        closeGalleryModal.addEventListener('click', hideScreenshotGallery);
+    }
+    if (closeGalleryModalBtn) {
+        closeGalleryModalBtn.addEventListener('click', hideScreenshotGallery);
+    }
+    
+    // Changelog modal close buttons
+    const closeChangelogModal = document.getElementById('closeChangelogModal');
+    const closeChangelogModalBtn = document.getElementById('closeChangelogModalBtn');
+    if (closeChangelogModal) {
+        closeChangelogModal.addEventListener('click', hideChangelog);
+    }
+    if (closeChangelogModalBtn) {
+        closeChangelogModalBtn.addEventListener('click', hideChangelog);
+    }
+    
+    // Player Import modal
+    const closePlayerImportModal = document.getElementById('closePlayerImportModal');
+    const cancelPlayerImportBtn  = document.getElementById('cancelPlayerImportBtn');
+    const confirmPlayerImportBtn = document.getElementById('confirmPlayerImportBtn');
+    if (closePlayerImportModal)  closePlayerImportModal.addEventListener('click', hidePlayerImportModal);
+    if (cancelPlayerImportBtn)   cancelPlayerImportBtn.addEventListener('click', hidePlayerImportModal);
+    if (confirmPlayerImportBtn)  confirmPlayerImportBtn.addEventListener('click', confirmPlayerImport);
+    
+    const playerImportModal = document.getElementById('playerImportModal');
+    if (playerImportModal) {
+        playerImportModal.addEventListener('click', e => {
+            if (e.target === playerImportModal) hidePlayerImportModal();
+        });
     }
     
     // Keyboard shortcuts
@@ -800,6 +877,31 @@ if (knownIssuesModal) {
     knownIssuesModal.addEventListener('click', (e) => {
         if (e.target === knownIssuesModal) {
             hideKnownIssues();
+        }
+    });
+}
+
+// Changelog modal functions
+function showChangelog() {
+    const modal = document.getElementById('changelogModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function hideChangelog() {
+    const modal = document.getElementById('changelogModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Click outside Changelog modal to close
+const changelogModal = document.getElementById('changelogModal');
+if (changelogModal) {
+    changelogModal.addEventListener('click', (e) => {
+        if (e.target === changelogModal) {
+            hideChangelog();
         }
     });
 }
@@ -3336,88 +3438,283 @@ function renderMap() {
     updatePlaceholder();
 }
 
+// Screenshot gallery storage
+let screenshotGallery = [];
+const MAX_SCREENSHOTS = 10;
+
+// Take screenshot of map
 // Take screenshot of map
 function takeMapScreenshot() {
-    // Check if html2canvas is loaded
     if (typeof html2canvas === 'undefined') {
-        alert('Screenshot library not loaded. Please refresh the page and try again.');
+        alert('Screenshot library not loaded. Please refresh the page.');
         return;
     }
-    
-    // Show loading indicator
+
     screenshotBtn.disabled = true;
     screenshotBtn.innerHTML = '<span class="btn-icon">⏳</span>';
-    
-    // Temporarily hide remove buttons and tooltips for cleaner screenshot
+
     const removeButtons = mapArea.querySelectorAll('.remove-btn');
     const tooltips = mapArea.querySelectorAll('.member-tooltip, .group-tooltip');
-    
-    removeButtons.forEach(btn => btn.style.display = 'none');
-    tooltips.forEach(tooltip => tooltip.style.display = 'none');
-    
-    // Wait a moment for DOM to update
-    setTimeout(() => {
-        html2canvas(mapArea, {
-            backgroundColor: '#2c3e50',
-            scale: 2,
-            logging: false,
-            useCORS: false, // Disable CORS to avoid tainted canvas
-            allowTaint: false, // Don't allow tainted canvas
-            foreignObjectRendering: false, // Disable foreign object rendering
-            imageTimeout: 0,
-            windowWidth: mapArea.scrollWidth,
-            windowHeight: mapArea.scrollHeight,
-            onclone: (clonedDoc) => {
-                // Remove background image from cloned element to avoid CORS
-                const clonedMapArea = clonedDoc.getElementById('mapArea');
-                if (clonedMapArea) {
-                    clonedMapArea.style.backgroundImage = 'none';
-                }
+    removeButtons.forEach(b => b.style.display = 'none');
+    tooltips.forEach(t => t.style.display = 'none');
+
+    function finish(blob) {
+        removeButtons.forEach(b => b.style.display = '');
+        tooltips.forEach(t => t.style.display = '');
+        screenshotBtn.disabled = false;
+        screenshotBtn.innerHTML = '<span class="btn-icon">📸</span>';
+
+        if (!blob) { alert('Screenshot failed. Please try again.'); return; }
+
+        const reader = new FileReader();
+        reader.onload = e => {
+            screenshotGallery.unshift({ id: Date.now(), dataUrl: e.target.result, timestamp: new Date() });
+            if (screenshotGallery.length > MAX_SCREENSHOTS) screenshotGallery = screenshotGallery.slice(0, MAX_SCREENSHOTS);
+            saveScreenshotGallery();
+            updateGalleryBadge();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `GvG-Strategy-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.png`;
+            link.href = url;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 200);
+            showNotification('Screenshot saved to gallery!', 'success');
+        };
+        reader.readAsDataURL(blob);
+    }
+
+    // Step 1: load map image as data URL to avoid CORS taint
+    const img = new Image();
+    const mapStyle = window.getComputedStyle(mapArea);
+    const bgUrl = mapStyle.backgroundImage.replace(/url\(["']?|["']?\)/g, '');
+
+    function captureWithCanvas(mapDataUrl) {
+        setTimeout(() => {
+            const rect = mapArea.getBoundingClientRect();
+            const W = rect.width;
+            const H = rect.height;
+            const scale = 2;
+
+            // Create offscreen canvas
+            const offscreen = document.createElement('canvas');
+            offscreen.width = W * scale;
+            offscreen.height = H * scale;
+            const ctx = offscreen.getContext('2d');
+            ctx.scale(scale, scale);
+
+            // Draw dark background
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, W, H);
+
+            function drawMarkersAndSave() {
+                // Use html2canvas on mapArea with background stripped, then composite
+                html2canvas(mapArea, {
+                    backgroundColor: null,
+                    scale: scale,
+                    logging: false,
+                    useCORS: false,
+                    allowTaint: false,
+                    width: Math.floor(W),
+                    height: Math.floor(H),
+                    onclone: (doc) => {
+                        const cloned = doc.getElementById('mapArea');
+                        if (cloned) {
+                            cloned.style.backgroundImage = 'none';
+                            cloned.style.background = 'transparent';
+                        }
+                    }
+                }).then(markersCanvas => {
+                    // Final composite: background + map image + markers
+                    const final = document.createElement('canvas');
+                    final.width = W * scale;
+                    final.height = H * scale;
+                    const fctx = final.getContext('2d');
+
+                    // 1. Dark bg
+                    fctx.fillStyle = '#1a1a2e';
+                    fctx.fillRect(0, 0, final.width, final.height);
+
+                    // 2. Map image (if loaded)
+                    if (mapDataUrl) {
+                        const mImg = new Image();
+                        mImg.onload = () => {
+                            // Draw map image centered with contain scaling
+                            const iw = mImg.naturalWidth, ih = mImg.naturalHeight;
+                            const fw = final.width, fh = final.height;
+                            const ratio = Math.min(fw / iw, fh / ih);
+                            const dw = iw * ratio, dh = ih * ratio;
+                            const dx = (fw - dw) / 2, dy = (fh - dh) / 2;
+                            fctx.drawImage(mImg, dx, dy, dw, dh);
+
+                            // 3. Markers on top
+                            fctx.drawImage(markersCanvas, 0, 0);
+                            final.toBlob(finish, 'image/png');
+                        };
+                        mImg.onerror = () => {
+                            fctx.drawImage(markersCanvas, 0, 0);
+                            final.toBlob(finish, 'image/png');
+                        };
+                        mImg.src = mapDataUrl;
+                    } else {
+                        fctx.drawImage(markersCanvas, 0, 0);
+                        final.toBlob(finish, 'image/png');
+                    }
+                }).catch(err => {
+                    console.error('html2canvas error:', err);
+                    removeButtons.forEach(b => b.style.display = '');
+                    tooltips.forEach(t => t.style.display = '');
+                    screenshotBtn.disabled = false;
+                    screenshotBtn.innerHTML = '<span class="btn-icon">📸</span>';
+                    alert('Screenshot failed: ' + err.message);
+                });
             }
-        }).then(canvas => {
-            // Convert to blob
-            canvas.toBlob(blob => {
-                if (!blob) {
-                    throw new Error('Failed to create image blob');
-                }
-                
-                // Create download link
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-                link.download = `GvG-Strategy-${timestamp}.png`;
-                link.href = url;
-                link.click();
-                
-                // Cleanup
-                setTimeout(() => URL.revokeObjectURL(url), 100);
-                
-                // Show buttons again
-                removeButtons.forEach(btn => btn.style.display = '');
-                tooltips.forEach(tooltip => tooltip.style.display = '');
-                
-                // Reset button
-                screenshotBtn.disabled = false;
-                screenshotBtn.innerHTML = '<span class="btn-icon">📸</span>';
-                
-                // Show success message
-                showNotification('Screenshot saved!', 'success');
-            }, 'image/png');
-        }).catch(error => {
-            console.error('Screenshot failed:', error);
-            console.error('Error details:', error.message);
-            
-            // Show buttons again
-            removeButtons.forEach(btn => btn.style.display = '');
-            tooltips.forEach(tooltip => tooltip.style.display = '');
-            
-            // Reset button
-            screenshotBtn.disabled = false;
-            screenshotBtn.innerHTML = '<span class="btn-icon">📸</span>';
-            
-            alert('Screenshot failed: ' + error.message + '\n\nTry using Print Screen key as alternative.');
+
+            drawMarkersAndSave();
+        }, 150);
+    }
+
+    if (bgUrl && bgUrl !== 'none') {
+        fetch(bgUrl)
+            .then(r => r.blob())
+            .then(blob => {
+                const r = new FileReader();
+                r.onload = e => captureWithCanvas(e.target.result);
+                r.readAsDataURL(blob);
+            })
+            .catch(() => captureWithCanvas(null)); // If fetch fails, skip map bg
+    } else {
+        captureWithCanvas(null);
+    }
+}
+
+
+function saveScreenshotGallery() {
+    try {
+        const galleryData = screenshotGallery.map(item => ({
+            id: item.id,
+            dataUrl: item.dataUrl,
+            timestamp: item.timestamp.toISOString()
+        }));
+        localStorage.setItem('mightylabs-screenshot-gallery', JSON.stringify(galleryData));
+    } catch (e) {
+        console.error('Failed to save gallery:', e);
+    }
+}
+
+// Load gallery from localStorage
+function loadScreenshotGallery() {
+    try {
+        const saved = localStorage.getItem('mightylabs-screenshot-gallery');
+        if (saved) {
+            const galleryData = JSON.parse(saved);
+            screenshotGallery = galleryData.map(item => ({
+                id: item.id,
+                dataUrl: item.dataUrl,
+                timestamp: new Date(item.timestamp),
+                blob: null // Will regenerate if needed
+            }));
+        }
+    } catch (e) {
+        console.error('Failed to load gallery:', e);
+    }
+}
+
+// Update gallery badge count
+function updateGalleryBadge() {
+    const badge = document.querySelector('.gallery-badge');
+    if (badge) {
+        badge.textContent = screenshotGallery.length;
+        badge.style.display = screenshotGallery.length > 0 ? 'flex' : 'none';
+    }
+}
+
+// Show screenshot gallery
+function showScreenshotGallery() {
+    const modal = document.getElementById('screenshotGalleryModal');
+    if (!modal) return;
+    
+    const container = document.getElementById('galleryContainer');
+    container.innerHTML = '';
+    
+    if (screenshotGallery.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">No screenshots yet. Take some screenshots to see them here!</p>';
+    } else {
+        screenshotGallery.forEach((screenshot, index) => {
+            const item = document.createElement('div');
+            item.className = 'gallery-item';
+            item.innerHTML = `
+                <img src="${screenshot.dataUrl}" alt="Screenshot ${index + 1}">
+                <div class="gallery-item-info">
+                    <span class="gallery-timestamp">${formatTimestamp(screenshot.timestamp)}</span>
+                    <div class="gallery-actions">
+                        <button class="gallery-btn" onclick="viewScreenshot(${index})" title="View Full Size">👁️</button>
+                        <button class="gallery-btn" onclick="downloadScreenshot(${index})" title="Download">💾</button>
+                        <button class="gallery-btn" onclick="deleteScreenshot(${index})" title="Delete">🗑️</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(item);
         });
-    }, 100);
+    }
+    
+    modal.style.display = 'flex';
+}
+
+function formatTimestamp(date) {
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
+    return date.toLocaleDateString();
+}
+
+function viewScreenshot(index) {
+    const screenshot = screenshotGallery[index];
+    if (!screenshot) return;
+    
+    // Open in new window
+    const win = window.open('', '_blank');
+    win.document.write(`
+        <html>
+        <head><title>Screenshot ${index + 1}</title></head>
+        <body style="margin:0;background:#000;display:flex;justify-content:center;align-items:center;min-height:100vh;">
+            <img src="${screenshot.dataUrl}" style="max-width:100%;max-height:100vh;">
+        </body>
+        </html>
+    `);
+}
+
+function downloadScreenshot(index) {
+    const screenshot = screenshotGallery[index];
+    if (!screenshot) return;
+    
+    const link = document.createElement('a');
+    link.download = `GvG-Strategy-${formatTimestamp(screenshot.timestamp).replace(/ /g, '-')}.png`;
+    link.href = screenshot.dataUrl;
+    link.click();
+}
+
+function deleteScreenshot(index) {
+    if (confirm('Delete this screenshot?')) {
+        screenshotGallery.splice(index, 1);
+        saveScreenshotGallery();
+        showScreenshotGallery();
+        updateGalleryBadge();
+        showNotification('Screenshot deleted', 'info');
+    }
+}
+
+function hideScreenshotGallery() {
+    const modal = document.getElementById('screenshotGalleryModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
 }
 
 // Show notification
@@ -3587,6 +3884,222 @@ function hideExportProgress() {
 // Import strategy from JSON file
 function importPositions() {
     importFileInput.click();
+}
+
+// ============================================================================
+// PLAYER ROSTER IMPORT (CSV / XLSX)
+// ============================================================================
+
+let pendingImportedPlayers = []; // Holds parsed players waiting for user confirm
+
+function handlePlayersFileImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    importPlayersFileInput.value = '';
+    
+    const ext = file.name.split('.').pop().toLowerCase();
+    
+    if (ext === 'csv') {
+        const reader = new FileReader();
+        reader.onload = e => parseAndPreviewPlayers(e.target.result, 'csv');
+        reader.readAsText(file);
+    } else if (ext === 'xlsx' || ext === 'xls') {
+        const reader = new FileReader();
+        reader.onload = e => parseAndPreviewPlayers(e.target.result, 'xlsx');
+        reader.readAsArrayBuffer(file);
+    } else {
+        alert('Unsupported file type. Please use .csv, .xlsx, or .xls');
+    }
+}
+
+function parseAndPreviewPlayers(data, type) {
+    let rows = [];
+    
+    if (type === 'csv') {
+        // Parse CSV
+        const lines = data.trim().split('\n');
+        const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+        
+        for (let i = 1; i < lines.length; i++) {
+            const vals = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+            if (vals.every(v => !v)) continue; // skip empty rows
+            const row = {};
+            headers.forEach((h, idx) => { row[h] = vals[idx] || ''; });
+            rows.push(row);
+        }
+    } else {
+        // Parse XLSX using SheetJS
+        if (typeof XLSX === 'undefined') {
+            alert('Excel library not loaded. Please refresh and try again.');
+            return;
+        }
+        const wb = XLSX.read(data, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rawRows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        // Normalise keys to lowercase
+        rows = rawRows.map(r => {
+            const norm = {};
+            Object.entries(r).forEach(([k, v]) => { norm[k.toLowerCase().trim()] = String(v).trim(); });
+            return norm;
+        });
+    }
+    
+    if (rows.length === 0) {
+        alert('No data found in file. Please check your file and try again.');
+        return;
+    }
+    
+    // Map flexible column names
+    const COLUMN_ALIASES = {
+        name:    ['name', 'player', 'playername', 'player name', 'ign', 'username'],
+        role:    ['role', 'class', 'type', 'position'],
+        team:    ['team', 'group', 'squad', 'teamname', 'team name'],
+        weapon1: ['weapon1', 'weapon 1', 'w1', 'main weapon', 'primary', 'weapon'],
+        weapon2: ['weapon2', 'weapon 2', 'w2', 'off weapon', 'secondary', 'offhand'],
+    };
+    
+    function findCol(row, aliases) {
+        const keys = Object.keys(row).map(k => k.toLowerCase());
+        for (const alias of aliases) {
+            const match = keys.find(k => k === alias || k.includes(alias));
+            if (match) return row[match] || '';
+        }
+        return '';
+    }
+    
+    // Validate roles
+    const VALID_ROLES = ['Tank', 'DPS', 'Healer', 'Support'];
+    function normaliseRole(raw) {
+        if (!raw) return 'DPS';
+        const r = raw.trim();
+        const match = VALID_ROLES.find(v => v.toLowerCase() === r.toLowerCase());
+        return match || 'DPS';
+    }
+    
+    // Build player objects
+    pendingImportedPlayers = rows.map((row, i) => ({
+        id: `imported-${Date.now()}-${i}`,
+        name: findCol(row, COLUMN_ALIASES.name) || `Player${i+1}`,
+        role: normaliseRole(findCol(row, COLUMN_ALIASES.role)),
+        team: findCol(row, COLUMN_ALIASES.team) || '',
+        weapon1: findCol(row, COLUMN_ALIASES.weapon1) || '',
+        weapon2: findCol(row, COLUMN_ALIASES.weapon2) || '',
+        placed: false
+    })).filter(p => p.name);
+    
+    if (pendingImportedPlayers.length === 0) {
+        alert('Could not find any valid players. Make sure your file has a "Name" column.');
+        return;
+    }
+    
+    showPlayerImportPreview(pendingImportedPlayers, rows[0]);
+}
+
+function showPlayerImportPreview(players, sampleRow) {
+    const modal = document.getElementById('playerImportModal');
+    const info  = document.getElementById('importPreviewInfo');
+    const table = document.getElementById('importPreviewTable');
+    
+    // Count unique teams
+    const teams = [...new Set(players.map(p => p.team).filter(t => t))];
+    const newTeams = teams.filter(t => !teamNames.includes(t));
+    
+    info.innerHTML = `
+        <strong>${players.length}</strong> players found &nbsp;|&nbsp;
+        <strong>${teams.length}</strong> teams found &nbsp;|&nbsp;
+        ${newTeams.length > 0 
+            ? `<span style="color:#f39c12">⚠️ ${newTeams.length} new team(s) will be created: <strong>${newTeams.join(', ')}</strong></span>` 
+            : '<span style="color:#2ecc71">✅ All teams match existing groups</span>'}
+        <br><br>
+        <span style="color:#999; font-size:0.85rem;">
+            Detected columns: ${Object.keys(sampleRow).join(', ')}
+        </span>
+    `;
+    
+    // Build preview table (max 50 rows shown)
+    const preview = players.slice(0, 50);
+    table.innerHTML = `
+        <div class="import-preview-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Team</th>
+                        <th>Weapon 1</th>
+                        <th>Weapon 2</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${preview.map((p, i) => `
+                        <tr>
+                            <td style="color:#666">${i+1}</td>
+                            <td><strong>${p.name}</strong></td>
+                            <td><span class="role-chip ${p.role}">${p.role}</span></td>
+                            <td>${p.team || '<span style="color:#666">—</span>'}</td>
+                            <td>${p.weapon1 || '<span style="color:#666">—</span>'}</td>
+                            <td>${p.weapon2 || '<span style="color:#666">—</span>'}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            ${players.length > 50 ? `<p style="text-align:center;color:#666;padding:10px">...and ${players.length - 50} more</p>` : ''}
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+}
+
+function confirmPlayerImport() {
+    if (!pendingImportedPlayers.length) return;
+    
+    // Create new team names from imported players if needed
+    const importedTeams = [...new Set(pendingImportedPlayers.map(p => p.team).filter(t => t))];
+    
+    // Add any new teams (replace existing team slots or append)
+    importedTeams.forEach(teamName => {
+        if (!teamNames.includes(teamName)) {
+            // Find a slot to add (look for default/empty team name)
+            const emptyIdx = teamNames.findIndex(t => 
+                t === '' || t === `Team ${teamNames.indexOf(t)+1}` || 
+                ['FLEX','ATTACK','DEFENCE','TOP JUNGLE','BOT JUNGLE','GATE KEEPERS','BOSS TEAM','ASSASSINS'].includes(t) === false
+            );
+            if (emptyIdx >= 0 && teamNames.length < 30) {
+                teamNames.push(teamName);
+            } else {
+                teamNames.push(teamName);
+            }
+        }
+    });
+    
+    // Replace members array with imported players
+    members = pendingImportedPlayers.map(p => ({
+        ...p,
+        id: p.id || `player-${Date.now()}-${Math.random()}`,
+        placed: false
+    }));
+    
+    // Save team names
+    saveTeamNames();
+    
+    // Re-render everything
+    renderMemberList();
+    updateCounts();
+    
+    // Close modal
+    document.getElementById('playerImportModal').style.display = 'none';
+    pendingImportedPlayers = [];
+    
+    const teamMsg = importedTeams.length > 0 
+        ? ` Teams created: ${importedTeams.join(', ')}.` 
+        : '';
+    showNotification(`✅ Imported ${members.length} players!${teamMsg}`, 'success');
+}
+
+function hidePlayerImportModal() {
+    document.getElementById('playerImportModal').style.display = 'none';
+    pendingImportedPlayers = [];
 }
 
 function handleImportFile(event) {
