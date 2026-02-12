@@ -689,6 +689,12 @@ function setupEventListeners() {
         knownIssuesBtn.addEventListener('click', showKnownIssues);
     }
     
+    // How To Guide button
+    const howToBtn = document.getElementById('howToBtn');
+    if (howToBtn) {
+        howToBtn.addEventListener('click', showHowTo);
+    }
+    
     // Changelog button
     const changelogBtn = document.getElementById('changelogBtn');
     if (changelogBtn) {
@@ -719,6 +725,16 @@ function setupEventListeners() {
     }
     if (closeKnownIssuesModalBtn) {
         closeKnownIssuesModalBtn.addEventListener('click', hideKnownIssues);
+    }
+    
+    // How To Guide modal close buttons
+    const closeHowToModal = document.getElementById('closeHowToModal');
+    const closeHowToModalBtn = document.getElementById('closeHowToModalBtn');
+    if (closeHowToModal)    closeHowToModal.addEventListener('click', hideHowTo);
+    if (closeHowToModalBtn) closeHowToModalBtn.addEventListener('click', hideHowTo);
+    const howToModal = document.getElementById('howToModal');
+    if (howToModal) {
+        howToModal.addEventListener('click', e => { if (e.target === howToModal) hideHowTo(); });
     }
     
     // Gallery modal close buttons
@@ -859,26 +875,37 @@ function closeHotkeyHelp() {
 // Known Issues modal functions
 function showKnownIssues() {
     const modal = document.getElementById('knownIssuesModal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
+    if (modal) modal.style.display = 'flex';
 }
 
 function hideKnownIssues() {
     const modal = document.getElementById('knownIssuesModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+    if (modal) modal.style.display = 'none';
 }
 
 // Click outside Known Issues modal to close
 const knownIssuesModal = document.getElementById('knownIssuesModal');
 if (knownIssuesModal) {
     knownIssuesModal.addEventListener('click', (e) => {
-        if (e.target === knownIssuesModal) {
-            hideKnownIssues();
-        }
+        if (e.target === knownIssuesModal) hideKnownIssues();
     });
+}
+
+// How To Guide modal functions
+function showHowTo() {
+    const modal = document.getElementById('howToModal');
+    if (modal) modal.style.display = 'flex';
+    // Sync version label from the nav button so it always matches
+    const navVersion = document.querySelector('#changelogBtn .nav-text');
+    const howtoLabel = document.getElementById('howtoVersionLabel');
+    if (navVersion && howtoLabel) {
+        howtoLabel.textContent = navVersion.textContent.trim();
+    }
+}
+
+function hideHowTo() {
+    const modal = document.getElementById('howToModal');
+    if (modal) modal.style.display = 'none';
 }
 
 // Changelog modal functions
