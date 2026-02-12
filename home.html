@@ -20,19 +20,31 @@
         <header>
             <h1>Ethereal-Heart - Guild War Strategy</h1>
             <p class="subtitle">Guild vs Guild Battle Map • Created by <a href="https://discordapp.com/users/91448874530504704" target="_blank" class="mightylabs-link">MIGHTYLABS</a> from <a href="https://discord.com/invite/HdC4dkNVvD" target="_blank" class="mightylabs-link">Ethereal-Heart</a></p>
-            <div class="header-buttons">
-                <div class="menu-dropdown">
-                    <button id="menuBtn" class="menu-btn" title="Menu">
-                        <span class="menu-icon">☰</span>
-                    </button>
-                    <div class="menu-content" id="menuContent">
-                        <button id="guildPageBtn" class="menu-item">💎 Ethereal Heart</button>
-                        <button id="exportBtn" class="menu-item">📥 Export Strategy</button>
-                        <button id="importBtn" class="menu-item">📤 Import Strategy</button>
-                        <button id="hotKeyBtn" class="menu-item">⌨️ Hot Keys</button>
-                    </div>
-                </div>
-            </div>
+            
+            <!-- Navigation Bar -->
+            <nav class="header-nav">
+                <button id="guildPageBtn" class="nav-btn">
+                    <span class="nav-icon">💎</span>
+                    <span class="nav-text">Guild Info</span>
+                </button>
+                <button id="exportBtn" class="nav-btn">
+                    <span class="nav-icon">📥</span>
+                    <span class="nav-text">Export</span>
+                </button>
+                <button id="importBtn" class="nav-btn">
+                    <span class="nav-icon">📤</span>
+                    <span class="nav-text">Import</span>
+                </button>
+                <button id="hotKeyBtn" class="nav-btn">
+                    <span class="nav-icon">⌨️</span>
+                    <span class="nav-text">Hot Keys</span>
+                </button>
+                <button id="knownIssuesBtn" class="nav-btn">
+                    <span class="nav-icon">⚠️</span>
+                    <span class="nav-text">Known Issues</span>
+                </button>
+            </nav>
+            
             <input type="file" id="importFileInput" accept=".json" style="display: none;">
         </header>
         
@@ -130,6 +142,12 @@
                                 <span class="toggle-text-small">Auto-delete</span>
                             </label>
                         </div>
+                        
+                        <div class="toolbar-divider"></div>
+                        
+                        <button id="screenshotBtn" class="toolbar-btn screenshot-btn" title="Take Screenshot of Map">
+                            <span class="btn-icon">📸</span>
+                        </button>
                         
                         <div class="toolbar-divider"></div>
                         
@@ -379,6 +397,57 @@
         </div>
     </div>
     
+    <!-- Known Issues Modal -->
+    <div id="knownIssuesModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>⚠️ Known Issues & Important Notes</h2>
+                <button class="modal-close" id="closeKnownIssuesModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: left; line-height: 1.8;">
+                    <h3 style="color: #f39c12; margin-top: 0;">🔍 Browser Zoom Limitation</h3>
+                    <p><strong>Issue:</strong> Marker positions shift when using browser zoom (Ctrl+Plus/Minus or Ctrl+MouseWheel).</p>
+                    
+                    <p><strong>Why:</strong> Markers use pixel coordinates that don't scale proportionally with browser zoom.</p>
+                    
+                    <div style="background: rgba(241, 196, 15, 0.2); padding: 15px; border-radius: 8px; border-left: 4px solid #f39c12; margin: 15px 0;">
+                        <p style="margin: 0; font-weight: 600; font-size: 1.1rem;">✅ Best Practice:</p>
+                        <p style="margin: 10px 0 0 0;">Keep browser at <strong>100% zoom</strong> while planning strategy.</p>
+                    </div>
+                    
+                    <p><strong>How to Reset Zoom:</strong></p>
+                    <ul style="margin: 10px 0;">
+                        <li>Press <kbd style="background: #34495e; padding: 3px 8px; border-radius: 4px; font-family: monospace;">Ctrl+0</kbd> (Windows/Linux)</li>
+                        <li>Press <kbd style="background: #34495e; padding: 3px 8px; border-radius: 4px; font-family: monospace;">⌘+0</kbd> (Mac)</li>
+                    </ul>
+                    
+                    <p><strong>Workflow:</strong></p>
+                    <ol style="margin: 10px 0;">
+                        <li>Reset zoom to 100% (Ctrl+0)</li>
+                        <li>Place all markers and create strategy</li>
+                        <li>Export your strategy (save progress)</li>
+                        <li>Take screenshot if needed</li>
+                        <li>Now you can zoom for viewing</li>
+                    </ol>
+                    
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
+                    
+                    <h3 style="color: #3498db;">💡 Tips for Best Results</h3>
+                    <ul style="margin: 10px 0;">
+                        <li>Use desktop/laptop for strategy planning</li>
+                        <li>Export frequently to save progress</li>
+                        <li>Use Import to restore saved strategies</li>
+                        <li>Mobile is great for viewing, not detailed planning</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="closeKnownIssuesModalBtn">Got it!</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Security Measures -->
     <script>
     // Copyright Protection - MightyLabs 2026
@@ -437,6 +506,9 @@
     console.log('%cCreated by MightyLabs', 'font-size: 16px; color: #764ba2;');
     console.log('%c© 2026 All Rights Reserved', 'font-size: 14px; color: #999;');
     </script>
+    
+    <!-- html2canvas for screenshot functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <script src="data.js"></script>
     <script src="app.js"></script>
