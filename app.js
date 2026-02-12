@@ -3632,90 +3632,153 @@ function updateGalleryBadge() {
 function showScreenshotGallery() {
     const modal = document.getElementById('screenshotGalleryModal');
     if (!modal) return;
-    
-    const container = document.getElementById('galleryContainer');
-    container.innerHTML = '';
-    
-    if (screenshotGallery.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">No screenshots yet. Take some screenshots to see them here!</p>';
-    } else {
-        screenshotGallery.forEach((screenshot, index) => {
-            const item = document.createElement('div');
-            item.className = 'gallery-item';
-            item.innerHTML = `
-                <img src="${screenshot.dataUrl}" alt="Screenshot ${index + 1}">
-                <div class="gallery-item-info">
-                    <span class="gallery-timestamp">${formatTimestamp(screenshot.timestamp)}</span>
-                    <div class="gallery-actions">
-                        <button class="gallery-btn" onclick="viewScreenshot(${index})" title="View Full Size">👁️</button>
-                        <button class="gallery-btn" onclick="downloadScreenshot(${index})" title="Download">💾</button>
-                        <button class="gallery-btn" onclick="deleteScreenshot(${index})" title="Delete">🗑️</button>
-                    </div>
-                </div>
-            `;
-            container.appendChild(item);
-        });
-    }
-    
+    renderGalleryGrid();
     modal.style.display = 'flex';
 }
 
+function renderGalleryGrid() {
+    const container = document.getElementById('galleryContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (screenshotGallery.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#888;padding:40px 20px;grid-column:1/-1">No screenshots yet.<br>Take some screenshots to see them here!</p>';
+        return;
+    }
+
+    screenshotGallery.forEach((shot, index) => {
+        const item = document.createElement('div');
+        item.className = 'gallery-item';
+        item.title = 'Click to view';
+        item.innerHTML = `
+            <img src="${shot.dataUrl}" alt="Screenshot ${index + 1}" loading="lazy">
+            <div class="gallery-item-info">
+                <span class="gallery-timestamp">${formatTimestamp(shot.timestamp)}</span>
+                <button class="gallery-delete-btn" title="Delete">🗑️</button>
+            </div>
+        `;
+        // Whole card opens lightbox
+        item.querySelector('img').addEventListener('click', () => openLightbox(index));
+        item.querySelector('.gallery-item-info').addEventListener('click', (e) => {
+            if (!e.target.classList.contains('gallery-delete-btn')) openLightbox(index);
+        });
+        item.querySelector('.gallery-delete-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteScreenshot(index);
+        });
+        container.appendChild(item);
+    });
+}
+
 function formatTimestamp(date) {
-    const now = new Date();
-    const diff = now - date;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-    
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
+    if (!(date instanceof Date)) date = new Date(date);
+    const diff = Date.now() - date;
+    const m = Math.floor(diff / 60000);
+    const h = Math.floor(diff / 3600000);
+    const d = Math.floor(diff / 86400000);
+    if (m < 1)  return 'Just now';
+    if (m < 60) return m + 'm ago';
+    if (h < 24) return h + 'h ago';
+    if (d < 7)  return d + 'd ago';
     return date.toLocaleDateString();
 }
 
-function viewScreenshot(index) {
-    const screenshot = screenshotGallery[index];
-    if (!screenshot) return;
-    
-    // Open in new window
-    const win = window.open('', '_blank');
-    win.document.write(`
-        <html>
-        <head><title>Screenshot ${index + 1}</title></head>
-        <body style="margin:0;background:#000;display:flex;justify-content:center;align-items:center;min-height:100vh;">
-            <img src="${screenshot.dataUrl}" style="max-width:100%;max-height:100vh;">
-        </body>
-        </html>
-    `);
+// ---- Lightbox ----
+let lightboxIndex = 0;
+
+function openLightbox(index) {
+    lightboxIndex = index;
+    const overlay = document.getElementById('lightboxOverlay');
+    overlay.classList.add('open');
+    updateLightbox();
+    // Close gallery modal so lightbox can be seen
+    const gm = document.getElementById('screenshotGalleryModal');
+    if (gm) gm.style.display = 'none';
 }
 
+function updateLightbox() {
+    const shot = screenshotGallery[lightboxIndex];
+    if (!shot) return;
+    document.getElementById('lightboxImg').src = shot.dataUrl;
+    document.getElementById('lightboxCounter').textContent =
+        (lightboxIndex + 1) + ' / ' + screenshotGallery.length;
+}
+
+function closeLightbox() {
+    document.getElementById('lightboxOverlay').classList.remove('open');
+    // Re-open gallery
+    showScreenshotGallery();
+}
+
+function lightboxPrev() {
+    if (screenshotGallery.length === 0) return;
+    lightboxIndex = (lightboxIndex - 1 + screenshotGallery.length) % screenshotGallery.length;
+    updateLightbox();
+}
+
+function lightboxNext() {
+    if (screenshotGallery.length === 0) return;
+    lightboxIndex = (lightboxIndex + 1) % screenshotGallery.length;
+    updateLightbox();
+}
+
+// Wire up lightbox controls once DOM ready
+(function initLightbox() {
+    function setup() {
+        const overlay = document.getElementById('lightboxOverlay');
+        if (!overlay) { setTimeout(setup, 100); return; }
+        document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+        document.getElementById('lightboxPrev').addEventListener('click', lightboxPrev);
+        document.getElementById('lightboxNext').addEventListener('click', lightboxNext);
+        document.getElementById('lightboxDownload').addEventListener('click', () => {
+            const shot = screenshotGallery[lightboxIndex];
+            if (!shot) return;
+            const link = document.createElement('a');
+            link.download = 'GvG-Strategy-' + formatTimestamp(shot.timestamp).replace(/ /g,'-') + '.png';
+            link.href = shot.dataUrl;
+            link.click();
+        });
+        // Click outside image closes lightbox
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeLightbox();
+        });
+        // Arrow keys
+        document.addEventListener('keydown', (e) => {
+            if (!overlay.classList.contains('open')) return;
+            if (e.key === 'ArrowLeft')  lightboxPrev();
+            if (e.key === 'ArrowRight') lightboxNext();
+            if (e.key === 'Escape')     closeLightbox();
+        });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setup);
+    } else {
+        setup();
+    }
+})();
+
 function downloadScreenshot(index) {
-    const screenshot = screenshotGallery[index];
-    if (!screenshot) return;
-    
+    const shot = screenshotGallery[index];
+    if (!shot) return;
     const link = document.createElement('a');
-    link.download = `GvG-Strategy-${formatTimestamp(screenshot.timestamp).replace(/ /g, '-')}.png`;
-    link.href = screenshot.dataUrl;
+    link.download = 'GvG-Strategy-' + formatTimestamp(shot.timestamp).replace(/ /g,'-') + '.png';
+    link.href = shot.dataUrl;
     link.click();
 }
 
 function deleteScreenshot(index) {
-    if (confirm('Delete this screenshot?')) {
-        screenshotGallery.splice(index, 1);
-        saveScreenshotGallery();
-        showScreenshotGallery();
-        updateGalleryBadge();
-        showNotification('Screenshot deleted', 'info');
-    }
+    screenshotGallery.splice(index, 1);
+    saveScreenshotGallery();
+    updateGalleryBadge();
+    renderGalleryGrid();
+    showNotification('Screenshot deleted', 'info');
 }
 
 function hideScreenshotGallery() {
     const modal = document.getElementById('screenshotGalleryModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+    if (modal) modal.style.display = 'none';
 }
+
 
 // Show notification
 function showNotification(message, type = 'info') {
