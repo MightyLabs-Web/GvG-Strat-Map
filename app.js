@@ -3996,10 +3996,12 @@ function handlePlayersFileImport(event) {
     if (ext === 'csv') {
         const reader = new FileReader();
         reader.onload = e => parseAndPreviewPlayers(e.target.result, 'csv');
+        reader.onerror = () => alert('Failed to read CSV file. Please try again.');
         reader.readAsText(file);
     } else if (ext === 'xlsx' || ext === 'xls') {
         const reader = new FileReader();
         reader.onload = e => parseAndPreviewPlayers(e.target.result, 'xlsx');
+        reader.onerror = () => alert('Failed to read Excel file. Please try again.');
         reader.readAsArrayBuffer(file);
     } else {
         alert('Unsupported file type. Please use .csv, .xlsx, or .xls');
@@ -4007,6 +4009,7 @@ function handlePlayersFileImport(event) {
 }
 
 function parseAndPreviewPlayers(data, type) {
+    try {
     let rows = [];
     
     if (type === 'csv') {
@@ -4087,6 +4090,10 @@ function parseAndPreviewPlayers(data, type) {
     }
     
     showPlayerImportPreview(pendingImportedPlayers, rows[0]);
+    } catch(err) {
+        console.error('Player import error:', err);
+        alert('Import failed: ' + err.message + '\n\nCheck the browser console for details.');
+    }
 }
 
 function showPlayerImportPreview(players, sampleRow) {
@@ -4094,15 +4101,20 @@ function showPlayerImportPreview(players, sampleRow) {
     const info  = document.getElementById('importPreviewInfo');
     const table = document.getElementById('importPreviewTable');
     
-    // Count unique teams
-    const teams = [...new Set(players.map(p => p.team).filter(t => t))];
-    const newTeams = teams.filter(t => !teamNames.includes(t));
+    if (!modal || !info || !table) {
+        alert('Import preview modal not found. Please refresh the page.');
+        return;
+    }
+    
+    // Count unique teams (use TEAM_ORDER as the reference, not undefined teamNames)
+    const teams = [...new Set(players.map(p => p.team).filter(t => t && t.toLowerCase() !== 'unassigned' && t !== ''))];
+    const newTeams = teams.filter(t => !TEAM_ORDER.includes(t));
     
     info.innerHTML = `
         <strong>${players.length}</strong> players found &nbsp;|&nbsp;
         <strong>${teams.length}</strong> teams found &nbsp;|&nbsp;
         ${newTeams.length > 0 
-            ? `<span style="color:#f39c12">⚠️ ${newTeams.length} new team(s) will be created: <strong>${newTeams.join(', ')}</strong></span>` 
+            ? `<span style="color:#f39c12">⚠️ ${newTeams.length} new team(s) will be added: <strong>${newTeams.join(', ')}</strong></span>` 
             : '<span style="color:#2ecc71">✅ All teams match existing groups</span>'}
         <br><br>
         <span style="color:#999; font-size:0.85rem;">
