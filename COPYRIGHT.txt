@@ -5,6 +5,7 @@ COPYRIGHT NOTICE
 
 GUILD WAR STRATEGY TOOL
 Where Winds Meet - GvG Battle Planner
+Created for Regenesis Guild
 
 Created by: MightyLabs
 Contact: https://discordapp.com/users/91448874530504704
@@ -52,7 +53,7 @@ This includes but is not limited to:
 
 TRADEMARK
 ---------
-"MightyLabs" and associated branding are trademarks of the creator.
+"MightyLabs" and "Regenesis" branding are trademarks of the creator.
 Unauthorized use of these marks is prohibited.
 
 DISCLAIMER
@@ -66,4 +67,4 @@ INQUIRIES
 For licensing, permissions, or other inquiries:
 Contact: MightyLabs via Discord (link above)
 
-Last Updated: February 12, 2026
+Last Updated: March 7, 2026
