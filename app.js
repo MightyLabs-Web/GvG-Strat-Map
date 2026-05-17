@@ -3334,20 +3334,20 @@ function renderMap() {
         mapArea.appendChild(marker);
     });
     
-    // Render trees
-    placedTrees.forEach(tree => {
+    // Render blue trees
+    placedBlueTrees.forEach(tree => {
         const marker = document.createElement('div');
-        marker.className = 'tree-marker';
+        marker.className = 'tree-marker blue-tree';
         marker.dataset.treeId = tree.id;
         marker.style.left = `${tree.x - 20}px`;
         marker.style.top = `${tree.y - 20}px`;
         marker.draggable = true;
-        marker.innerHTML = '<button class="remove-btn" onclick="removeTreeMarker(\'' + tree.id + '\')">×</button>';
+        marker.innerHTML = '<button class="remove-btn" onclick="removeBlueTreeMarker(\'' + tree.id + '\')">×</button>';
         
         marker.addEventListener('dragstart', (e) => {
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', tree.id);
-            e.dataTransfer.setData('type', 'tree-marker');
+            e.dataTransfer.setData('type', 'blue-tree-marker');
             e.currentTarget.style.opacity = '0.5';
         });
         
@@ -3356,10 +3356,45 @@ function renderMap() {
             const rect = mapArea.getBoundingClientRect();
             const x = e.clientX - rect.left + 20;
             const y = e.clientY - rect.top + 20;
-            const treeIndex = placedTrees.findIndex(t => t.id === tree.id);
+            const treeIndex = placedBlueTrees.findIndex(t => t.id === tree.id);
             if (treeIndex !== -1) {
-                placedTrees[treeIndex].x = x;
-                placedTrees[treeIndex].y = y;
+                placedBlueTrees[treeIndex].x = x;
+                placedBlueTrees[treeIndex].y = y;
+                marker.style.left = `${x - 20}px`;
+                marker.style.top = `${y - 20}px`;
+                savePositions();
+            }
+        });
+        
+        mapArea.appendChild(marker);
+    });
+    
+    // Render red trees
+    placedRedTrees.forEach(tree => {
+        const marker = document.createElement('div');
+        marker.className = 'tree-marker red-tree';
+        marker.dataset.treeId = tree.id;
+        marker.style.left = `${tree.x - 20}px`;
+        marker.style.top = `${tree.y - 20}px`;
+        marker.draggable = true;
+        marker.innerHTML = '<button class="remove-btn" onclick="removeRedTreeMarker(\'' + tree.id + '\')">×</button>';
+        
+        marker.addEventListener('dragstart', (e) => {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', tree.id);
+            e.dataTransfer.setData('type', 'red-tree-marker');
+            e.currentTarget.style.opacity = '0.5';
+        });
+        
+        marker.addEventListener('dragend', (e) => {
+            e.currentTarget.style.opacity = '1';
+            const rect = mapArea.getBoundingClientRect();
+            const x = e.clientX - rect.left + 20;
+            const y = e.clientY - rect.top + 20;
+            const treeIndex = placedRedTrees.findIndex(t => t.id === tree.id);
+            if (treeIndex !== -1) {
+                placedRedTrees[treeIndex].x = x;
+                placedRedTrees[treeIndex].y = y;
                 marker.style.left = `${x - 20}px`;
                 marker.style.top = `${y - 20}px`;
                 savePositions();
@@ -3635,6 +3670,132 @@ function handleImportFile(event) {
     const file = event.target.files[0];
     if (!file) return;
     
+    const fileName = file.name.toLowerCase();
+    const fileType = fileName.split('.').pop();
+    
+    // Handle CSV files (player roster import)
+    if (fileType === 'csv') {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const csv = e.target.result;
+                const lines = csv.split('\n').filter(line => line.trim());
+                const headers = lines[0].split(',').map(h => h.trim());
+                
+                // Validate CSV headers
+                if (!headers.includes('name') || !headers.includes('role')) {
+                    throw new Error('CSV must include "name" and "role" columns');
+                }
+                
+                // Parse players
+                const newPlayers = [];
+                let maxId = members.length > 0 ? Math.max(...members.map(m => m.id)) : 0;
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',').map(v => v.trim());
+                    if (values.length < headers.length) continue;
+                    
+                    const player = {};
+                    headers.forEach((header, index) => {
+                        player[header] = values[index] || '';
+                    });
+                    
+                    if (player.name && player.role) {
+                        newPlayers.push({
+                            id: ++maxId,
+                            name: player.name,
+                            role: player.role,
+                            team: player.team || '',
+                            weapon1: player.weapon1 || '',
+                            weapon2: player.weapon2 || ''
+                        });
+                    }
+                }
+                
+                if (newPlayers.length === 0) {
+                    throw new Error('No valid players found in CSV');
+                }
+                
+                // Add players to members array
+                members.push(...newPlayers);
+                
+                // Update display
+                renderMemberList();
+                updateCounts();
+                
+                alert(`Successfully imported ${newPlayers.length} players from CSV!`);
+            } catch (error) {
+                console.error('Error importing CSV:', error);
+                alert('Failed to import CSV. Error: ' + error.message);
+            }
+            
+            importFileInput.value = '';
+        };
+        reader.readAsText(file);
+        return;
+    }
+    
+    // Handle Excel files (player roster import)
+    if (fileType === 'xlsx' || fileType === 'xls') {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                
+                if (jsonData.length === 0) {
+                    throw new Error('Excel file is empty');
+                }
+                
+                // Validate headers
+                const firstRow = jsonData[0];
+                if (!firstRow.name || !firstRow.role) {
+                    throw new Error('Excel must include "name" and "role" columns');
+                }
+                
+                // Parse players
+                const newPlayers = [];
+                let maxId = members.length > 0 ? Math.max(...members.map(m => m.id)) : 0;
+                
+                jsonData.forEach(row => {
+                    if (row.name && row.role) {
+                        newPlayers.push({
+                            id: ++maxId,
+                            name: row.name,
+                            role: row.role,
+                            team: row.team || '',
+                            weapon1: row.weapon1 || '',
+                            weapon2: row.weapon2 || ''
+                        });
+                    }
+                });
+                
+                if (newPlayers.length === 0) {
+                    throw new Error('No valid players found in Excel file');
+                }
+                
+                // Add players to members array
+                members.push(...newPlayers);
+                
+                // Update display
+                renderMemberList();
+                updateCounts();
+                
+                alert(`Successfully imported ${newPlayers.length} players from Excel!`);
+            } catch (error) {
+                console.error('Error importing Excel:', error);
+                alert('Failed to import Excel. Error: ' + error.message);
+            }
+            
+            importFileInput.value = '';
+        };
+        reader.readAsArrayBuffer(file);
+        return;
+    }
+    
+    // Handle JSON files (complete strategy import)
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
