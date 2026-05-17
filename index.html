@@ -19,8 +19,8 @@
     <div class="container">
         <header>
             <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 10px;">
-                <img src="images/guild_logo.png" alt="Regenesis Logo" style="width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(255, 207, 52, 0.5));">
-                <h1 style="margin: 0;">Regenesis - Guild War Strategy</h1>
+                <img src="images/guild_logo.png" alt="WWM Logo" style="width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(255, 207, 52, 0.5));">
+                <h1 style="margin: 0;">WWM - Guild War Strategy</h1>
             </div>
             <p class="subtitle">Guild vs Guild Battle Map • Created by <a href="https://discordapp.com/users/91448874530504704" target="_blank" class="mightylabs-link">MIGHTYLABS</a></p>
             
@@ -28,7 +28,7 @@
             <nav class="header-nav">
                 <button id="guildPageBtn" class="nav-btn">
                     <span class="nav-icon">💎</span>
-                    <span class="nav-text">Guild Info</span>
+                    <span class="nav-text">About Me</span>
                 </button>
                 <button id="exportBtn" class="nav-btn">
                     <span class="nav-icon">📥</span>
@@ -64,7 +64,7 @@
                 </button>
                 <button id="changelogBtn" class="nav-btn">
                     <span class="nav-icon">📋</span>
-                    <span class="nav-text">v1.10.0</span>
+                    <span class="nav-text">v1.11.0</span>
                 </button>
             </nav>
             
@@ -118,25 +118,37 @@
                         <button id="addObjectiveBtn" class="toolbar-btn objective-btn" title="Add Objective Marker">
                             <span class="btn-icon">🎯</span>
                         </button>
-                        <button id="addBossBtn" class="toolbar-btn boss-btn" title="Add Boss Marker">
+                        <button id="addHealerObjectiveBtn" class="toolbar-btn objective-btn" title="Add Healer Marker">
+                            <img src="images/healer.png" alt="Healer" class="btn-icon-img">
+                        </button>
+                        <button id="addTankObjectiveBtn" class="toolbar-btn objective-btn" title="Add Tank Marker">
+                            <img src="images/tank.png" alt="Tank" class="btn-icon-img">
+                        </button>
+                        <button id="addDPSObjectiveBtn" class="toolbar-btn objective-btn" title="Add DPS Marker">
+                            <img src="images/dps.png" alt="DPS" class="btn-icon-img">
+                        </button>
+                        <button id="addMapObjectiveBtn" class="toolbar-btn map-objective-btn" title="Map Objective Markers">
+                            <span class="btn-icon">🗺️</span>
+                        </button>
+                        <button id="addBossBtn" class="toolbar-btn boss-btn" title="Add Boss Marker" style="display:none;">
                             <img src="images/boss.png" alt="Boss" class="btn-icon-img">
                         </button>
-                        <button id="addBlueTowerBtn" class="toolbar-btn blue-tower-btn" title="Add Ally Tower (Blue)">
+                        <button id="addBlueTowerBtn" class="toolbar-btn blue-tower-btn" title="Add Ally Tower (Blue)" style="display:none;">
                             <img src="images/tower_blue.png" alt="Blue Tower" class="btn-icon-img">
                         </button>
-                        <button id="addRedTowerBtn" class="toolbar-btn red-tower-btn" title="Add Enemy Tower (Red)">
+                        <button id="addRedTowerBtn" class="toolbar-btn red-tower-btn" title="Add Enemy Tower (Red)" style="display:none;">
                             <img src="images/tower_red.png" alt="Red Tower" class="btn-icon-img">
                         </button>
-                        <button id="addBlueTreeBtn" class="toolbar-btn blue-tree-btn" title="Add Ally Tree (Blue)">
+                        <button id="addBlueTreeBtn" class="toolbar-btn blue-tree-btn" title="Add Ally Tree (Blue)" style="display:none;">
                             <img src="images/tree_blue.png" alt="Blue Tree" class="btn-icon-img">
                         </button>
-                        <button id="addRedTreeBtn" class="toolbar-btn red-tree-btn" title="Add Enemy Tree (Red)">
+                        <button id="addRedTreeBtn" class="toolbar-btn red-tree-btn" title="Add Enemy Tree (Red)" style="display:none;">
                             <img src="images/tree_red.png" alt="Red Tree" class="btn-icon-img">
                         </button>
-                        <button id="addBlueGooseBtn" class="toolbar-btn blue-goose-btn" title="Add Ally Goose (Blue)">
+                        <button id="addBlueGooseBtn" class="toolbar-btn blue-goose-btn" title="Add Ally Goose (Blue)" style="display:none;">
                             <img src="images/goose_blue.png" alt="Blue Goose" class="btn-icon-img">
                         </button>
-                        <button id="addRedGooseBtn" class="toolbar-btn red-goose-btn" title="Add Enemy Goose (Red)">
+                        <button id="addRedGooseBtn" class="toolbar-btn red-goose-btn" title="Add Enemy Goose (Red)" style="display:none;">
                             <img src="images/goose_red.png" alt="Red Goose" class="btn-icon-img">
                         </button>
                         
@@ -164,6 +176,13 @@
                                 <input type="checkbox" id="autoDeleteToggle" />
                                 <span class="toggle-slider-small"></span>
                                 <span class="toggle-text-small">Auto-delete</span>
+                            </label>
+                        </div>
+                        <div class="toolbar-toggle-option">
+                            <label class="toggle-label-small" title="Show 20px radius around healer/DPS/tank markers">
+                                <input type="checkbox" id="radiusToggle" />
+                                <span class="toggle-slider-small"></span>
+                                <span class="toggle-text-small">Role radius</span>
                             </label>
                         </div>
                         
@@ -425,6 +444,50 @@
             </div>
         </div>
     </div>
+
+    <!-- Map Objective Marker Selection Modal -->
+    <div id="mapObjectiveModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Map Objective Markers</h2>
+            </div>
+            <div class="modal-body">
+                <div class="objective-type-grid">
+                    <button type="button" class="objective-type-btn map-objective-modal-btn" data-type="boss">
+                        <img src="images/boss.png" alt="Boss" class="type-icon" style="width: 40px; height: 40px; object-fit: contain;">
+                        <span class="type-label">Boss</span>
+                    </button>
+                    <button type="button" class="objective-type-btn map-objective-modal-btn" data-type="blue-tower">
+                        <img src="images/tower_blue.png" alt="Blue Tower" class="type-icon" style="width: 40px; height: 40px;">
+                        <span class="type-label">Ally Tower</span>
+                    </button>
+                    <button type="button" class="objective-type-btn map-objective-modal-btn" data-type="red-tower">
+                        <img src="images/tower_red.png" alt="Red Tower" class="type-icon" style="width: 40px; height: 40px;">
+                        <span class="type-label">Enemy Tower</span>
+                    </button>
+                    <button type="button" class="objective-type-btn map-objective-modal-btn" data-type="blue-tree">
+                        <img src="images/tree_blue.png" alt="Blue Tree" class="type-icon" style="width: 40px; height: 40px;">
+                        <span class="type-label">Ally Tree</span>
+                    </button>
+                    <button type="button" class="objective-type-btn map-objective-modal-btn" data-type="red-tree">
+                        <img src="images/tree_red.png" alt="Red Tree" class="type-icon" style="width: 40px; height: 40px;">
+                        <span class="type-label">Enemy Tree</span>
+                    </button>
+                    <button type="button" class="objective-type-btn map-objective-modal-btn" data-type="blue-goose">
+                        <img src="images/goose_blue.png" alt="Blue Goose" class="type-icon" style="width: 40px; height: 40px;">
+                        <span class="type-label">Ally Goose</span>
+                    </button>
+                    <button type="button" class="objective-type-btn map-objective-modal-btn" data-type="red-goose">
+                        <img src="images/goose_red.png" alt="Red Goose" class="type-icon" style="width: 40px; height: 40px;">
+                        <span class="type-label">Enemy Goose</span>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="closeMapObjectiveModal">Cancel</button>
+            </div>
+        </div>
+    </div>
     
     <!-- Known Issues Modal -->
     <div id="knownIssuesModal" class="modal">
@@ -503,7 +566,7 @@
                 <div class="howto-section">
                     <h3 class="howto-title">🔗 Navigation Bar</h3>
                     <div class="howto-table">
-                        <div class="howto-row"><span class="howto-icon">💎</span><div><strong>Guild Info</strong> Opens the Regenesis guild information page.</div></div>
+                        <div class="howto-row"><span class="howto-icon">💎</span><div><strong>About Me</strong> Opens information about MightyLabs, the creator of this tool.</div></div>
                         <div class="howto-row"><span class="howto-icon">📥</span><div><strong>Export</strong>: Saves your entire current strategy (player positions, markers, drawings) as a <code>.json</code> file. Share this file for others to reload.</div></div>
                         <div class="howto-row"><span class="howto-icon">📤</span><div><strong>Import</strong>: Two options:<br>
                             &nbsp;&nbsp;• <em>Strategy File (.json)</em>: restores a previously exported layout.<br>
@@ -511,7 +574,7 @@
                         <div class="howto-row"><span class="howto-icon">⌨️</span><div><strong>Hot Keys</strong>: Lists all keyboard shortcuts.</div></div>
                         <div class="howto-row"><span class="howto-icon">⚠️</span><div><strong>Known Issues</strong>: Important notes about browser zoom and best practices.</div></div>
                         <div class="howto-row"><span class="howto-icon">📖</span><div><strong>How To Use</strong>: This guide!</div></div>
-                        <div class="howto-row"><span class="howto-icon">📋</span><div><strong id="howtoVersionLabel">v1.10.0</strong>: Full version history and changelog.</div></div>
+                        <div class="howto-row"><span class="howto-icon">📋</span><div><strong id="howtoVersionLabel">v1.11.0</strong>: Full version history and changelog.</div></div>
                     </div>
                 </div>
 
@@ -654,8 +717,25 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto; text-align: left;">
                 <div class="version-current">
-                    <h3>🎯 Current Version: 1.10.0</h3>
-                    <p class="version-date">Released: February 2026</p>
+                    <h3>🎯 Current Version: 1.11.0</h3>
+                    <p class="version-date">Released: May 2026</p>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.11.0 - Major Overhaul: Objective Markers, Rebranding & Bug Fixes</h4>
+                    <ul>
+                        <li>🎯 <strong>Enhanced Objective Markers:</strong> Complete redesign with new marker types and functionality</li>
+                        <li>🎯 <strong>Class Objective Markers:</strong> Added specialized markers for different objective types (Attack, Defend, Hold, Danger, etc.)</li>
+                        <li>🎯 <strong>Radius Toggles:</strong> Added visual radius indicators for objective markers to show area of effect</li>
+                        <li>🎯 <strong>Improved Marker Positioning:</strong> Markers now positioned more accurately and consistently across the map</li>
+                        <li>✨ <strong>Working Modal Buttons:</strong> Fixed How To, Known Issues, Changelog, and Screenshot buttons</li>
+                        <li>📸 <strong>Screenshot Function:</strong> Fully functional screenshot feature with html2canvas integration</li>
+                        <li>🐛 <strong>Critical Bug Fixes:</strong> Resolved drag-and-drop issues caused by DOM loading timing errors</li>
+                        <li>🐛 <strong>Fixed Canvas Context:</strong> Moved canvas context initialization to prevent script crashes</li>
+                        <li>🐛 <strong>Null Check Protection:</strong> Added null checks for all DOM elements to prevent runtime errors</li>
+                        <li>🎨 <strong>Modal Improvements:</strong> Added click-outside-to-close functionality for all modals</li>
+                        <li>🔧 <strong>Code Optimization:</strong> Restructured initialization to use window.addEventListener('load') for reliability</li>
+                    </ul>
                 </div>
                 
                 <div class="changelog-section">
@@ -781,7 +861,6 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 <div style="margin-top: 30px; padding: 20px; background: rgba(102, 126, 234, 0.1); border-radius: 8px; border-left: 4px solid #667eea;">
                     <p style="margin: 0; font-size: 0.9rem; color: #999;">
                         <strong>Created by:</strong> MightyLabs<br>
-                        <strong>For:</strong> Regenesis Guild<br>
                         <strong>Game:</strong> Where Winds Meet
                     </p>
                 </div>

@@ -713,7 +713,7 @@ header h1 {
     border-radius: 16px;
     cursor: move;
     box-shadow: 0 3px 10px rgba(0,0,0,0.6);
-    z-index: 10;
+    z-index: 300; /* above drawing canvas (z-index:100) */
     user-select: none;
     border: 3px solid rgba(255,255,255,0.9);
     transition: all 0.3s ease;
@@ -747,9 +747,86 @@ header h1 {
     border-color: rgba(255, 255, 255, 0.9);
 }
 
+/* Role radius for objective markers (controlled by toolbar toggle) */
+.objective-marker {
+    /* make objective markers render above players and canvas when needed */
+}
+
+.objective-marker .role-radius {
+    display: none;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 350; /* ensure radius renders above other map elements */
+    opacity: 0.675;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.1875) inset;
+    pointer-events: none;
+}
+
+.map-area.show-role-radius .objective-marker {
+    z-index: 400; /* bring objectives above players when radius active */
+    overflow: visible !important;
+}
+
+.map-area.show-role-radius .objective-marker .role-radius {
+    display: block !important;
+}
+
+.map-area.show-role-radius .objective-marker.objective-tank .role-radius {
+    background: rgba(255, 223, 0, 0.2625) !important; /* yellow for tank (midpoint alpha) */
+}
+
+.map-area.show-role-radius .objective-marker.objective-dps .role-radius {
+    background: rgba(231, 76, 60, 0.2625) !important;
+}
+
+.map-area.show-role-radius .objective-marker.objective-healer .role-radius {
+    background: rgba(46, 204, 113, 0.2625) !important;
+}
+
+/* Also enable radius for player markers */
+.member-marker .role-radius {
+    display: none;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 250; /* slightly below objective radii */
+    opacity: 0.675;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.135) inset;
+    pointer-events: none;
+}
+
+.map-area.show-role-radius .member-marker {
+    overflow: visible !important;
+}
+
+.map-area.show-role-radius .member-marker .role-radius {
+    display: block !important;
+}
+
+.map-area.show-role-radius .member-marker.role-Tank .role-radius {
+    background: rgba(255, 223, 0, 0.2625) !important; /* yellow for tank (midpoint alpha) */
+}
+
+.map-area.show-role-radius .member-marker.role-DPS .role-radius {
+    background: rgba(231, 76, 60, 0.2625) !important;
+}
+
+.map-area.show-role-radius .member-marker.role-Healer .role-radius {
+    background: rgba(46, 204, 113, 0.2625) !important;
+}
+
 .member-marker:hover {
     transform: scale(1.3);
-    z-index: 100;
+    z-index: 500;
     box-shadow: 0 4px 16px rgba(0,0,0,0.8);
 }
 
@@ -1094,7 +1171,7 @@ header h1 {
 
 .objective-marker:hover {
     transform: scale(1.3);
-    z-index: 100;
+    z-index: 600;
 }
 
 .objective-marker .remove-btn {
@@ -2884,6 +2961,12 @@ body.dark-theme .hotkey-desc {
     font-size: 24px;
     text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     filter: drop-shadow(0 0 2px rgba(255,255,255,0.5));
+}
+.objective-marker img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
 }
 /* ==========================================
    PROFESSIONAL REDESIGN - VERSION 2
