@@ -123,14 +123,16 @@ const searchInput = document.getElementById('searchInput');
 const roleFilterButtons = document.querySelectorAll('.role-filter-btn');
 const viewToggleButtons = document.querySelectorAll('.view-toggle-btn');
 const clearMapBtn = document.getElementById('clearMapBtn');
-const screenshotBtn = document.getElementById('screenshotBtn');
 const exportBtn = document.getElementById('exportBtn');
 const importBtn = document.getElementById('importBtn');
 const importFileInput = document.getElementById('importFileInput');
-const importPlayersFileInput = document.getElementById('importPlayersFileInput');
 const playerCount = document.getElementById('playerCount');
 const placedCount = document.getElementById('placedCount');
 const addObjectiveBtn = document.getElementById('addObjectiveBtn');
+const addHealerObjectiveBtn = document.getElementById('addHealerObjectiveBtn');
+const addTankObjectiveBtn = document.getElementById('addTankObjectiveBtn');
+const addDPSObjectiveBtn = document.getElementById('addDPSObjectiveBtn');
+const addMapObjectiveBtn = document.getElementById('addMapObjectiveBtn');
 const addBossBtn = document.getElementById('addBossBtn');
 const addBlueTowerBtn = document.getElementById('addBlueTowerBtn');
 const addRedTowerBtn = document.getElementById('addRedTowerBtn');
@@ -143,9 +145,10 @@ const clearDrawBtn = document.getElementById('clearDrawBtn');
 const undoDrawBtn = document.getElementById('undoDrawBtn');
 const redoDrawBtn = document.getElementById('redoDrawBtn');
 const autoDeleteToggle = document.getElementById('autoDeleteToggle');
+const radiusToggle = document.getElementById('radiusToggle');
 const drawColorPicker = document.getElementById('drawColorPicker');
 const drawingCanvas = document.getElementById('drawingCanvas');
-const ctx = drawingCanvas.getContext('2d');
+let ctx; // Initialize in init() after DOM loads
 const addEnemiesBtn = document.getElementById('addEnemiesBtn');
 const enemyCount = document.getElementById('enemyCount');
 const managePlayersBtn = document.getElementById('managePlayersBtn');
@@ -158,6 +161,8 @@ const playerManagementList = document.getElementById('playerManagementList');
 const playerEditForm = document.getElementById('playerEditForm');
 const objectiveTypeModal = document.getElementById('objectiveTypeModal');
 const closeObjectiveTypeModal = document.getElementById('closeObjectiveTypeModal');
+const mapObjectiveModal = document.getElementById('mapObjectiveModal');
+const closeMapObjectiveModal = document.getElementById('closeMapObjectiveModal');
 const cancelEditBtn = document.getElementById('cancelEditBtn');
 // const themeToggleBtn = document.getElementById('themeToggleBtn'); // Removed - dark mode only
 const confirmModal = document.getElementById('confirmModal');
@@ -361,6 +366,9 @@ function loadDefaultMarkers() {
 }
 
 function init() {
+    // Initialize canvas context after DOM is ready
+    ctx = drawingCanvas.getContext('2d');
+    
     // loadDefaultMarkers(); // REMOVED - markers depend on resolution/zoom
     // ALWAYS use fresh data from data.js - DO NOT load from localStorage
     // This ensures the player list is always current from your Excel/data.js file
@@ -368,7 +376,6 @@ function init() {
     
     loadTeamNames();
     loadThemePreference();
-    loadScreenshotGallery(); // Load saved screenshots
     renderMemberList();
     setupEventListeners();
     
@@ -380,7 +387,6 @@ function init() {
     initializeCanvas();
     setupClickOutsideHandler();
     setupPlayerManagementHandlers();
-    updateGalleryBadge(); // Update screenshot count
     
     // Render default markers on the map
     renderMap();
@@ -407,11 +413,7 @@ function renderMemberList() {
 
 // Render grouped view by team
 function renderGroupedView() {
-    // Build the full team order: start with TEAM_ORDER, then add any extra teams from members
-    const extraTeams = [...new Set(members.map(m => m.team).filter(t => t && t !== '' && !TEAM_ORDER.includes(t)))];
-    const dynamicTeamOrder = [...TEAM_ORDER, ...extraTeams];
-
-    dynamicTeamOrder.forEach(teamName => {
+    TEAM_ORDER.forEach(teamName => {
         // Get all team members first (not filtered yet)
         const allTeamMembers = members.filter(m => m.team === teamName);
         
@@ -473,9 +475,9 @@ function renderGroupedView() {
         memberList.appendChild(groupDiv);
     });
     
-    // Add unassigned players (those with empty team OR team literally named "Unassigned")
+    // Add unassigned players (those with empty team)
     const unassignedMembers = members.filter(m => {
-        if (!m.team || m.team === '' || m.team.toLowerCase() === 'unassigned') {
+        if (!m.team || m.team === '') {
             // Check if member is already placed individually
             if (isPlayerPlaced(m.id)) return false;
             
@@ -593,11 +595,31 @@ function createMemberElement(member) {
 // Setup event listeners
 function setupEventListeners() {
     
-    // Guild page button (now in nav bar)
+    // Menu dropdown toggle
+    const menuBtn = document.getElementById('menuBtn');
+    const menuContent = document.getElementById('menuContent');
+    
+    if (menuBtn && menuContent) {
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuContent.classList.toggle('show');
+        });
+    }
+    
+    // Guild page button
     const guildPageBtn = document.getElementById('guildPageBtn');
     if (guildPageBtn) {
         guildPageBtn.addEventListener('click', () => {
-            window.location.href = 'guild.html';
+            window.location.href = 'about.html';
+        });
+    }
+    
+    // Close menu when clicking outside
+    if (menuContent) {
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.menu-dropdown')) {
+                menuContent.classList.remove('show');
+            }
         });
     }
     
@@ -622,6 +644,12 @@ function setupEventListeners() {
     
     // Objective and Boss buttons
     addObjectiveBtn.addEventListener('click', toggleObjectiveMode);
+    addHealerObjectiveBtn.addEventListener('click', () => toggleRoleObjectiveMode('healer', addHealerObjectiveBtn));
+    addTankObjectiveBtn.addEventListener('click', () => toggleRoleObjectiveMode('tank', addTankObjectiveBtn));
+    addDPSObjectiveBtn.addEventListener('click', () => toggleRoleObjectiveMode('dps', addDPSObjectiveBtn));
+    addMapObjectiveBtn.addEventListener('click', () => {
+        if (mapObjectiveModal) mapObjectiveModal.style.display = 'flex';
+    });
     addBossBtn.addEventListener('click', toggleBossMode);
     addBlueTowerBtn.addEventListener('click', toggleBlueTowerMode);
     addRedTowerBtn.addEventListener('click', toggleRedTowerMode);
@@ -636,6 +664,9 @@ function setupEventListeners() {
     undoDrawBtn.addEventListener('click', undoDrawing);
     redoDrawBtn.addEventListener('click', redoDrawing);
     autoDeleteToggle.addEventListener('change', handleAutoDeleteToggle);
+    if (radiusToggle) {
+        radiusToggle.addEventListener('change', handleRadiusToggle);
+    }
     drawColorPicker.addEventListener('change', (e) => {
         drawingColor = e.target.value;
     });
@@ -646,69 +677,68 @@ function setupEventListeners() {
     // Clear map button
     clearMapBtn.addEventListener('click', clearAllPlacements);
     
-    // Screenshot button
-    screenshotBtn.addEventListener('click', takeMapScreenshot);
-    
     // Export button
     exportBtn.addEventListener('click', exportPositions);
     
     // Import button
-    // Import button - shows dropdown with two options
-    importBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const dropdown = document.getElementById('importDropdown');
-        dropdown.classList.toggle('show');
-    });
-    
-    // Close import dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-        const wrapper = document.getElementById('importWrapper');
-        if (wrapper && !wrapper.contains(e.target)) {
-            document.getElementById('importDropdown').classList.remove('show');
-        }
-    });
-    
-    // Import Strategy option
-    document.getElementById('importStrategyBtn').addEventListener('click', () => {
-        document.getElementById('importDropdown').classList.remove('show');
-        importFileInput.click();
-    });
-    
-    // Import Players option
-    document.getElementById('importPlayersBtn').addEventListener('click', () => {
-        document.getElementById('importDropdown').classList.remove('show');
-        importPlayersFileInput.click();
-    });
-    
+    importBtn.addEventListener('click', importPositions);
     importFileInput.addEventListener('change', handleImportFile);
-    importPlayersFileInput.addEventListener('change', handlePlayersFileImport);
     
     // Hot Key button
     const hotKeyBtn = document.getElementById('hotKeyBtn');
-    hotKeyBtn.addEventListener('click', showHotkeyHelp);
+    if (hotKeyBtn) {
+        hotKeyBtn.addEventListener('click', showHotkeyHelp);
+    }
+    
+    // How To button
+    const howToBtn = document.getElementById('howToBtn');
+    const howToModal = document.getElementById('howToModal');
+    const closeHowToModal = document.getElementById('closeHowToModal');
+    if (howToBtn && howToModal) {
+        howToBtn.addEventListener('click', () => {
+            howToModal.style.display = 'flex';
+        });
+    }
+    if (closeHowToModal && howToModal) {
+        closeHowToModal.addEventListener('click', () => {
+            howToModal.style.display = 'none';
+        });
+    }
     
     // Known Issues button
     const knownIssuesBtn = document.getElementById('knownIssuesBtn');
-    if (knownIssuesBtn) {
-        knownIssuesBtn.addEventListener('click', showKnownIssues);
+    const knownIssuesModal = document.getElementById('knownIssuesModal');
+    const closeKnownIssuesModal = document.getElementById('closeKnownIssuesModal');
+    if (knownIssuesBtn && knownIssuesModal) {
+        knownIssuesBtn.addEventListener('click', () => {
+            knownIssuesModal.style.display = 'flex';
+        });
     }
-    
-    // How To Guide button
-    const howToBtn = document.getElementById('howToBtn');
-    if (howToBtn) {
-        howToBtn.addEventListener('click', showHowTo);
+    if (closeKnownIssuesModal && knownIssuesModal) {
+        closeKnownIssuesModal.addEventListener('click', () => {
+            knownIssuesModal.style.display = 'none';
+        });
     }
     
     // Changelog button
     const changelogBtn = document.getElementById('changelogBtn');
-    if (changelogBtn) {
-        changelogBtn.addEventListener('click', showChangelog);
+    const changelogModal = document.getElementById('changelogModal');
+    const closeChangelogModal = document.getElementById('closeChangelogModal');
+    if (changelogBtn && changelogModal) {
+        changelogBtn.addEventListener('click', () => {
+            changelogModal.style.display = 'flex';
+        });
+    }
+    if (closeChangelogModal && changelogModal) {
+        closeChangelogModal.addEventListener('click', () => {
+            changelogModal.style.display = 'none';
+        });
     }
     
-    // Gallery button
-    const galleryBtn = document.getElementById('galleryBtn');
-    if (galleryBtn) {
-        galleryBtn.addEventListener('click', showScreenshotGallery);
+    // Screenshot button
+    const screenshotBtn = document.getElementById('screenshotBtn');
+    if (screenshotBtn) {
+        screenshotBtn.addEventListener('click', takeScreenshot);
     }
     
     // Theme toggle button
@@ -720,61 +750,6 @@ function setupEventListeners() {
     
     // Hotkey modal
     closeHotkeyModalBtn.addEventListener('click', closeHotkeyHelp);
-    
-    // Known Issues modal close buttons
-    const closeKnownIssuesModal = document.getElementById('closeKnownIssuesModal');
-    const closeKnownIssuesModalBtn = document.getElementById('closeKnownIssuesModalBtn');
-    if (closeKnownIssuesModal) {
-        closeKnownIssuesModal.addEventListener('click', hideKnownIssues);
-    }
-    if (closeKnownIssuesModalBtn) {
-        closeKnownIssuesModalBtn.addEventListener('click', hideKnownIssues);
-    }
-    
-    // How To Guide modal close buttons
-    const closeHowToModal = document.getElementById('closeHowToModal');
-    const closeHowToModalBtn = document.getElementById('closeHowToModalBtn');
-    if (closeHowToModal)    closeHowToModal.addEventListener('click', hideHowTo);
-    if (closeHowToModalBtn) closeHowToModalBtn.addEventListener('click', hideHowTo);
-    const howToModal = document.getElementById('howToModal');
-    if (howToModal) {
-        howToModal.addEventListener('click', e => { if (e.target === howToModal) hideHowTo(); });
-    }
-    
-    // Gallery modal close buttons
-    const closeGalleryModal = document.getElementById('closeGalleryModal');
-    const closeGalleryModalBtn = document.getElementById('closeGalleryModalBtn');
-    if (closeGalleryModal) {
-        closeGalleryModal.addEventListener('click', hideScreenshotGallery);
-    }
-    if (closeGalleryModalBtn) {
-        closeGalleryModalBtn.addEventListener('click', hideScreenshotGallery);
-    }
-    
-    // Changelog modal close buttons
-    const closeChangelogModal = document.getElementById('closeChangelogModal');
-    const closeChangelogModalBtn = document.getElementById('closeChangelogModalBtn');
-    if (closeChangelogModal) {
-        closeChangelogModal.addEventListener('click', hideChangelog);
-    }
-    if (closeChangelogModalBtn) {
-        closeChangelogModalBtn.addEventListener('click', hideChangelog);
-    }
-    
-    // Player Import modal
-    const closePlayerImportModal = document.getElementById('closePlayerImportModal');
-    const cancelPlayerImportBtn  = document.getElementById('cancelPlayerImportBtn');
-    const confirmPlayerImportBtn = document.getElementById('confirmPlayerImportBtn');
-    if (closePlayerImportModal)  closePlayerImportModal.addEventListener('click', hidePlayerImportModal);
-    if (cancelPlayerImportBtn)   cancelPlayerImportBtn.addEventListener('click', hidePlayerImportModal);
-    if (confirmPlayerImportBtn)  confirmPlayerImportBtn.addEventListener('click', confirmPlayerImport);
-    
-    const playerImportModal = document.getElementById('playerImportModal');
-    if (playerImportModal) {
-        playerImportModal.addEventListener('click', e => {
-            if (e.target === playerImportModal) hidePlayerImportModal();
-        });
-    }
     
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyboardShortcut);
@@ -876,67 +851,6 @@ function closeHotkeyHelp() {
     hotkeyHelpModal.style.display = 'none';
 }
 
-// Known Issues modal functions
-function showKnownIssues() {
-    const modal = document.getElementById('knownIssuesModal');
-    if (modal) modal.style.display = 'flex';
-}
-
-function hideKnownIssues() {
-    const modal = document.getElementById('knownIssuesModal');
-    if (modal) modal.style.display = 'none';
-}
-
-// Click outside Known Issues modal to close
-const knownIssuesModal = document.getElementById('knownIssuesModal');
-if (knownIssuesModal) {
-    knownIssuesModal.addEventListener('click', (e) => {
-        if (e.target === knownIssuesModal) hideKnownIssues();
-    });
-}
-
-// How To Guide modal functions
-function showHowTo() {
-    const modal = document.getElementById('howToModal');
-    if (modal) modal.style.display = 'flex';
-    // Sync version label from the nav button so it always matches
-    const navVersion = document.querySelector('#changelogBtn .nav-text');
-    const howtoLabel = document.getElementById('howtoVersionLabel');
-    if (navVersion && howtoLabel) {
-        howtoLabel.textContent = navVersion.textContent.trim();
-    }
-}
-
-function hideHowTo() {
-    const modal = document.getElementById('howToModal');
-    if (modal) modal.style.display = 'none';
-}
-
-// Changelog modal functions
-function showChangelog() {
-    const modal = document.getElementById('changelogModal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
-
-function hideChangelog() {
-    const modal = document.getElementById('changelogModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// Click outside Changelog modal to close
-const changelogModal = document.getElementById('changelogModal');
-if (changelogModal) {
-    changelogModal.addEventListener('click', (e) => {
-        if (e.target === changelogModal) {
-            hideChangelog();
-        }
-    });
-}
-
 // Click outside modal to close
 hotkeyHelpModal.addEventListener('click', (e) => {
     if (e.target === hotkeyHelpModal) {
@@ -955,32 +869,82 @@ objectiveTypeModal.addEventListener('click', (e) => {
     }
 });
 
-// Handle objective type selection
-document.querySelectorAll('.objective-type-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const type = btn.dataset.type;
-        selectedObjectiveType = type;
-        placingMode = `objective-${type}`;
-        
-        // Close modal
-        objectiveTypeModal.style.display = 'none';
-        
-        // Activate placing mode
-        drawingMode = false;
-        addObjectiveBtn.classList.add('active');
-        addBossBtn.classList.remove('active');
-        addBlueTowerBtn.classList.remove('active');
-        addRedTowerBtn.classList.remove('active');
-        addBlueTreeBtn.classList.remove('active');
-        addRedTreeBtn.classList.remove('active');
-        addBlueGooseBtn.classList.remove('active');
-        addRedGooseBtn.classList.remove('active');
-        drawBtn.classList.remove('active');
-        mapArea.classList.remove('placing-mode', 'drawing-mode');
-        mapArea.classList.add('placing-mode');
-        drawingCanvas.classList.remove('active');
+// Map objective modal close
+if (closeMapObjectiveModal) {
+    closeMapObjectiveModal.addEventListener('click', () => {
+        if (mapObjectiveModal) mapObjectiveModal.style.display = 'none';
     });
-});
+}
+
+if (mapObjectiveModal) {
+    mapObjectiveModal.addEventListener('click', (e) => {
+        if (e.target === mapObjectiveModal) {
+            mapObjectiveModal.style.display = 'none';
+        }
+    });
+}
+
+// Handle objective type selection
+if (objectiveTypeModal) {
+    objectiveTypeModal.querySelectorAll('.objective-type-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const type = btn.dataset.type;
+            selectedObjectiveType = type;
+            placingMode = `objective-${type}`;
+            
+            // Close modal
+            objectiveTypeModal.style.display = 'none';
+            
+            // Activate placing mode
+            drawingMode = false;
+            addObjectiveBtn.classList.add('active');
+            addBossBtn.classList.remove('active');
+            addBlueTowerBtn.classList.remove('active');
+            addRedTowerBtn.classList.remove('active');
+            addBlueTreeBtn.classList.remove('active');
+            addRedTreeBtn.classList.remove('active');
+            addBlueGooseBtn.classList.remove('active');
+            addRedGooseBtn.classList.remove('active');
+            drawBtn.classList.remove('active');
+            mapArea.classList.remove('placing-mode', 'drawing-mode');
+            mapArea.classList.add('placing-mode');
+            drawingCanvas.classList.remove('active');
+        });
+    });
+}
+
+// Handle map objective selection
+if (mapObjectiveModal) {
+    mapObjectiveModal.querySelectorAll('.map-objective-modal-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const type = btn.dataset.type;
+            mapObjectiveModal.style.display = 'none';
+            switch (type) {
+                case 'boss':
+                    if (placingMode !== 'boss') toggleBossMode();
+                    break;
+                case 'blue-tower':
+                    if (placingMode !== 'blue-tower') toggleBlueTowerMode();
+                    break;
+                case 'red-tower':
+                    if (placingMode !== 'red-tower') toggleRedTowerMode();
+                    break;
+                case 'blue-tree':
+                    if (placingMode !== 'blue-tree') toggleBlueTreeMode();
+                    break;
+                case 'red-tree':
+                    if (placingMode !== 'red-tree') toggleRedTreeMode();
+                    break;
+                case 'blue-goose':
+                    if (placingMode !== 'blue-goose') toggleBlueGooseMode();
+                    break;
+                case 'red-goose':
+                    if (placingMode !== 'red-goose') toggleRedGooseMode();
+                    break;
+            }
+        });
+    });
+}
 
 function deactivatePlacingMode() {
     placingMode = null;
@@ -1391,17 +1355,53 @@ function updateGroupsAfterMemberPlacement(memberId) {
 }
 
 // Toggle objective placing mode
+function resetRoleObjectiveButtons() {
+    addHealerObjectiveBtn.classList.remove('active');
+    addTankObjectiveBtn.classList.remove('active');
+    addDPSObjectiveBtn.classList.remove('active');
+}
+
+function deactivateObjectivePlacement() {
+    placingMode = null;
+    selectedObjectiveType = null;
+    addObjectiveBtn.classList.remove('active');
+    resetRoleObjectiveButtons();
+    mapArea.classList.remove('placing-mode');
+}
+
 function toggleObjectiveMode() {
     if (placingMode && placingMode.startsWith('objective-')) {
         // Deactivate
-        placingMode = null;
-        selectedObjectiveType = null;
-        addObjectiveBtn.classList.remove('active');
-        mapArea.classList.remove('placing-mode');
+        deactivateObjectivePlacement();
     } else {
         // Show objective type selection modal
         objectiveTypeModal.style.display = 'flex';
     }
+}
+
+function toggleRoleObjectiveMode(type, button) {
+    if (placingMode === `objective-${type}`) {
+        deactivateObjectivePlacement();
+        button.classList.remove('active');
+        return;
+    }
+
+    placingMode = `objective-${type}`;
+    selectedObjectiveType = type;
+    addObjectiveBtn.classList.remove('active');
+    addBossBtn.classList.remove('active');
+    addBlueTowerBtn.classList.remove('active');
+    addRedTowerBtn.classList.remove('active');
+    addBlueTreeBtn.classList.remove('active');
+    addRedTreeBtn.classList.remove('active');
+    addBlueGooseBtn.classList.remove('active');
+    addRedGooseBtn.classList.remove('active');
+    drawBtn.classList.remove('active');
+    resetRoleObjectiveButtons();
+    button.classList.add('active');
+    mapArea.classList.remove('drawing-mode');
+    mapArea.classList.add('placing-mode');
+    drawingCanvas.classList.remove('active');
 }
 
 // Toggle boss placing mode
@@ -1417,6 +1417,7 @@ function toggleBossMode() {
         drawingMode = false;
         addBossBtn.classList.add('active');
         addObjectiveBtn.classList.remove('active');
+        resetRoleObjectiveButtons();
         addBlueTowerBtn.classList.remove('active');
         addRedTowerBtn.classList.remove('active');
         addBlueTreeBtn.classList.remove('active');
@@ -1445,6 +1446,7 @@ function toggleBlueTowerMode() {
         addBlueTowerBtn.classList.add('active');
         addObjectiveBtn.classList.remove('active');
         addBossBtn.classList.remove('active');
+        resetRoleObjectiveButtons();
         addRedTowerBtn.classList.remove('active');
         addBlueTreeBtn.classList.remove('active');
         addRedTreeBtn.classList.remove('active');
@@ -1471,6 +1473,7 @@ function toggleRedTowerMode() {
         addRedTowerBtn.classList.add('active');
         addObjectiveBtn.classList.remove('active');
         addBossBtn.classList.remove('active');
+        resetRoleObjectiveButtons();
         addBlueTowerBtn.classList.remove('active');
         addBlueTreeBtn.classList.remove('active');
         addRedTreeBtn.classList.remove('active');
@@ -1497,6 +1500,7 @@ function toggleBlueTreeMode() {
         addBlueTreeBtn.classList.add('active');
         addObjectiveBtn.classList.remove('active');
         addBossBtn.classList.remove('active');
+        resetRoleObjectiveButtons();
         addBlueTowerBtn.classList.remove('active');
         addRedTowerBtn.classList.remove('active');
         addRedTreeBtn.classList.remove('active');
@@ -1525,6 +1529,7 @@ function toggleRedTreeMode() {
         addRedTreeBtn.classList.add('active');
         addObjectiveBtn.classList.remove('active');
         addBossBtn.classList.remove('active');
+        resetRoleObjectiveButtons();
         addBlueTowerBtn.classList.remove('active');
         addRedTowerBtn.classList.remove('active');
         addBlueTreeBtn.classList.remove('active');
@@ -1612,6 +1617,15 @@ function placeObjectiveMarker(x, y, type = 'enemy-dps') {
         case 'no':
             markerContent = '<div class="objective-icon">❌</div>';
             break;
+        case 'healer':
+            markerContent = '<img src="images/healer.png" alt="Healer" draggable="false">';
+            break;
+        case 'tank':
+            markerContent = '<img src="images/tank.png" alt="Tank" draggable="false">';
+            break;
+        case 'dps':
+            markerContent = '<img src="images/dps.png" alt="DPS" draggable="false">';
+            break;
         // Legacy support for old marker types
         case 'eh-marker':
             markerContent = '<div class="objective-icon">⚔️</div>';
@@ -1624,6 +1638,7 @@ function placeObjectiveMarker(x, y, type = 'enemy-dps') {
     }
     
     marker.innerHTML = `
+        <div class="role-radius"></div>
         ${markerContent}
         <button class="remove-btn" onclick="removeObjectiveMarker('${objectiveId}')">×</button>
     `;
@@ -2069,12 +2084,11 @@ function toggleBlueGooseMode() {
         addBlueGooseBtn.classList.add('active');
         addObjectiveBtn.classList.remove('active');
         addBossBtn.classList.remove('active');
+        resetRoleObjectiveButtons();
         addBlueTowerBtn.classList.remove('active');
         addRedTowerBtn.classList.remove('active');
         addBlueTreeBtn.classList.remove('active');
         addRedTreeBtn.classList.remove('active');
-    addBlueGooseBtn.classList.remove('active');
-    addRedGooseBtn.classList.remove('active');
         addRedGooseBtn.classList.remove('active');
         drawBtn.classList.remove('active');
         mapArea.classList.remove('placing-mode', 'drawing-mode');
@@ -2095,12 +2109,11 @@ function toggleRedGooseMode() {
         addRedGooseBtn.classList.add('active');
         addObjectiveBtn.classList.remove('active');
         addBossBtn.classList.remove('active');
+        resetRoleObjectiveButtons();
         addBlueTowerBtn.classList.remove('active');
         addRedTowerBtn.classList.remove('active');
         addBlueTreeBtn.classList.remove('active');
         addRedTreeBtn.classList.remove('active');
-    addBlueGooseBtn.classList.remove('active');
-    addRedGooseBtn.classList.remove('active');
         addBlueGooseBtn.classList.remove('active');
         drawBtn.classList.remove('active');
         mapArea.classList.remove('placing-mode', 'drawing-mode');
@@ -2569,6 +2582,7 @@ function toggleDrawingMode() {
         drawBtn.classList.add('active');
         addObjectiveBtn.classList.remove('active');
         addBossBtn.classList.remove('active');
+        resetRoleObjectiveButtons();
         addBlueTowerBtn.classList.remove('active');
         addRedTowerBtn.classList.remove('active');
         addBlueTreeBtn.classList.remove('active');
@@ -2742,6 +2756,10 @@ function handleAutoDeleteToggle(e) {
     }
 }
 
+function handleRadiusToggle(e) {
+    mapArea.classList.toggle('show-role-radius', e.target.checked);
+}
+
 // Schedule path deletion
 function schedulePathDeletion(index, delay = AUTO_DELETE_DELAY) {
     const timer = setTimeout(() => {
@@ -2893,6 +2911,7 @@ function placeMemberOnMap(member, x, y) {
     const displayTeamName = getTeamDisplayName(member.team);
     
     marker.innerHTML = `
+        <div class="role-radius"></div>
         <div class="member-name">${member.name}</div>
         <div class="marker-tooltip">
             <div class="tooltip-info">${member.role} | ${displayTeamName || 'No Team'}</div>
@@ -3172,6 +3191,7 @@ function renderMap() {
         }
         
         marker.innerHTML = `
+            <div class="role-radius"></div>
             ${markerContent}
             <button class="remove-btn" onclick="removeObjectiveMarker('${obj.id}')">×</button>
         `;
@@ -3469,375 +3489,6 @@ function renderMap() {
     updatePlaceholder();
 }
 
-// Screenshot gallery storage
-let screenshotGallery = [];
-const MAX_SCREENSHOTS = 10;
-
-// Take screenshot of map
-// Take screenshot of map
-function takeMapScreenshot() {
-    if (typeof html2canvas === 'undefined') {
-        alert('Screenshot library not loaded. Please refresh the page.');
-        return;
-    }
-
-    screenshotBtn.disabled = true;
-    screenshotBtn.innerHTML = '<span class="btn-icon">⏳</span>';
-
-    const removeButtons = mapArea.querySelectorAll('.remove-btn');
-    const tooltips = mapArea.querySelectorAll('.member-tooltip, .group-tooltip');
-    removeButtons.forEach(b => b.style.display = 'none');
-    tooltips.forEach(t => t.style.display = 'none');
-
-    function finish(blob) {
-        removeButtons.forEach(b => b.style.display = '');
-        tooltips.forEach(t => t.style.display = '');
-        screenshotBtn.disabled = false;
-        screenshotBtn.innerHTML = '<span class="btn-icon">📸</span>';
-
-        if (!blob) { alert('Screenshot failed. Please try again.'); return; }
-
-        const reader = new FileReader();
-        reader.onload = e => {
-            screenshotGallery.unshift({ id: Date.now(), dataUrl: e.target.result, timestamp: new Date() });
-            if (screenshotGallery.length > MAX_SCREENSHOTS) screenshotGallery = screenshotGallery.slice(0, MAX_SCREENSHOTS);
-            saveScreenshotGallery();
-            updateGalleryBadge();
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.download = `GvG-Strategy-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.png`;
-            link.href = url;
-            link.click();
-            setTimeout(() => URL.revokeObjectURL(url), 200);
-            showNotification('Screenshot saved to gallery!', 'success');
-        };
-        reader.readAsDataURL(blob);
-    }
-
-    // Step 1: load map image as data URL to avoid CORS taint
-    const img = new Image();
-    const mapStyle = window.getComputedStyle(mapArea);
-    const bgUrl = mapStyle.backgroundImage.replace(/url\(["']?|["']?\)/g, '');
-
-    function captureWithCanvas(mapDataUrl) {
-        setTimeout(() => {
-            const rect = mapArea.getBoundingClientRect();
-            const W = rect.width;
-            const H = rect.height;
-            const scale = 2;
-
-            // Create offscreen canvas
-            const offscreen = document.createElement('canvas');
-            offscreen.width = W * scale;
-            offscreen.height = H * scale;
-            const ctx = offscreen.getContext('2d');
-            ctx.scale(scale, scale);
-
-            // Draw dark background
-            ctx.fillStyle = '#1a1a2e';
-            ctx.fillRect(0, 0, W, H);
-
-            function drawMarkersAndSave() {
-                // Use html2canvas on mapArea with background stripped, then composite
-                html2canvas(mapArea, {
-                    backgroundColor: null,
-                    scale: scale,
-                    logging: false,
-                    useCORS: false,
-                    allowTaint: false,
-                    width: Math.floor(W),
-                    height: Math.floor(H),
-                    onclone: (doc) => {
-                        const cloned = doc.getElementById('mapArea');
-                        if (cloned) {
-                            cloned.style.backgroundImage = 'none';
-                            cloned.style.background = 'transparent';
-                        }
-                    }
-                }).then(markersCanvas => {
-                    // Final composite: background + map image + markers
-                    const final = document.createElement('canvas');
-                    final.width = W * scale;
-                    final.height = H * scale;
-                    const fctx = final.getContext('2d');
-
-                    // 1. Dark bg
-                    fctx.fillStyle = '#1a1a2e';
-                    fctx.fillRect(0, 0, final.width, final.height);
-
-                    // 2. Map image (if loaded)
-                    if (mapDataUrl) {
-                        const mImg = new Image();
-                        mImg.onload = () => {
-                            // Draw map image centered with contain scaling
-                            const iw = mImg.naturalWidth, ih = mImg.naturalHeight;
-                            const fw = final.width, fh = final.height;
-                            const ratio = Math.min(fw / iw, fh / ih);
-                            const dw = iw * ratio, dh = ih * ratio;
-                            const dx = (fw - dw) / 2, dy = (fh - dh) / 2;
-                            fctx.drawImage(mImg, dx, dy, dw, dh);
-
-                            // 3. Markers on top
-                            fctx.drawImage(markersCanvas, 0, 0);
-                            final.toBlob(finish, 'image/png');
-                        };
-                        mImg.onerror = () => {
-                            fctx.drawImage(markersCanvas, 0, 0);
-                            final.toBlob(finish, 'image/png');
-                        };
-                        mImg.src = mapDataUrl;
-                    } else {
-                        fctx.drawImage(markersCanvas, 0, 0);
-                        final.toBlob(finish, 'image/png');
-                    }
-                }).catch(err => {
-                    console.error('html2canvas error:', err);
-                    removeButtons.forEach(b => b.style.display = '');
-                    tooltips.forEach(t => t.style.display = '');
-                    screenshotBtn.disabled = false;
-                    screenshotBtn.innerHTML = '<span class="btn-icon">📸</span>';
-                    alert('Screenshot failed: ' + err.message);
-                });
-            }
-
-            drawMarkersAndSave();
-        }, 150);
-    }
-
-    if (bgUrl && bgUrl !== 'none') {
-        fetch(bgUrl)
-            .then(r => r.blob())
-            .then(blob => {
-                const r = new FileReader();
-                r.onload = e => captureWithCanvas(e.target.result);
-                r.readAsDataURL(blob);
-            })
-            .catch(() => captureWithCanvas(null)); // If fetch fails, skip map bg
-    } else {
-        captureWithCanvas(null);
-    }
-}
-
-
-function saveScreenshotGallery() {
-    try {
-        const galleryData = screenshotGallery.map(item => ({
-            id: item.id,
-            dataUrl: item.dataUrl,
-            timestamp: item.timestamp.toISOString()
-        }));
-        localStorage.setItem('mightylabs-screenshot-gallery', JSON.stringify(galleryData));
-    } catch (e) {
-        console.error('Failed to save gallery:', e);
-    }
-}
-
-// Load gallery from localStorage
-function loadScreenshotGallery() {
-    try {
-        const saved = localStorage.getItem('mightylabs-screenshot-gallery');
-        if (saved) {
-            const galleryData = JSON.parse(saved);
-            screenshotGallery = galleryData.map(item => ({
-                id: item.id,
-                dataUrl: item.dataUrl,
-                timestamp: new Date(item.timestamp),
-                blob: null // Will regenerate if needed
-            }));
-        }
-    } catch (e) {
-        console.error('Failed to load gallery:', e);
-    }
-}
-
-// Update gallery badge count
-function updateGalleryBadge() {
-    const badge = document.querySelector('.gallery-badge');
-    if (badge) {
-        badge.textContent = screenshotGallery.length;
-        badge.style.display = screenshotGallery.length > 0 ? 'flex' : 'none';
-    }
-}
-
-// Show screenshot gallery
-function showScreenshotGallery() {
-    const modal = document.getElementById('screenshotGalleryModal');
-    if (!modal) return;
-    renderGalleryGrid();
-    modal.style.display = 'flex';
-}
-
-function renderGalleryGrid() {
-    const container = document.getElementById('galleryContainer');
-    if (!container) return;
-    container.innerHTML = '';
-
-    if (screenshotGallery.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#888;padding:40px 20px;grid-column:1/-1">No screenshots yet.<br>Take some screenshots to see them here!</p>';
-        return;
-    }
-
-    screenshotGallery.forEach((shot, index) => {
-        const item = document.createElement('div');
-        item.className = 'gallery-item';
-        item.title = 'Click to view';
-        item.innerHTML = `
-            <img src="${shot.dataUrl}" alt="Screenshot ${index + 1}" loading="lazy">
-            <div class="gallery-item-info">
-                <span class="gallery-timestamp">${formatTimestamp(shot.timestamp)}</span>
-                <button class="gallery-delete-btn" title="Delete">🗑️</button>
-            </div>
-        `;
-        // Whole card opens lightbox
-        item.querySelector('img').addEventListener('click', () => openLightbox(index));
-        item.querySelector('.gallery-item-info').addEventListener('click', (e) => {
-            if (!e.target.classList.contains('gallery-delete-btn')) openLightbox(index);
-        });
-        item.querySelector('.gallery-delete-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            deleteScreenshot(index);
-        });
-        container.appendChild(item);
-    });
-}
-
-function formatTimestamp(date) {
-    if (!(date instanceof Date)) date = new Date(date);
-    const diff = Date.now() - date;
-    const m = Math.floor(diff / 60000);
-    const h = Math.floor(diff / 3600000);
-    const d = Math.floor(diff / 86400000);
-    if (m < 1)  return 'Just now';
-    if (m < 60) return m + 'm ago';
-    if (h < 24) return h + 'h ago';
-    if (d < 7)  return d + 'd ago';
-    return date.toLocaleDateString();
-}
-
-// ---- Lightbox ----
-let lightboxIndex = 0;
-
-function openLightbox(index) {
-    lightboxIndex = index;
-    const overlay = document.getElementById('lightboxOverlay');
-    overlay.classList.add('open');
-    updateLightbox();
-    // Close gallery modal so lightbox can be seen
-    const gm = document.getElementById('screenshotGalleryModal');
-    if (gm) gm.style.display = 'none';
-}
-
-function updateLightbox() {
-    const shot = screenshotGallery[lightboxIndex];
-    if (!shot) return;
-    document.getElementById('lightboxImg').src = shot.dataUrl;
-    document.getElementById('lightboxCounter').textContent =
-        (lightboxIndex + 1) + ' / ' + screenshotGallery.length;
-}
-
-function closeLightbox() {
-    document.getElementById('lightboxOverlay').classList.remove('open');
-    // Re-open gallery
-    showScreenshotGallery();
-}
-
-function lightboxPrev() {
-    if (screenshotGallery.length === 0) return;
-    lightboxIndex = (lightboxIndex - 1 + screenshotGallery.length) % screenshotGallery.length;
-    updateLightbox();
-}
-
-function lightboxNext() {
-    if (screenshotGallery.length === 0) return;
-    lightboxIndex = (lightboxIndex + 1) % screenshotGallery.length;
-    updateLightbox();
-}
-
-// Wire up lightbox controls once DOM ready
-(function initLightbox() {
-    function setup() {
-        const overlay = document.getElementById('lightboxOverlay');
-        if (!overlay) { setTimeout(setup, 100); return; }
-        document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
-        document.getElementById('lightboxPrev').addEventListener('click', lightboxPrev);
-        document.getElementById('lightboxNext').addEventListener('click', lightboxNext);
-        document.getElementById('lightboxDownload').addEventListener('click', () => {
-            const shot = screenshotGallery[lightboxIndex];
-            if (!shot) return;
-            const link = document.createElement('a');
-            link.download = 'GvG-Strategy-' + formatTimestamp(shot.timestamp).replace(/ /g,'-') + '.png';
-            link.href = shot.dataUrl;
-            link.click();
-        });
-        // Click outside image closes lightbox
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) closeLightbox();
-        });
-        // Arrow keys
-        document.addEventListener('keydown', (e) => {
-            if (!overlay.classList.contains('open')) return;
-            if (e.key === 'ArrowLeft')  lightboxPrev();
-            if (e.key === 'ArrowRight') lightboxNext();
-            if (e.key === 'Escape')     closeLightbox();
-        });
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setup);
-    } else {
-        setup();
-    }
-})();
-
-function downloadScreenshot(index) {
-    const shot = screenshotGallery[index];
-    if (!shot) return;
-    const link = document.createElement('a');
-    link.download = 'GvG-Strategy-' + formatTimestamp(shot.timestamp).replace(/ /g,'-') + '.png';
-    link.href = shot.dataUrl;
-    link.click();
-}
-
-function deleteScreenshot(index) {
-    screenshotGallery.splice(index, 1);
-    saveScreenshotGallery();
-    updateGalleryBadge();
-    renderGalleryGrid();
-    showNotification('Screenshot deleted', 'info');
-}
-
-function hideScreenshotGallery() {
-    const modal = document.getElementById('screenshotGalleryModal');
-    if (modal) modal.style.display = 'none';
-}
-
-
-// Show notification
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = message;
-    notification.style.cssText = `
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        background: ${type === 'success' ? '#2ecc71' : '#667eea'};
-        color: white;
-        padding: 15px 25px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 100000;
-        font-weight: 600;
-        animation: slideIn 0.3s ease-out;
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease-out';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
-
 // Export positions
 function exportPositions() {
     // Show progress indicator
@@ -3978,210 +3629,6 @@ function hideExportProgress() {
 // Import strategy from JSON file
 function importPositions() {
     importFileInput.click();
-}
-
-// ============================================================================
-// PLAYER ROSTER IMPORT (CSV / XLSX)
-// ============================================================================
-
-let pendingImportedPlayers = []; // Holds parsed players waiting for user confirm
-
-function handlePlayersFileImport(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    importPlayersFileInput.value = '';
-    
-    const ext = file.name.split('.').pop().toLowerCase();
-    
-    if (ext === 'csv') {
-        const reader = new FileReader();
-        reader.onload = e => parseAndPreviewPlayers(e.target.result, 'csv');
-        reader.onerror = () => alert('Failed to read CSV file. Please try again.');
-        reader.readAsText(file);
-    } else if (ext === 'xlsx' || ext === 'xls') {
-        const reader = new FileReader();
-        reader.onload = e => parseAndPreviewPlayers(e.target.result, 'xlsx');
-        reader.onerror = () => alert('Failed to read Excel file. Please try again.');
-        reader.readAsArrayBuffer(file);
-    } else {
-        alert('Unsupported file type. Please use .csv, .xlsx, or .xls');
-    }
-}
-
-function parseAndPreviewPlayers(data, type) {
-    try {
-    let rows = [];
-    
-    if (type === 'csv') {
-        // Parse CSV
-        const lines = data.trim().split('\n');
-        const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
-        
-        for (let i = 1; i < lines.length; i++) {
-            const vals = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-            if (vals.every(v => !v)) continue; // skip empty rows
-            const row = {};
-            headers.forEach((h, idx) => { row[h] = vals[idx] || ''; });
-            rows.push(row);
-        }
-    } else {
-        // Parse XLSX using SheetJS
-        if (typeof XLSX === 'undefined') {
-            alert('Excel library not loaded. Please refresh and try again.');
-            return;
-        }
-        const wb = XLSX.read(data, { type: 'array' });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const rawRows = XLSX.utils.sheet_to_json(ws, { defval: '' });
-        // Normalise keys to lowercase
-        rows = rawRows.map(r => {
-            const norm = {};
-            Object.entries(r).forEach(([k, v]) => { norm[k.toLowerCase().trim()] = String(v).trim(); });
-            return norm;
-        });
-    }
-    
-    if (rows.length === 0) {
-        alert('No data found in file. Please check your file and try again.');
-        return;
-    }
-    
-    // Map flexible column names
-    const COLUMN_ALIASES = {
-        name:    ['name', 'player', 'playername', 'player name', 'ign', 'username'],
-        role:    ['role', 'class', 'type', 'position'],
-        team:    ['team', 'group', 'squad', 'teamname', 'team name'],
-        weapon1: ['weapon1', 'weapon 1', 'w1', 'main weapon', 'primary', 'weapon'],
-        weapon2: ['weapon2', 'weapon 2', 'w2', 'off weapon', 'secondary', 'offhand'],
-    };
-    
-    function findCol(row, aliases) {
-        const keys = Object.keys(row).map(k => k.toLowerCase());
-        for (const alias of aliases) {
-            const match = keys.find(k => k === alias || k.includes(alias));
-            if (match) return row[match] || '';
-        }
-        return '';
-    }
-    
-    // Validate roles
-    const VALID_ROLES = ['Tank', 'DPS', 'Healer', 'Support'];
-    function normaliseRole(raw) {
-        if (!raw) return 'DPS';
-        const r = raw.trim();
-        const match = VALID_ROLES.find(v => v.toLowerCase() === r.toLowerCase());
-        return match || 'DPS';
-    }
-    
-    // Build player objects
-    pendingImportedPlayers = rows.map((row, i) => ({
-        id: `imported-${Date.now()}-${i}`,
-        name: findCol(row, COLUMN_ALIASES.name) || `Player${i+1}`,
-        role: normaliseRole(findCol(row, COLUMN_ALIASES.role)),
-        team: findCol(row, COLUMN_ALIASES.team) || '',
-        weapon1: findCol(row, COLUMN_ALIASES.weapon1) || '',
-        weapon2: findCol(row, COLUMN_ALIASES.weapon2) || '',
-        placed: false
-    })).filter(p => p.name);
-    
-    if (pendingImportedPlayers.length === 0) {
-        alert('Could not find any valid players. Make sure your file has a "Name" column.');
-        return;
-    }
-    
-    showPlayerImportPreview(pendingImportedPlayers, rows[0]);
-    } catch(err) {
-        console.error('Player import error:', err);
-        alert('Import failed: ' + err.message + '\n\nCheck the browser console for details.');
-    }
-}
-
-function showPlayerImportPreview(players, sampleRow) {
-    const modal = document.getElementById('playerImportModal');
-    const info  = document.getElementById('importPreviewInfo');
-    const table = document.getElementById('importPreviewTable');
-    
-    if (!modal || !info || !table) {
-        alert('Import preview modal not found. Please refresh the page.');
-        return;
-    }
-    
-    // Count unique teams (use TEAM_ORDER as the reference, not undefined teamNames)
-    const teams = [...new Set(players.map(p => p.team).filter(t => t && t.toLowerCase() !== 'unassigned' && t !== ''))];
-    const newTeams = teams.filter(t => !TEAM_ORDER.includes(t));
-    
-    info.innerHTML = `
-        <strong>${players.length}</strong> players found &nbsp;|&nbsp;
-        <strong>${teams.length}</strong> teams found &nbsp;|&nbsp;
-        ${newTeams.length > 0 
-            ? `<span style="color:#f39c12">⚠️ ${newTeams.length} new team(s) will be added: <strong>${newTeams.join(', ')}</strong></span>` 
-            : '<span style="color:#2ecc71">✅ All teams match existing groups</span>'}
-        <br><br>
-        <span style="color:#999; font-size:0.85rem;">
-            Detected columns: ${Object.keys(sampleRow).join(', ')}
-        </span>
-    `;
-    
-    // Build preview table (max 50 rows shown)
-    const preview = players.slice(0, 50);
-    table.innerHTML = `
-        <div class="import-preview-table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Role</th>
-                        <th>Team</th>
-                        <th>Weapon 1</th>
-                        <th>Weapon 2</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${preview.map((p, i) => `
-                        <tr>
-                            <td style="color:#666">${i+1}</td>
-                            <td><strong>${p.name}</strong></td>
-                            <td><span class="role-chip ${p.role}">${p.role}</span></td>
-                            <td>${p.team || '<span style="color:#666">—</span>'}</td>
-                            <td>${p.weapon1 || '<span style="color:#666">—</span>'}</td>
-                            <td>${p.weapon2 || '<span style="color:#666">—</span>'}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-            ${players.length > 50 ? `<p style="text-align:center;color:#666;padding:10px">...and ${players.length - 50} more</p>` : ''}
-        </div>
-    `;
-    
-    modal.style.display = 'flex';
-}
-
-function confirmPlayerImport() {
-    if (!pendingImportedPlayers.length) return;
-    
-    // Replace members array with imported players, giving each a unique numeric id
-    members = pendingImportedPlayers.map((p, i) => ({
-        ...p,
-        id: i + 1,  // numeric id starting at 1
-        placed: false
-    }));
-    
-    // Re-render everything
-    renderMemberList();
-    updateCounts();
-    
-    // Close modal
-    document.getElementById('playerImportModal').style.display = 'none';
-    pendingImportedPlayers = [];
-    
-    const importedTeams = [...new Set(members.map(p => p.team).filter(t => t && t.toLowerCase() !== 'unassigned'))];
-    showNotification(`✅ Imported ${members.length} players across ${importedTeams.length} teams!`, 'success');
-}
-
-function hidePlayerImportModal() {
-    document.getElementById('playerImportModal').style.display = 'none';
-    pendingImportedPlayers = [];
 }
 
 function handleImportFile(event) {
@@ -4649,6 +4096,21 @@ function setupPlayerManagementHandlers() {
         if (e.target === playerEditModal) {
             closePlayerEditModal();
         }
+        // Close How To modal
+        const howToModal = document.getElementById('howToModal');
+        if (e.target === howToModal) {
+            howToModal.style.display = 'none';
+        }
+        // Close Known Issues modal
+        const knownIssuesModal = document.getElementById('knownIssuesModal');
+        if (e.target === knownIssuesModal) {
+            knownIssuesModal.style.display = 'none';
+        }
+        // Close Changelog modal
+        const changelogModal = document.getElementById('changelogModal');
+        if (e.target === changelogModal) {
+            changelogModal.style.display = 'none';
+        }
     });
     
     // Add new player button
@@ -4927,6 +4389,47 @@ function updatePlacedPlayerInfo(playerId) {
 // UTILITY FUNCTIONS
 // ============================================================================
 
+// Screenshot functionality
+function takeScreenshot() {
+    const mapArea = document.getElementById('mapArea');
+    if (!mapArea) {
+        console.error('Map area not found');
+        return;
+    }
+    
+    // Show loading state
+    const originalText = screenshotBtn.innerHTML;
+    screenshotBtn.innerHTML = '📸 Taking Screenshot...';
+    screenshotBtn.disabled = true;
+    
+    html2canvas(mapArea, {
+        backgroundColor: '#0f0f1e',
+        scale: 2, // Higher quality
+        logging: false,
+        useCORS: true
+    }).then(canvas => {
+        // Create download link
+        canvas.toBlob(blob => {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            link.download = `GvG-Strategy-${timestamp}.png`;
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            // Reset button
+            screenshotBtn.innerHTML = originalText;
+            screenshotBtn.disabled = false;
+        });
+    }).catch(error => {
+        console.error('Screenshot failed:', error);
+        alert('Failed to take screenshot. Please try again.');
+        screenshotBtn.innerHTML = originalText;
+        screenshotBtn.disabled = false;
+    });
+}
+
 // Panel toggle functionality
 function savePlayersToStorage() {
     // DISABLED - Players are always loaded fresh from data.js
@@ -5021,5 +4524,7 @@ function loadThemePreference() {
     */
 }
 
-// Initialize on load
-init();
+// Initialize when window loads - ensures all DOM elements are ready
+window.addEventListener('load', function() {
+    init();
+});
