@@ -41,7 +41,7 @@ const MAX_ENEMIES = 30;
 const ENEMIES_PER_CLICK = 5;
 const GROUP_MERGE_DISTANCE = 80;
 const AUTO_DELETE_DELAY = 10000;
-const TEAM_ORDER = ['FLEX', 'ATTACK', 'DEFENCE', 'TOP JUNGLE', 'BOT JUNGLE', 'GATE KEEPERS', 'BOSS TEAM', 'ASSASSINS'];
+const TEAM_ORDER = ['Team 1', 'Team 2', 'Team 3', 'Team 4', 'Team 5', 'Team 6', 'FLEX', 'ATTACK', 'DEFENCE', 'TOP JUNGLE', 'BOT JUNGLE', 'GATE KEEPERS', 'BOSS TEAM', 'ASSASSINS'];
 // Add after TEAM_ORDER constant
 
 // Custom team name mappings
@@ -750,6 +750,39 @@ function setupEventListeners() {
     
     // Hotkey modal
     closeHotkeyModalBtn.addEventListener('click', closeHotkeyHelp);
+    
+    // Additional modal footer close buttons (Got it / Close) - ensure they hide the modals
+    const closeKnownIssuesModalBtn = document.getElementById('closeKnownIssuesModalBtn');
+    if (closeKnownIssuesModalBtn && knownIssuesModal) {
+        closeKnownIssuesModalBtn.addEventListener('click', () => { knownIssuesModal.style.display = 'none'; });
+    }
+
+    const closeHowToModalBtn = document.getElementById('closeHowToModalBtn');
+    if (closeHowToModalBtn && howToModal) {
+        closeHowToModalBtn.addEventListener('click', () => { howToModal.style.display = 'none'; });
+    }
+
+    const closeGalleryModalBtn = document.getElementById('closeGalleryModalBtn');
+    const screenshotGalleryModal = document.getElementById('screenshotGalleryModal');
+    if (closeGalleryModalBtn && screenshotGalleryModal) {
+        closeGalleryModalBtn.addEventListener('click', () => { screenshotGalleryModal.style.display = 'none'; });
+    }
+
+    const closeChangelogModalBtn = document.getElementById('closeChangelogModalBtn');
+    if (closeChangelogModalBtn && changelogModal) {
+        closeChangelogModalBtn.addEventListener('click', () => { changelogModal.style.display = 'none'; });
+    }
+
+    // Player import modal close handlers
+    const playerImportModal = document.getElementById('playerImportModal');
+    const closePlayerImportModal = document.getElementById('closePlayerImportModal');
+    const cancelPlayerImportBtn = document.getElementById('cancelPlayerImportBtn');
+    if (closePlayerImportModal && playerImportModal) {
+        closePlayerImportModal.addEventListener('click', () => { playerImportModal.style.display = 'none'; });
+    }
+    if (cancelPlayerImportBtn && playerImportModal) {
+        cancelPlayerImportBtn.addEventListener('click', () => { playerImportModal.style.display = 'none'; });
+    }
     
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyboardShortcut);
