@@ -14,6 +14,7 @@ let placedRedTrees = [];
 let placedBlueGeese = [];
 let placedRedGeese = [];
 let placedEnemies = [];
+let placedArrows = [];
 
 // UI State
 let filteredMembers = [...members];
@@ -141,6 +142,7 @@ const addRedTreeBtn = document.getElementById('addRedTreeBtn');
 const addBlueGooseBtn = document.getElementById('addBlueGooseBtn');
 const addRedGooseBtn = document.getElementById('addRedGooseBtn');
 const drawBtn = document.getElementById('drawBtn');
+const arrowBtn = document.getElementById('arrowBtn');
 const clearDrawBtn = document.getElementById('clearDrawBtn');
 const undoDrawBtn = document.getElementById('undoDrawBtn');
 const redoDrawBtn = document.getElementById('redoDrawBtn');
@@ -628,6 +630,10 @@ function setupEventListeners() {
     mapArea.addEventListener('dragleave', handleDragLeave);
     mapArea.addEventListener('drop', handleDrop);
     mapArea.addEventListener('click', handleMapClick);
+    mapArea.addEventListener('mousedown', handleMapMouseDown);
+    mapArea.addEventListener('mousemove', handleMapMouseMove);
+    mapArea.addEventListener('mouseup', handleMapMouseUp);
+    mapArea.addEventListener('mouseleave', handleMapMouseLeave);
     
     // Search functionality
     searchInput.addEventListener('input', handleSearch);
@@ -647,9 +653,6 @@ function setupEventListeners() {
     addHealerObjectiveBtn.addEventListener('click', () => toggleRoleObjectiveMode('healer', addHealerObjectiveBtn));
     addTankObjectiveBtn.addEventListener('click', () => toggleRoleObjectiveMode('tank', addTankObjectiveBtn));
     addDPSObjectiveBtn.addEventListener('click', () => toggleRoleObjectiveMode('dps', addDPSObjectiveBtn));
-    addMapObjectiveBtn.addEventListener('click', () => {
-        if (mapObjectiveModal) mapObjectiveModal.style.display = 'flex';
-    });
     addBossBtn.addEventListener('click', toggleBossMode);
     addBlueTowerBtn.addEventListener('click', toggleBlueTowerMode);
     addRedTowerBtn.addEventListener('click', toggleRedTowerMode);
@@ -660,13 +663,16 @@ function setupEventListeners() {
     
     // Drawing buttons
     drawBtn.addEventListener('click', toggleDrawingMode);
+    arrowBtn.addEventListener('click', toggleArrowMode);
     clearDrawBtn.addEventListener('click', clearAllDrawings);
     undoDrawBtn.addEventListener('click', undoDrawing);
     redoDrawBtn.addEventListener('click', redoDrawing);
-    autoDeleteToggle.addEventListener('change', handleAutoDeleteToggle);
     if (radiusToggle) {
         radiusToggle.addEventListener('change', handleRadiusToggle);
     }
+    drawColorPicker.addEventListener('input', (e) => {
+        drawingColor = e.target.value;
+    });
     drawColorPicker.addEventListener('change', (e) => {
         drawingColor = e.target.value;
     });
@@ -735,12 +741,6 @@ function setupEventListeners() {
         });
     }
     
-    // Screenshot button
-    const screenshotBtn = document.getElementById('screenshotBtn');
-    if (screenshotBtn) {
-        screenshotBtn.addEventListener('click', takeScreenshot);
-    }
-    
     // Theme toggle button
     // Theme toggle removed - dark mode only
 // themeToggleBtn.addEventListener('click', toggleTheme);
@@ -760,12 +760,6 @@ function setupEventListeners() {
     const closeHowToModalBtn = document.getElementById('closeHowToModalBtn');
     if (closeHowToModalBtn && howToModal) {
         closeHowToModalBtn.addEventListener('click', () => { howToModal.style.display = 'none'; });
-    }
-
-    const closeGalleryModalBtn = document.getElementById('closeGalleryModalBtn');
-    const screenshotGalleryModal = document.getElementById('screenshotGalleryModal');
-    if (closeGalleryModalBtn && screenshotGalleryModal) {
-        closeGalleryModalBtn.addEventListener('click', () => { screenshotGalleryModal.style.display = 'none'; });
     }
 
     const closeChangelogModalBtn = document.getElementById('closeChangelogModalBtn');
@@ -902,21 +896,6 @@ objectiveTypeModal.addEventListener('click', (e) => {
     }
 });
 
-// Map objective modal close
-if (closeMapObjectiveModal) {
-    closeMapObjectiveModal.addEventListener('click', () => {
-        if (mapObjectiveModal) mapObjectiveModal.style.display = 'none';
-    });
-}
-
-if (mapObjectiveModal) {
-    mapObjectiveModal.addEventListener('click', (e) => {
-        if (e.target === mapObjectiveModal) {
-            mapObjectiveModal.style.display = 'none';
-        }
-    });
-}
-
 // Handle objective type selection
 if (objectiveTypeModal) {
     objectiveTypeModal.querySelectorAll('.objective-type-btn').forEach(btn => {
@@ -947,38 +926,6 @@ if (objectiveTypeModal) {
 }
 
 // Handle map objective selection
-if (mapObjectiveModal) {
-    mapObjectiveModal.querySelectorAll('.map-objective-modal-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const type = btn.dataset.type;
-            mapObjectiveModal.style.display = 'none';
-            switch (type) {
-                case 'boss':
-                    if (placingMode !== 'boss') toggleBossMode();
-                    break;
-                case 'blue-tower':
-                    if (placingMode !== 'blue-tower') toggleBlueTowerMode();
-                    break;
-                case 'red-tower':
-                    if (placingMode !== 'red-tower') toggleRedTowerMode();
-                    break;
-                case 'blue-tree':
-                    if (placingMode !== 'blue-tree') toggleBlueTreeMode();
-                    break;
-                case 'red-tree':
-                    if (placingMode !== 'red-tree') toggleRedTreeMode();
-                    break;
-                case 'blue-goose':
-                    if (placingMode !== 'blue-goose') toggleBlueGooseMode();
-                    break;
-                case 'red-goose':
-                    if (placingMode !== 'red-goose') toggleRedGooseMode();
-                    break;
-            }
-        });
-    });
-}
-
 function deactivatePlacingMode() {
     placingMode = null;
     selectedObjectiveType = null;
@@ -1449,6 +1396,7 @@ function toggleBossMode() {
         placingMode = 'boss';
         drawingMode = false;
         addBossBtn.classList.add('active');
+        arrowBtn.classList.remove('active');
         addObjectiveBtn.classList.remove('active');
         resetRoleObjectiveButtons();
         addBlueTowerBtn.classList.remove('active');
@@ -1477,6 +1425,7 @@ function toggleBlueTowerMode() {
         placingMode = 'blue-tower';
         drawingMode = false;
         addBlueTowerBtn.classList.add('active');
+        arrowBtn.classList.remove('active');
         addObjectiveBtn.classList.remove('active');
         addBossBtn.classList.remove('active');
         resetRoleObjectiveButtons();
@@ -1504,6 +1453,7 @@ function toggleRedTowerMode() {
         placingMode = 'red-tower';
         drawingMode = false;
         addRedTowerBtn.classList.add('active');
+        arrowBtn.classList.remove('active');
         addObjectiveBtn.classList.remove('active');
         addBossBtn.classList.remove('active');
         resetRoleObjectiveButtons();
@@ -1531,6 +1481,7 @@ function toggleBlueTreeMode() {
         placingMode = 'blue-tree';
         drawingMode = false;
         addBlueTreeBtn.classList.add('active');
+        arrowBtn.classList.remove('active');
         addObjectiveBtn.classList.remove('active');
         addBossBtn.classList.remove('active');
         resetRoleObjectiveButtons();
@@ -1560,6 +1511,7 @@ function toggleRedTreeMode() {
         placingMode = 'red-tree';
         drawingMode = false;
         addRedTreeBtn.classList.add('active');
+        arrowBtn.classList.remove('active');
         addObjectiveBtn.classList.remove('active');
         addBossBtn.classList.remove('active');
         resetRoleObjectiveButtons();
@@ -1602,6 +1554,9 @@ function handleMapClick(e) {
         placeBlueGooseMarker(x, y);
     } else if (placingMode === 'red-goose') {
         placeRedGooseMarker(x, y);
+    } else if (placingMode === 'arrow') {
+        // Arrow placement is handled by drag events, not click
+        return;
     }
 }
 
@@ -2459,14 +2414,7 @@ function initializeCanvas() {
             
             // Only add to history if auto-delete is OFF
             if (!autoDeleteDrawings) {
-                // Create a deep copy of the current state
-                const stateCopy = drawingPaths.map(path => ({
-                    points: [...path.points],
-                    timestamp: path.timestamp,
-                    color: path.color,
-                    width: path.width
-                }));
-                drawingHistory.push(stateCopy);
+                drawingHistory.push(getCurrentVisualState());
                 drawingRedoStack = []; // Clear redo stack when new action is made
                 updateUndoRedoButtons();
             }
@@ -2540,13 +2488,7 @@ function initializeCanvas() {
             
             // Only add to history if auto-delete is OFF
             if (!autoDeleteDrawings) {
-                const stateCopy = drawingPaths.map(path => ({
-                    points: [...path.points],
-                    timestamp: path.timestamp,
-                    color: path.color,
-                    width: path.width
-                }));
-                drawingHistory.push(stateCopy);
+                drawingHistory.push(getCurrentVisualState());
                 drawingRedoStack = [];
                 updateUndoRedoButtons();
             }
@@ -2613,6 +2555,7 @@ function toggleDrawingMode() {
         drawingMode = true;
         placingMode = null;
         drawBtn.classList.add('active');
+        arrowBtn.classList.remove('active');
         addObjectiveBtn.classList.remove('active');
         addBossBtn.classList.remove('active');
         resetRoleObjectiveButtons();
@@ -2628,6 +2571,253 @@ function toggleDrawingMode() {
     }
 }
 
+function toggleArrowMode() {
+    if (placingMode === 'arrow') {
+        placingMode = null;
+        arrowBtn.classList.remove('active');
+        mapArea.classList.remove('placing-mode');
+    } else {
+        placingMode = 'arrow';
+        drawingMode = false;
+        arrowBtn.classList.add('active');
+        drawBtn.classList.remove('active');
+        addObjectiveBtn.classList.remove('active');
+        addBossBtn.classList.remove('active');
+        resetRoleObjectiveButtons();
+        addBlueTowerBtn.classList.remove('active');
+        addRedTowerBtn.classList.remove('active');
+        addBlueTreeBtn.classList.remove('active');
+        addRedTreeBtn.classList.remove('active');
+        addBlueGooseBtn.classList.remove('active');
+        addRedGooseBtn.classList.remove('active');
+        mapArea.classList.remove('drawing-mode');
+        mapArea.classList.add('placing-mode');
+        drawingCanvas.classList.remove('active');
+    }
+}
+
+function placeArrowMarker(x1, y1, x2, y2, color) {
+    const arrowId = `arrow-${Date.now()}`;
+    const marker = document.createElement('div');
+    marker.className = 'arrow-marker';
+    marker.dataset.arrowId = arrowId;
+    marker.innerHTML = `
+        <div class="arrow-shaft"></div>
+        <div class="arrow-head"></div>
+    `;
+    updateArrowElement(marker, {
+        x1, y1, x2, y2, color
+    });
+    mapArea.appendChild(marker);
+    placedArrows.push({
+        id: arrowId,
+        x1,
+        y1,
+        x2,
+        y2,
+        color: color || drawingColor
+    });
+    savePositions();
+    updatePlaceholder();
+}
+
+function updateArrowElement(marker, arrowData) {
+    const dx = arrowData.x2 - arrowData.x1;
+    const dy = arrowData.y2 - arrowData.y1;
+    const length = Math.max(18, Math.sqrt(dx * dx + dy * dy));
+    const angle = Math.atan2(dy, dx);
+
+    marker.style.left = `${arrowData.x1}px`;
+    marker.style.top = `${arrowData.y1 - 10}px`;
+    marker.style.width = `${length + 12}px`;
+    marker.style.height = `20px`;
+    marker.style.transformOrigin = '0 50%';
+    marker.style.transform = `rotate(${angle}rad)`;
+    marker.style.setProperty('--arrow-color', arrowData.color || drawingColor);
+}
+
+function getCurrentVisualState() {
+    return {
+        drawingPaths: drawingPaths.map(path => ({
+            points: path.points.map(point => ({ x: point.x, y: point.y })),
+            timestamp: path.timestamp,
+            color: path.color,
+            width: path.width
+        })),
+        placedArrows: placedArrows.map(arrow => ({
+            id: arrow.id,
+            x1: arrow.x1,
+            y1: arrow.y1,
+            x2: arrow.x2,
+            y2: arrow.y2,
+            color: arrow.color
+        }))
+    };
+}
+
+function restoreVisualState(state) {
+    drawingPaths = state.drawingPaths.map(path => ({
+        points: path.points.map(point => ({ x: point.x, y: point.y })),
+        timestamp: path.timestamp,
+        color: path.color,
+        width: path.width
+    }));
+    placedArrows = state.placedArrows.map(arrow => ({ ...arrow }));
+    redrawAllPaths();
+    refreshArrowMarkers();
+    updatePlaceholder();
+}
+
+function refreshArrowMarkers() {
+    const existingArrowMarkers = mapArea.querySelectorAll('.arrow-marker');
+    existingArrowMarkers.forEach(marker => marker.remove());
+    placedArrows.forEach(arrow => {
+        const marker = document.createElement('div');
+        marker.className = 'arrow-marker';
+        marker.dataset.arrowId = arrow.id;
+        marker.innerHTML = `
+            <div class="arrow-shaft"></div>
+            <div class="arrow-head"></div>
+        `;
+        updateArrowElement(marker, arrow);
+        mapArea.appendChild(marker);
+    });
+}
+
+function handleArrowDragStart(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', e.currentTarget.dataset.arrowId);
+    e.dataTransfer.setData('type', 'arrow-marker');
+    e.currentTarget.style.opacity = '0.5';
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const offsetX = Math.round(e.clientX - rect.left);
+    const offsetY = Math.round(e.clientY - rect.top);
+    e.currentTarget.dataset.dragStartX = e.clientX;
+    e.currentTarget.dataset.dragStartY = e.clientY;
+    e.currentTarget.dataset.dragOffsetX = offsetX;
+    e.currentTarget.dataset.dragOffsetY = offsetY;
+    e.dataTransfer.setDragImage(e.currentTarget, offsetX, offsetY);
+}
+
+function handleArrowDragEnd(e) {
+    e.currentTarget.style.opacity = '1';
+    const arrowId = e.currentTarget.dataset.arrowId;
+    const startX = Number(e.currentTarget.dataset.dragStartX || 0);
+    const startY = Number(e.currentTarget.dataset.dragStartY || 0);
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    const arrowIndex = placedArrows.findIndex(a => a.id === arrowId);
+    if (arrowIndex !== -1) {
+        placedArrows[arrowIndex].x1 += dx;
+        placedArrows[arrowIndex].y1 += dy;
+        placedArrows[arrowIndex].x2 += dx;
+        placedArrows[arrowIndex].y2 += dy;
+        updateArrowElement(e.currentTarget, placedArrows[arrowIndex]);
+        savePositions();
+    }
+}
+
+function removeArrowMarker(arrowId) {
+    const marker = mapArea.querySelector(`[data-arrow-id="${arrowId}"]`);
+    if (marker) marker.remove();
+    placedArrows = placedArrows.filter(a => a.id !== arrowId);
+    savePositions();
+    updatePlaceholder();
+}
+
+function handleMapMouseDown(e) {
+    if (placingMode !== 'arrow') return;
+    if (e.target !== mapArea && !e.target.classList.contains('map-placeholder')) return;
+    e.preventDefault();
+
+    const rect = mapArea.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    isCreatingArrow = true;
+    currentArrowData = {
+        id: `arrow-temp-${Date.now()}`,
+        x1: x,
+        y1: y,
+        x2: x,
+        y2: y,
+        color: drawingColor
+    };
+
+    currentArrowMarker = document.createElement('div');
+    currentArrowMarker.className = 'arrow-marker temp-arrow-marker';
+    currentArrowMarker.innerHTML = `
+        <div class="arrow-shaft"></div>
+        <div class="arrow-head"></div>
+    `;
+    updateArrowElement(currentArrowMarker, currentArrowData);
+    mapArea.appendChild(currentArrowMarker);
+}
+
+function handleMapMouseMove(e) {
+    if (!isCreatingArrow || !currentArrowMarker) return;
+    const rect = mapArea.getBoundingClientRect();
+    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+    currentArrowData.x2 = x;
+    currentArrowData.y2 = y;
+    updateArrowElement(currentArrowMarker, currentArrowData);
+}
+
+function handleMapMouseUp(e) {
+    if (!isCreatingArrow) return;
+    if (!currentArrowMarker || !currentArrowData) {
+        isCreatingArrow = false;
+        return;
+    }
+
+    const dx = currentArrowData.x2 - currentArrowData.x1;
+    const dy = currentArrowData.y2 - currentArrowData.y1;
+    const length = Math.sqrt(dx * dx + dy * dy);
+
+    if (length < 8) {
+        currentArrowMarker.remove();
+    } else {
+        const arrowId = `arrow-${Date.now()}`;
+        currentArrowMarker.dataset.arrowId = arrowId;
+        currentArrowMarker.classList.remove('temp-arrow-marker');
+        currentArrowMarker.innerHTML = `
+            <div class="arrow-shaft"></div>
+            <div class="arrow-head"></div>
+        `;
+        placedArrows.push({
+            id: arrowId,
+            x1: currentArrowData.x1,
+            y1: currentArrowData.y1,
+            x2: currentArrowData.x2,
+            y2: currentArrowData.y2,
+            color: currentArrowData.color
+        });
+        if (!autoDeleteDrawings) {
+            drawingHistory.push(getCurrentVisualState());
+            drawingRedoStack = [];
+            updateUndoRedoButtons();
+        }
+        savePositions();
+        updatePlaceholder();
+    }
+
+    isCreatingArrow = false;
+    currentArrowMarker = null;
+    currentArrowData = null;
+}
+
+function handleMapMouseLeave() {
+    if (!isCreatingArrow) return;
+    if (currentArrowMarker) {
+        currentArrowMarker.remove();
+    }
+    isCreatingArrow = false;
+    currentArrowMarker = null;
+    currentArrowData = null;
+}
+
 // Clear all drawings
 async function clearAllDrawings() {
     if (drawingPaths.length === 0) return;
@@ -2640,13 +2830,7 @@ async function clearAllDrawings() {
     if (confirmed) {
         // Save current state to history before clearing (deep copy)
         if (!autoDeleteDrawings && drawingPaths.length > 0) {
-            const stateCopy = drawingPaths.map(path => ({
-                points: [...path.points],
-                timestamp: path.timestamp,
-                color: path.color,
-                width: path.width
-            }));
-            drawingHistory.push(stateCopy);
+            drawingHistory.push(getCurrentVisualState());
         }
         
         drawingPaths = [];
@@ -2666,33 +2850,22 @@ function undoDrawing() {
     
     if (drawingHistory.length === 0) return;
     
-    // Save current state to redo stack (deep copy)
-    const currentStateCopy = drawingPaths.map(path => ({
-        points: [...path.points],
-        timestamp: path.timestamp,
-        color: path.color,
-        width: path.width
-    }));
+    const currentStateCopy = getCurrentVisualState();
     drawingRedoStack.push(currentStateCopy);
     
-    // Restore previous state (pop returns the last element)
-    drawingHistory.pop(); // Remove current state
-    const previousState = drawingHistory[drawingHistory.length - 1]; // Get previous state
+    drawingHistory.pop();
+    const previousState = drawingHistory[drawingHistory.length - 1];
     
     if (previousState) {
-        // Deep copy the previous state
-        drawingPaths = previousState.map(path => ({
-            points: [...path.points],
-            timestamp: path.timestamp,
-            color: path.color,
-            width: path.width
-        }));
+        restoreVisualState(previousState);
     } else {
-        // No previous state means go back to empty
         drawingPaths = [];
+        placedArrows = [];
+        redrawAllPaths();
+        refreshArrowMarkers();
+        updatePlaceholder();
     }
     
-    redrawAllPaths();
     updateUndoRedoButtons();
 }
 
@@ -2705,29 +2878,13 @@ function redoDrawing() {
     
     if (drawingRedoStack.length === 0) return;
     
-    // Get the next state from redo stack
     const nextState = drawingRedoStack.pop();
     
     if (nextState) {
-        // Save current state to history (deep copy)
-        const currentStateCopy = drawingPaths.map(path => ({
-            points: [...path.points],
-            timestamp: path.timestamp,
-            color: path.color,
-            width: path.width
-        }));
-        drawingHistory.push(currentStateCopy);
-        
-        // Restore next state (deep copy)
-        drawingPaths = nextState.map(path => ({
-            points: [...path.points],
-            timestamp: path.timestamp,
-            color: path.color,
-            width: path.width
-        }));
+        drawingHistory.push(getCurrentVisualState());
+        restoreVisualState(nextState);
     }
     
-    redrawAllPaths();
     updateUndoRedoButtons();
 }
 
@@ -2774,16 +2931,10 @@ function handleAutoDeleteToggle(e) {
         drawingDeleteTimers = [];
         
         // Initialize history with current state (deep copy)
-        if (drawingPaths.length > 0) {
-            const stateCopy = drawingPaths.map(path => ({
-                points: [...path.points],
-                timestamp: path.timestamp,
-                color: path.color,
-                width: path.width
-            }));
-            drawingHistory = [stateCopy];
+        if (drawingPaths.length > 0 || placedArrows.length > 0) {
+            drawingHistory = [getCurrentVisualState()];
         } else {
-            drawingHistory = [[]]; // Empty state
+            drawingHistory = [{ drawingPaths: [], placedArrows: [] }];
         }
         updateUndoRedoButtons();
     }
@@ -3059,8 +3210,8 @@ function applyFilters(searchTerm = '') {
 // Clear all placements
 async function clearAllPlacements() {
     const totalPlaced = getTotalPlacedPlayers();
-    const totalMarkers = placedObjectives.length + placedBosses.length + placedBlueTowers.length + placedRedTowers.length + placedBlueTrees.length + placedRedTrees.length + placedBlueGeese.length + placedRedGeese.length + placedEnemies.length;
-    if (totalPlaced === 0 && totalMarkers === 0) return;
+    const totalMarkers = placedObjectives.length + placedBosses.length + placedBlueTowers.length + placedRedTowers.length + placedBlueTrees.length + placedRedTrees.length + placedBlueGeese.length + placedRedGeese.length + placedEnemies.length + placedArrows.length;
+    if (totalPlaced === 0 && totalMarkers === 0 && drawingPaths.length === 0) return;
     
     const confirmed = await showConfirm(
         'Clear All Placements',
@@ -3068,7 +3219,7 @@ async function clearAllPlacements() {
     );
     
     if (confirmed) {
-        const markers = mapArea.querySelectorAll('.member-marker, .group-marker, .objective-marker, .boss-marker, .tower-marker, .tree-marker, .goose-marker, .enemy-marker');
+        const markers = mapArea.querySelectorAll('.member-marker, .group-marker, .objective-marker, .boss-marker, .tower-marker, .tree-marker, .goose-marker, .enemy-marker, .arrow-marker');
         markers.forEach(marker => marker.remove());
         placedMembers = [];
         placedGroups = [];
@@ -3081,6 +3232,14 @@ async function clearAllPlacements() {
         placedBlueGeese = [];
         placedRedGeese = [];
         placedEnemies = [];
+        placedArrows = [];
+        drawingPaths = [];
+        drawingHistory = [];
+        drawingRedoStack = [];
+        drawingDeleteTimers.forEach(timer => clearTimeout(timer));
+        drawingDeleteTimers = [];
+        redrawAllPaths();
+        updateUndoRedoButtons();
         savePositions();
         updateCounts();
         updatePlaceholder();
@@ -3102,7 +3261,7 @@ function updatePlaceholder() {
     if (placeholder) {
         const hasContent = placedMembers.length > 0 || placedGroups.length > 0 || 
                           placedObjectives.length > 0 || placedBosses.length > 0 ||
-                          placedBlueTowers.length > 0 || placedRedTowers.length > 0 || placedBlueTrees.length > 0 || placedRedTrees.length > 0 || placedBlueGeese.length > 0 || placedRedGeese.length > 0 || placedEnemies.length > 0;
+                          placedBlueTowers.length > 0 || placedRedTowers.length > 0 || placedBlueTrees.length > 0 || placedRedTrees.length > 0 || placedBlueGeese.length > 0 || placedRedGeese.length > 0 || placedEnemies.length > 0 || placedArrows.length > 0 || drawingPaths.length > 0;
         placeholder.style.display = hasContent ? 'none' : 'block';
     }
 }
@@ -3114,7 +3273,7 @@ function updatePlaceholder() {
 // Render all map markers from data
 function renderMap() {
     // Clear existing markers
-    const existingMarkers = mapArea.querySelectorAll('.member-marker, .group-marker, .objective-marker, .boss-marker, .tower-marker, .tree-marker, .enemy-marker');
+    const existingMarkers = mapArea.querySelectorAll('.member-marker, .group-marker, .objective-marker, .boss-marker, .tower-marker, .tree-marker, .goose-marker, .arrow-marker, .enemy-marker');
     existingMarkers.forEach(marker => marker.remove());
     
     // Render individual member markers
@@ -3515,6 +3674,19 @@ function renderMap() {
         
         mapArea.appendChild(marker);
     });
+    // Render arrows
+    placedArrows.forEach(arrow => {
+        const marker = document.createElement('div');
+        marker.className = 'arrow-marker';
+        marker.dataset.arrowId = arrow.id;
+        marker.innerHTML = `
+            <div class="arrow-shaft"></div>
+            <div class="arrow-head"></div>
+        `;
+        updateArrowElement(marker, arrow);
+        mapArea.appendChild(marker);
+    });
+
     // Render enemies
     placedEnemies.forEach(enemy => {
         const marker = document.createElement('div');
@@ -3616,7 +3788,7 @@ function exportPositions() {
                     x: Math.round(tree.x),
                     y: Math.round(tree.y)
                 })),
-                                redTrees: placedRedTrees.map(tree => ({
+                redTrees: placedRedTrees.map(tree => ({
                     id: tree.id,
                     x: Math.round(tree.x),
                     y: Math.round(tree.y)
@@ -3630,6 +3802,14 @@ function exportPositions() {
                     id: goose.id,
                     x: Math.round(goose.x),
                     y: Math.round(goose.y)
+                })),
+                arrows: placedArrows.map(arrow => ({
+                    id: arrow.id,
+                    x1: Math.round(arrow.x1),
+                    y1: Math.round(arrow.y1),
+                    x2: Math.round(arrow.x2),
+                    y2: Math.round(arrow.y2),
+                    color: arrow.color || drawingColor
                 })),
                 enemies: placedEnemies.map(enemy => ({
                     id: enemy.id,
@@ -3856,7 +4036,7 @@ function handleImportFile(event) {
             }
             
             // Clear current placements without confirmation
-            const markers = mapArea.querySelectorAll('.member-marker, .group-marker, .objective-marker, .boss-marker, .tower-marker, .tree-marker, .goose-marker, .enemy-marker');
+            const markers = mapArea.querySelectorAll('.member-marker, .group-marker, .objective-marker, .boss-marker, .tower-marker, .tree-marker, .goose-marker, .enemy-marker, .arrow-marker');
             markers.forEach(marker => marker.remove());
             placedMembers = [];
             placedGroups = [];
@@ -3868,6 +4048,7 @@ function handleImportFile(event) {
             placedRedTrees = [];
             placedBlueGeese = [];
             placedRedGeese = [];
+            placedArrows = [];
             placedEnemies = [];
             enemiesCount = 0;
             
@@ -4012,6 +4193,20 @@ function handleImportFile(event) {
                 });
             }
             
+            // Import arrows
+            if (importData.arrows && Array.isArray(importData.arrows)) {
+                importData.arrows.forEach(arrow => {
+                    placedArrows.push({
+                        id: arrow.id,
+                        x1: arrow.x1 != null ? arrow.x1 : (arrow.x || 0),
+                        y1: arrow.y1 != null ? arrow.y1 : (arrow.y || 0),
+                        x2: arrow.x2 != null ? arrow.x2 : ((arrow.x || 0) + 30),
+                        y2: arrow.y2 != null ? arrow.y2 : (arrow.y || 0),
+                        color: arrow.color || '#ff0000'
+                    });
+                });
+            }
+            
             // Import enemies
             if (importData.enemies && Array.isArray(importData.enemies)) {
                 importData.enemies.forEach(enemy => {
@@ -4050,9 +4245,9 @@ function handleImportFile(event) {
                     }
                 });
                 
-                // Save initial drawing state to history
-                if (drawingPaths.length > 0) {
-                    drawingHistory = [JSON.parse(JSON.stringify(drawingPaths))];
+                // Save initial state to history
+                if (drawingPaths.length > 0 || placedArrows.length > 0) {
+                    drawingHistory = [getCurrentVisualState()];
                 }
                 
                 // Redraw canvas with imported drawings
@@ -4583,46 +4778,6 @@ function updatePlacedPlayerInfo(playerId) {
 // UTILITY FUNCTIONS
 // ============================================================================
 
-// Screenshot functionality
-function takeScreenshot() {
-    const mapArea = document.getElementById('mapArea');
-    if (!mapArea) {
-        console.error('Map area not found');
-        return;
-    }
-    
-    // Show loading state
-    const originalText = screenshotBtn.innerHTML;
-    screenshotBtn.innerHTML = '📸 Taking Screenshot...';
-    screenshotBtn.disabled = true;
-    
-    html2canvas(mapArea, {
-        backgroundColor: '#0f0f1e',
-        scale: 2, // Higher quality
-        logging: false,
-        useCORS: true
-    }).then(canvas => {
-        // Create download link
-        canvas.toBlob(blob => {
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-            link.download = `GvG-Strategy-${timestamp}.png`;
-            link.href = url;
-            link.click();
-            URL.revokeObjectURL(url);
-            
-            // Reset button
-            screenshotBtn.innerHTML = originalText;
-            screenshotBtn.disabled = false;
-        });
-    }).catch(error => {
-        console.error('Screenshot failed:', error);
-        alert('Failed to take screenshot. Please try again.');
-        screenshotBtn.innerHTML = originalText;
-        screenshotBtn.disabled = false;
-    });
-}
 
 // Panel toggle functionality
 function savePlayersToStorage() {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WWM - GvG Strategy</title>
+    <title>GvG Strategy Maker</title>
     
     <!-- Copyright & Security Meta Tags -->
     <meta name="author" content="MightyLabs">
@@ -13,6 +13,7 @@
     <meta http-equiv="cache-control" content="no-cache">
     <meta name="referrer" content="same-origin">
     
+    <link rel="icon" type="image/png" href="images/guild_logo.png">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -64,7 +65,7 @@
                 </button>
                 <button id="changelogBtn" class="nav-btn">
                     <span class="nav-icon">📋</span>
-                    <span class="nav-text">v1.12.0</span>
+                    <span class="nav-text">v2.0.1</span>
                 </button>
             </nav>
             
@@ -127,28 +128,28 @@
                         <button id="addDPSObjectiveBtn" class="toolbar-btn objective-btn" title="Add DPS Marker">
                             <img src="images/dps.png" alt="DPS" class="btn-icon-img">
                         </button>
-                        <button id="addMapObjectiveBtn" class="toolbar-btn map-objective-btn" title="Map Objective Markers">
-                            <span class="btn-icon">🗺️</span>
-                        </button>
-                        <button id="addBossBtn" class="toolbar-btn boss-btn" title="Add Boss Marker" style="display:none;">
+
+                        <div class="toolbar-divider"></div>
+
+                        <button id="addBossBtn" class="toolbar-btn boss-btn" title="Add Boss Marker">
                             <img src="images/boss.png" alt="Boss" class="btn-icon-img">
                         </button>
-                        <button id="addBlueTowerBtn" class="toolbar-btn blue-tower-btn" title="Add Ally Tower (Blue)" style="display:none;">
+                        <button id="addBlueTowerBtn" class="toolbar-btn blue-tower-btn" title="Add Ally Tower (Blue)">
                             <img src="images/tower_blue.png" alt="Blue Tower" class="btn-icon-img">
                         </button>
-                        <button id="addRedTowerBtn" class="toolbar-btn red-tower-btn" title="Add Enemy Tower (Red)" style="display:none;">
+                        <button id="addRedTowerBtn" class="toolbar-btn red-tower-btn" title="Add Enemy Tower (Red)">
                             <img src="images/tower_red.png" alt="Red Tower" class="btn-icon-img">
                         </button>
-                        <button id="addBlueTreeBtn" class="toolbar-btn blue-tree-btn" title="Add Ally Tree (Blue)" style="display:none;">
+                        <button id="addBlueTreeBtn" class="toolbar-btn blue-tree-btn" title="Add Ally Tree (Blue)">
                             <img src="images/tree_blue.png" alt="Blue Tree" class="btn-icon-img">
                         </button>
-                        <button id="addRedTreeBtn" class="toolbar-btn red-tree-btn" title="Add Enemy Tree (Red)" style="display:none;">
+                        <button id="addRedTreeBtn" class="toolbar-btn red-tree-btn" title="Add Enemy Tree (Red)">
                             <img src="images/tree_red.png" alt="Red Tree" class="btn-icon-img">
                         </button>
-                        <button id="addBlueGooseBtn" class="toolbar-btn blue-goose-btn" title="Add Ally Goose (Blue)" style="display:none;">
+                        <button id="addBlueGooseBtn" class="toolbar-btn blue-goose-btn" title="Add Ally Goose (Blue)">
                             <img src="images/goose_blue.png" alt="Blue Goose" class="btn-icon-img">
                         </button>
-                        <button id="addRedGooseBtn" class="toolbar-btn red-goose-btn" title="Add Enemy Goose (Red)" style="display:none;">
+                        <button id="addRedGooseBtn" class="toolbar-btn red-goose-btn" title="Add Enemy Goose (Red)">
                             <img src="images/goose_red.png" alt="Red Goose" class="btn-icon-img">
                         </button>
                         
@@ -156,6 +157,11 @@
                         
                         <button id="drawBtn" class="toolbar-btn draw-btn" title="Toggle Draw Mode">
                             <span class="btn-icon">✏️</span>
+                        </button>
+                        <button id="arrowBtn" class="toolbar-btn arrow-btn" title="Place Draggable Arrow">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down-right" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M0 4.5A.5.5 0 0 1 .5 4h9a.5.5 0 0 1 0 1H1.707l11.147 11.146a.5.5 0 0 1-.708.708L1 5.707V13.5a.5.5 0 0 1-1 0v-9z"/>
+                            </svg>
                         </button>
                         <div class="toolbar-color-picker">
                             <label for="drawColorPicker" class="color-picker-label" title="Choose Drawing Color">
@@ -172,30 +178,12 @@
                             <span class="btn-icon">🧹</span>
                         </button>
                         <div class="toolbar-toggle-option">
-                            <label class="toggle-label-small" title="Auto-delete drawings after 10 seconds">
-                                <input type="checkbox" id="autoDeleteToggle" />
-                                <span class="toggle-slider-small"></span>
-                                <span class="toggle-text-small">Auto-delete</span>
-                            </label>
-                        </div>
-                        <div class="toolbar-toggle-option">
                             <label class="toggle-label-small" title="Show 20px radius around healer/DPS/tank markers">
                                 <input type="checkbox" id="radiusToggle" />
                                 <span class="toggle-slider-small"></span>
                                 <span class="toggle-text-small">Role radius</span>
                             </label>
                         </div>
-                        
-                        <div class="toolbar-divider"></div>
-                        
-                        <button id="screenshotBtn" class="toolbar-btn screenshot-btn" title="Take Screenshot of Map">
-                            <span class="btn-icon">📸</span>
-                        </button>
-                        
-                        <button id="galleryBtn" class="toolbar-btn gallery-btn" title="View Screenshot Gallery">
-                            <span class="btn-icon">🖼️</span>
-                            <span class="gallery-badge">0</span>
-                        </button>
                         
                         <div class="toolbar-divider"></div>
                         
@@ -445,50 +433,6 @@
         </div>
     </div>
 
-    <!-- Map Objective Marker Selection Modal -->
-    <div id="mapObjectiveModal" class="modal">
-        <div class="modal-content modal-small">
-            <div class="modal-header">
-                <h2>Map Objective Markers</h2>
-            </div>
-            <div class="modal-body">
-                <div class="objective-type-grid">
-                    <button type="button" class="objective-type-btn map-objective-modal-btn" data-type="boss">
-                        <img src="images/boss.png" alt="Boss" class="type-icon" style="width: 40px; height: 40px; object-fit: contain;">
-                        <span class="type-label">Boss</span>
-                    </button>
-                    <button type="button" class="objective-type-btn map-objective-modal-btn" data-type="blue-tower">
-                        <img src="images/tower_blue.png" alt="Blue Tower" class="type-icon" style="width: 40px; height: 40px;">
-                        <span class="type-label">Ally Tower</span>
-                    </button>
-                    <button type="button" class="objective-type-btn map-objective-modal-btn" data-type="red-tower">
-                        <img src="images/tower_red.png" alt="Red Tower" class="type-icon" style="width: 40px; height: 40px;">
-                        <span class="type-label">Enemy Tower</span>
-                    </button>
-                    <button type="button" class="objective-type-btn map-objective-modal-btn" data-type="blue-tree">
-                        <img src="images/tree_blue.png" alt="Blue Tree" class="type-icon" style="width: 40px; height: 40px;">
-                        <span class="type-label">Ally Tree</span>
-                    </button>
-                    <button type="button" class="objective-type-btn map-objective-modal-btn" data-type="red-tree">
-                        <img src="images/tree_red.png" alt="Red Tree" class="type-icon" style="width: 40px; height: 40px;">
-                        <span class="type-label">Enemy Tree</span>
-                    </button>
-                    <button type="button" class="objective-type-btn map-objective-modal-btn" data-type="blue-goose">
-                        <img src="images/goose_blue.png" alt="Blue Goose" class="type-icon" style="width: 40px; height: 40px;">
-                        <span class="type-label">Ally Goose</span>
-                    </button>
-                    <button type="button" class="objective-type-btn map-objective-modal-btn" data-type="red-goose">
-                        <img src="images/goose_red.png" alt="Red Goose" class="type-icon" style="width: 40px; height: 40px;">
-                        <span class="type-label">Enemy Goose</span>
-                    </button>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="closeMapObjectiveModal">Cancel</button>
-            </div>
-        </div>
-    </div>
-    
     <!-- Known Issues Modal -->
     <div id="knownIssuesModal" class="modal">
         <div class="modal-content" style="max-width: 600px;">
@@ -498,20 +442,20 @@
             </div>
             <div class="modal-body">
                 <div style="text-align: left; line-height: 1.8;">
-                    <h3 style="color: #f39c12; margin-top: 0;">🔍 Browser Zoom Limitation</h3>
+                    <h3 style="color: var(--gold-bright); margin-top: 0;">🔍 Browser Zoom Limitation</h3>
                     <p><strong>Issue:</strong> Marker positions shift when using browser zoom (Ctrl+Plus/Minus or Ctrl+MouseWheel).</p>
                     
                     <p><strong>Why:</strong> Markers use pixel coordinates that don't scale proportionally with browser zoom.</p>
                     
-                    <div style="background: rgba(241, 196, 15, 0.2); padding: 15px; border-radius: 8px; border-left: 4px solid #f39c12; margin: 15px 0;">
+                    <div style="background: rgba(201,162,75,0.12); padding: 15px; border-radius: 4px; border-left: 4px solid var(--gold); margin: 15px 0;">
                         <p style="margin: 0; font-weight: 600; font-size: 1.1rem;">✅ Best Practice:</p>
                         <p style="margin: 10px 0 0 0;">Keep browser at <strong>100% zoom</strong> while planning strategy.</p>
                     </div>
                     
                     <p><strong>How to Reset Zoom:</strong></p>
                     <ul style="margin: 10px 0;">
-                        <li>Press <kbd style="background: #34495e; padding: 3px 8px; border-radius: 4px; font-family: monospace;">Ctrl+0</kbd> (Windows/Linux)</li>
-                        <li>Press <kbd style="background: #34495e; padding: 3px 8px; border-radius: 4px; font-family: monospace;">⌘+0</kbd> (Mac)</li>
+                        <li>Press <kbd style="background: var(--ink-void); color: var(--gold-bright); padding: 3px 8px; border-radius: 3px; border: 1px solid var(--gold-deep); font-family: monospace;">Ctrl+0</kbd> (Windows/Linux)</li>
+                        <li>Press <kbd style="background: var(--ink-void); color: var(--gold-bright); padding: 3px 8px; border-radius: 3px; border: 1px solid var(--gold-deep); font-family: monospace;">⌘+0</kbd> (Mac)</li>
                     </ul>
                     
                     <p><strong>Workflow:</strong></p>
@@ -519,13 +463,12 @@
                         <li>Reset zoom to 100% (Ctrl+0)</li>
                         <li>Place all markers and create strategy</li>
                         <li>Export your strategy (save progress)</li>
-                        <li>Take screenshot if needed</li>
                         <li>Now you can zoom for viewing</li>
                     </ol>
                     
                     <hr style="margin: 20px 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
                     
-                    <h3 style="color: #3498db;">💡 Tips for Best Results</h3>
+                    <h3 style="color: var(--jade-bright);">💡 Tips for Best Results</h3>
                     <ul style="margin: 10px 0;">
                         <li>Use desktop/laptop for strategy planning</li>
                         <li>Export frequently to save progress</li>
@@ -558,7 +501,6 @@
                         <li>Use the toolbar at the bottom to add objective markers, boss/tower/tree/goose icons, or draw arrows.</li>
                         <li>When happy with the strategy, click <strong>📥 Export</strong> to save a JSON file.</li>
                         <li>Share the JSON with your team: they can <strong>📤 Import</strong> it to see the same setup.</li>
-                        <li>Click <strong>📸</strong> to capture and download a screenshot.</li>
                     </ol>
                 </div>
 
@@ -574,7 +516,7 @@
                         <div class="howto-row"><span class="howto-icon">⌨️</span><div><strong>Hot Keys</strong>: Lists all keyboard shortcuts.</div></div>
                         <div class="howto-row"><span class="howto-icon">⚠️</span><div><strong>Known Issues</strong>: Important notes about browser zoom and best practices.</div></div>
                         <div class="howto-row"><span class="howto-icon">📖</span><div><strong>How To Use</strong>: This guide!</div></div>
-                        <div class="howto-row"><span class="howto-icon">📋</span><div><strong id="howtoVersionLabel">v1.12.0</strong>: Full version history and changelog.</div></div>
+                        <div class="howto-row"><span class="howto-icon">📋</span><div><strong id="howtoVersionLabel">v2.0.1</strong>: Full version history and changelog.</div></div>
                     </div>
                 </div>
 
@@ -605,9 +547,6 @@
                         <div class="howto-row"><span class="howto-icon">✏️</span><div><strong>Draw Mode</strong>: Toggle freehand drawing on the map (useful for arrows and zones). All drawings can be undone.</div></div>
                         <div class="howto-row"><span class="howto-icon">↩️</span><div><strong>Undo / Redo</strong>: Step back or forward through drawing history.</div></div>
                         <div class="howto-row"><span class="howto-icon">🧹</span><div><strong>Clear Drawings</strong>: Removes all freehand drawings instantly.</div></div>
-                        <div class="howto-row"><span class="howto-icon">⏱️</span><div><strong>Auto-delete toggle</strong>: When enabled, each drawing stroke disappears after ~10 seconds.</div></div>
-                        <div class="howto-row"><span class="howto-icon">📸</span><div><strong>Screenshot</strong>: Captures the map area (map background + all markers + drawings) and downloads as a PNG. Also saves to the gallery.</div></div>
-                        <div class="howto-row"><span class="howto-icon">🖼️</span><div><strong>Gallery</strong>: Opens the screenshot gallery. Shows thumbnails of up to 10 recent screenshots. Click any thumbnail to open the full-screen slideshow. Use ← → arrows or keyboard to navigate.</div></div>
                         <div class="howto-row"><span class="howto-icon">❌</span><div><strong>Clear Map</strong>: Removes all placed players and markers from the map. Does not affect the player roster.</div></div>
                     </div>
                 </div>
@@ -642,8 +581,6 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                     <ul class="howto-list">
                         <li>Keep your browser at <strong>100% zoom</strong> (Ctrl+0) while placing markers to avoid position drift.</li>
                         <li><strong>Export before closing</strong> the tab: the map does not auto-save between sessions.</li>
-                        <li>Take a <strong>screenshot before and after</strong> adjustments so you can compare strategies in the gallery slideshow.</li>
-                        <li>Use <strong>Draw Mode + Auto-delete</strong> during live presentations to draw quick callout arrows that disappear automatically.</li>
                         <li>The Export JSON file can be pasted into Discord so guildmates can load the exact same setup.</li>
                         <li>On mobile the page is best used for <strong>viewing</strong> a shared strategy, not detailed editing.</li>
                     </ul>
@@ -680,34 +617,6 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
         </div>
     </div>
     
-    <!-- Screenshot Gallery Modal -->
-    <div id="screenshotGalleryModal" class="modal">
-        <div class="modal-content" style="max-width: 900px; max-height: 90vh;">
-            <div class="modal-header">
-                <h2>🖼️ Screenshot Gallery</h2>
-                <button class="modal-close" id="closeGalleryModal">&times;</button>
-            </div>
-            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-                <div id="galleryContainer" class="gallery-grid"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="closeGalleryModalBtn">Close</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Lightbox Slideshow (outside all modals) -->
-    <div id="lightboxOverlay" class="lightbox-overlay">
-        <button class="lightbox-close" id="lightboxClose">&times;</button>
-        <div class="lightbox-img-wrap">
-            <button class="lightbox-btn lightbox-prev" id="lightboxPrev">&#8249;</button>
-            <img id="lightboxImg" src="" alt="Screenshot">
-            <button class="lightbox-btn lightbox-next" id="lightboxNext">&#8250;</button>
-        </div>
-        <div class="lightbox-counter" id="lightboxCounter">1 / 1</div>
-        <button class="lightbox-dl-btn" id="lightboxDownload">💾 Download</button>
-    </div>
-    
     <!-- Changelog Modal -->
     <div id="changelogModal" class="modal">
         <div class="modal-content" style="max-width: 700px; max-height: 90vh;">
@@ -717,8 +626,34 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto; text-align: left;">
                 <div class="version-current">
-                    <h3>🎯 Current Version: 1.12.0</h3>
-                    <p class="version-date">Released: May 2026</p>
+                    <h3>🎯 Current Version: 2.0.1</h3>
+                    <p class="version-date">Released: June 2026</p>
+                </div>
+
+                <div class="changelog-section">
+                    <h4>Version 2.0.1 - Arrow Tool &amp; Toolbar Refinements</h4>
+                    <ul>
+                        <li>➹ <strong>Directional Arrow Tool:</strong> Added a draggable arrow tool. Click the arrow button, then drag on the map to draw a variable length, directional arrow for callouts, pushes, and rotations.</li>
+                        <li>✨ <strong>Map Objectives Back on the Toolbar:</strong> Un-nested the boss, tower, tree, and goose markers from the pop-up menu. They now sit directly on the bottom toolbar for one click placement.</li>
+                        <li>🧹 <strong>Removed Screenshot &amp; Gallery:</strong> Retired the screenshot capture and gallery slideshow features to keep the tool focused and lightweight.</li>
+                        <li>🧹 <strong>Removed Auto-delete Toggle:</strong> Removed the auto-delete drawings option; drawings now persist until cleared or undone.</li>
+                        <li>🐛 <strong>Marker Dot Fix:</strong> Player role markers now render as clean colored dots instead of showing a square background.</li>
+                        <li>🐛 <strong>Draw Color Fix:</strong> The first stroke after picking a new color now uses the chosen color immediately.</li>
+                        <li>🎨 <strong>Layout Polish:</strong> Aligned the roster and map panels so their bottoms line up, and ensured the full map is always visible without cropping.</li>
+                        <li>🔆 <strong>Toolbar Icons:</strong> Brightened the undo/redo icons for better visibility, and enlarged team marker labels for readability.</li>
+                    </ul>
+                </div>
+
+                <div class="changelog-section">
+                    <h4>Version 2.0.0 - "Ink &amp; Cinder" Complete Redesign</h4>
+                    <ul>
+                        <li>🎨 <strong>Full Visual Overhaul:</strong> Rebuilt the entire interface with a wuxia inspired ink and gold theme to match Where Winds Meet, replacing the previous look entirely.</li>
+                        <li>🖼️ <strong>New Layout:</strong> Reorganized into a battle map left, roster right layout with framed map, hanging scroll header, and engraved navigation tablets.</li>
+                        <li>🀄 <strong>Themed Components:</strong> Restyled every element: team pills, role badges, markers, modals, toolbar, and forms in the new imperial palette.</li>
+                        <li>🌄 <strong>Wallpaper Background:</strong> Added a full page themed wallpaper across both the strategy map and About pages.</li>
+                        <li>📝 <strong>About Page Refresh:</strong> Rebuilt the About page to match the new theme, with updated bio, playstyle, and project details.</li>
+                        <li>♻️ <strong>Preserved Functionality:</strong> Kept all existing tools: rosters, drag and drop placement, objective markers, drawing, export/import kept fully intact through the redesign.</li>
+                    </ul>
                 </div>
 
                 <div class="changelog-section">
@@ -742,7 +677,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                         <li>🐛 <strong>Critical Bug Fixes:</strong> Resolved drag-and-drop issues caused by DOM loading timing errors</li>
                         <li>🐛 <strong>Fixed Canvas Context:</strong> Moved canvas context initialization to prevent script crashes</li>
                         <li>🐛 <strong>Null Check Protection:</strong> Added null checks for all DOM elements to prevent runtime errors</li>
-                        <li>🎨 <strong>Modal Improvements:</strong> Added click-outside-to-close functionality for all modals</li>
+                        <li>🎨 <strong>Modal Improvements:</strong> Added "click outside to close" functionality for all modals</li>
                         <li>📝 <strong>About Page Content:</strong> Added vcross attribution and custom commission information</li>
                         <li>🔧 <strong>Code Optimization:</strong> Restructured initialization to use window.addEventListener('load') for reliability</li>
                     </ul>
@@ -868,7 +803,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                     </ul>
                 </div>
                 
-                <div style="margin-top: 30px; padding: 20px; background: rgba(102, 126, 234, 0.1); border-radius: 8px; border-left: 4px solid #667eea;">
+                <div style="margin-top: 30px; padding: 20px; background: rgba(201,162,75,0.10); border-radius: 4px; border-left: 4px solid var(--gold);">
                     <p style="margin: 0; font-size: 0.9rem; color: #999;">
                         <strong>Created by:</strong> MightyLabs<br>
                         <strong>Game:</strong> Where Winds Meet
@@ -940,8 +875,6 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
     console.log('%c© 2026 All Rights Reserved', 'font-size: 14px; color: #999;');
     </script>
     
-    <!-- html2canvas for screenshot functionality -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- SheetJS for Excel/CSV parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
