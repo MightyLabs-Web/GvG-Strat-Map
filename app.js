@@ -995,10 +995,8 @@ function handleDrop(e) {
     if (type === 'team') {
         // Dropping a team group
         const teamName = data;
-        // Adjust position to top-right of cursor for better visibility
-        const adjustedX = x + 21; // 16px radius + 5px offset
-        const adjustedY = y - 21;
-        placeTeamGroupOnMap(teamName, adjustedX, adjustedY);
+        // Place the group centered at the drop point
+        placeTeamGroupOnMap(teamName, x, y);
     } else if (type === 'member') {
         // Dropping individual member
         const memberId = parseInt(data);
@@ -1036,10 +1034,8 @@ function handleDrop(e) {
             return;
         }
         
-        // Adjust position to top-right of cursor for better visibility
-        const adjustedX = x + 13; // 8px radius + 5px offset
-        const adjustedY = y - 13;
-        placeMemberOnMap(member, adjustedX, adjustedY);
+        // Place the legacy member drop centered at the cursor
+        placeMemberOnMap(member, x, y);
     }
 }
 
@@ -1136,16 +1132,12 @@ function createNewGroup(teamName, teamMembers, x, y) {
     const groupId = `group-${Date.now()}`;
     const memberIds = teamMembers.map(m => m.id);
     
-    // Adjust position to top-right of cursor
-    const adjustedX = x + 21; // 16px radius + 5px offset
-    const adjustedY = y - 21;
-    
     const group = {
         id: groupId,
         teams: [teamName],
         memberIds: memberIds,
-        x: adjustedX,
-        y: adjustedY
+        x: x,
+        y: y
     };
     
     placedGroups.push(group);
@@ -1181,8 +1173,8 @@ function renderGroupMarker(group) {
     const marker = document.createElement('div');
     marker.className = 'group-marker';
     marker.dataset.groupId = group.id;
-    marker.style.left = `${group.x - 16}px`; // Center the 32px marker
-    marker.style.top = `${group.y - 16}px`;
+    marker.style.left = `${group.x}px`;
+    marker.style.top = `${group.y}px`;
     marker.draggable = true;
     
     updateGroupMarker(marker, group);
@@ -1204,15 +1196,6 @@ function updateGroupMarker(marker, group) {
     
     marker.innerHTML = `
         <div class="group-number">${displayTeamNames}</div>
-        <div class="group-tooltip">
-            <div class="tooltip-header">Group: ${displayTeamNames}</div>
-            <div class="tooltip-roles">
-                ${roleCount.Tank > 0 ? `<div class="role-item"><span class="role-dot role-Tank"></span> ${roleCount.Tank} Tank</div>` : ''}
-                ${roleCount.DPS > 0 ? `<div class="role-item"><span class="role-dot role-DPS"></span> ${roleCount.DPS} DPS</div>` : ''}
-                ${roleCount.Healer > 0 ? `<div class="role-item"><span class="role-dot role-Healer"></span> ${roleCount.Healer} Healer</div>` : ''}
-                ${roleCount.Support > 0 ? `<div class="role-item"><span class="role-dot role-Support"></span> ${roleCount.Support} Support</div>` : ''}
-            </div>
-        </div>
         <button class="remove-btn" onclick="removeGroupMarker('${group.id}')">×</button>
     `;
 }
@@ -1235,6 +1218,12 @@ function handleGroupMarkerDragStart(e) {
     e.dataTransfer.setData('text/plain', e.currentTarget.dataset.groupId);
     e.dataTransfer.setData('type', 'group-marker');
     e.currentTarget.style.opacity = '0.5';
+    
+    if (e.dataTransfer.setDragImage) {
+        const width = e.currentTarget.offsetWidth;
+        const height = e.currentTarget.offsetHeight;
+        e.dataTransfer.setDragImage(e.currentTarget, width / 2, height / 2);
+    }
 }
 
 function handleGroupMarkerDragEnd(e) {
@@ -1253,8 +1242,8 @@ function handleGroupMarkerDragEnd(e) {
     if (group) {
         group.x = constrained.x;
         group.y = constrained.y;
-        e.currentTarget.style.left = `${constrained.x - 16}px`; // Center the 32px marker
-        e.currentTarget.style.top = `${constrained.y - 16}px`;
+        e.currentTarget.style.left = `${constrained.x}px`;
+        e.currentTarget.style.top = `${constrained.y}px`;
         
         // MERGE DISABLED - Groups no longer merge when dragged close together
         // checkAndMergeNearbyGroups(group);
@@ -2280,10 +2269,6 @@ function placeEnemyGroup(x, y) {
     
     marker.innerHTML = `
         <div class="group-number">5</div>
-        <div class="group-tooltip">
-            <div class="tooltip-header">Enemy Group</div>
-            <div class="tooltip-info">5 Enemy Players</div>
-        </div>
         <button class="remove-btn" onclick="removeEnemyGroup('${enemyGroupId}')">×</button>
     `;
     
@@ -2309,6 +2294,12 @@ function handleEnemyGroupDragStart(e) {
     e.dataTransfer.setData('text/plain', e.currentTarget.dataset.enemyGroupId);
     e.dataTransfer.setData('type', 'enemy-group-marker');
     e.currentTarget.style.opacity = '0.5';
+
+    if (e.dataTransfer.setDragImage) {
+        const width = e.currentTarget.offsetWidth;
+        const height = e.currentTarget.offsetHeight;
+        e.dataTransfer.setDragImage(e.currentTarget, width / 2, height / 2);
+    }
 }
 
 function handleEnemyGroupDragEnd(e) {

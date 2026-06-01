@@ -778,9 +778,10 @@ header img[alt="WWM Logo"] {
     border: 2px solid rgba(11,10,8,0.9);
     box-shadow: 0 3px 10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.3);
     transition: transform .2s, box-shadow .2s;
+    transform: translate(-50%, -50%);
 }
 .group-marker:hover {
-    transform: scale(1.08);
+    transform: translate(-50%, -50%) scale(1.08);
     z-index: 100;
     box-shadow: 0 5px 16px rgba(0,0,0,0.7), 0 0 14px rgba(201,162,75,0.4);
 }
@@ -943,8 +944,7 @@ header img[alt="WWM Logo"] {
 .remove-btn:hover { background: var(--vermilion-br); }
 
 /* Tooltips */
-.marker-tooltip,
-.group-tooltip {
+.marker-tooltip {
     position: absolute;
     bottom: calc(100% + 8px);
     left: 50%;
@@ -964,8 +964,7 @@ header img[alt="WWM Logo"] {
     box-shadow: 0 10px 26px rgba(0,0,0,0.6);
     pointer-events: none;
 }
-.member-marker:hover .marker-tooltip,
-.group-marker:hover .group-tooltip {
+.member-marker:hover .marker-tooltip {
     opacity: 1; visibility: visible;
     transform: translateX(-50%) translateY(0);
 }
