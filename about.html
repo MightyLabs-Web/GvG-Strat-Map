@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="images/guild_logo.png">
+    <title>About MightyLabs - Where Winds Meet</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* About Page — Ink & Cinder wuxia theme */
+        .about-page { min-height: 100vh; padding: 40px 20px; }
+        .about-container { max-width: 980px; margin: 0 auto; }
+
+        .about-header {
+            position: relative;
+            text-align: center;
+            padding: 54px 40px 44px;
+            margin-bottom: 40px;
+            background:
+                linear-gradient(180deg, rgba(20,18,16,0.78), rgba(11,10,8,0.88)),
+                url('images/gm_banner.png') center/cover no-repeat;
+            border: 1px solid var(--ink-line);
+            border-top: 3px solid var(--gold);
+            border-radius: 4px;
+            box-shadow: 0 22px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(232,200,120,0.10);
+            overflow: hidden;
+        }
+        .about-header::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(201,162,75,0.18), transparent 60%);
+            z-index: 0;
+        }
+        .about-header > * { position: relative; z-index: 1; }
+
+        .profile-avatar {
+            width: 156px; height: 156px;
+            margin: 0 auto 22px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 0 6px rgba(11,10,8,0.6), 0 0 40px rgba(201,162,75,0.45);
+        }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        .about-name {
+            font-family: var(--font-display);
+            font-size: 2.6rem;
+            font-weight: 900;
+            letter-spacing: 0.05em;
+            color: transparent;
+            background: linear-gradient(180deg, var(--gold-bright), var(--gold) 60%, var(--gold-deep));
+            -webkit-background-clip: text; background-clip: text;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 18px rgba(201,162,75,0.3);
+        }
+        .about-tagline {
+            font-family: var(--font-body);
+            font-style: italic;
+            font-size: 1.2rem;
+            color: var(--silk-dim);
+            letter-spacing: 0.04em;
+            margin-bottom: 26px;
+        }
+        .about-tagline::before, .about-tagline::after {
+            content: '❖'; color: var(--gold-deep); margin: 0 12px; font-style: normal; font-size: 0.8em;
+        }
+
+        .social-links { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .social-btn {
+            display: inline-flex; align-items: center; gap: 9px;
+            padding: 11px 22px;
+            font-family: var(--font-display);
+            font-size: 0.82rem; font-weight: 600;
+            letter-spacing: 0.06em; text-transform: uppercase;
+            text-decoration: none;
+            color: var(--silk);
+            background: linear-gradient(180deg, var(--ink-raised), var(--ink-panel));
+            border: 1px solid var(--ink-line);
+            border-radius: 3px;
+            transition: all .2s;
+        }
+        .social-btn:hover {
+            color: var(--gold-bright); border-color: var(--gold);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        }
+        .social-btn svg { fill: currentColor; }
+        .social-btn.youtube:hover { color: var(--vermilion-br); border-color: var(--vermilion); }
+
+        .about-content { display: grid; gap: 24px; margin-bottom: 40px; }
+        .about-section {
+            background: linear-gradient(180deg, rgba(27,24,20,0.97), rgba(18,16,13,0.98));
+            border: 1px solid var(--ink-line);
+            border-left: 3px solid var(--gold-deep);
+            border-radius: 4px;
+            padding: 28px 30px;
+            box-shadow: 0 14px 40px rgba(0,0,0,0.45);
+        }
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 1.4rem; font-weight: 700;
+            letter-spacing: 0.03em;
+            color: var(--gold-bright);
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--ink-line);
+            position: relative;
+        }
+        .section-title::after {
+            content: ''; position: absolute; left: 0; bottom: -1px;
+            width: 60px; height: 2px;
+            background: linear-gradient(90deg, var(--vermilion-br), transparent);
+        }
+        .description-text { color: var(--silk-dim); line-height: 1.75; font-size: 1.05rem; margin-bottom: 14px; }
+        .description-text:last-child { margin-bottom: 0; }
+        .description-text strong { color: var(--gold); }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px; margin-top: 18px;
+        }
+        .skill-item {
+            background: rgba(11,10,8,0.5);
+            border-left: 3px solid var(--jade);
+            padding: 16px 18px;
+            border-radius: 3px;
+            transition: all .2s;
+        }
+        .skill-item:hover { border-left-color: var(--jade-bright); transform: translateX(3px); }
+        .skill-title {
+            font-family: var(--font-display);
+            font-weight: 600; font-size: 1.05rem;
+            color: var(--silk); margin-bottom: 7px;
+            letter-spacing: 0.02em;
+        }
+        .skill-desc { color: var(--silk-faint); font-size: 0.96rem; line-height: 1.6; }
+
+        .back-button {
+            position: fixed; top: 22px; left: 22px;
+            padding: 12px 22px;
+            font-family: var(--font-display);
+            font-size: 0.8rem; font-weight: 600;
+            letter-spacing: 0.06em; text-transform: uppercase;
+            color: var(--ink-void);
+            background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+            border: 1px solid var(--gold-deep);
+            border-radius: 3px;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+            transition: all .25s;
+            z-index: 1000;
+        }
+        .back-button:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(201,162,75,0.4); }
+
+        @media (max-width: 768px) {
+            .profile-avatar { width: 124px; height: 124px; }
+            .about-name { font-size: 2rem; }
+            .skills-grid { grid-template-columns: 1fr; }
+            .back-button { top: 12px; left: 12px; padding: 10px 16px; font-size: 0.72rem; }
+        }
+    </style>
+
+</head>
+<body class="about-page">
+    <button class="back-button" onclick="window.location.href='index.html'">← Back to Strategy Map</button>
+
+    <div class="about-container">
+        <!-- Header -->
+        <div class="about-header">
+            <div class="profile-avatar">
+                <img src="images/GM_DP.png" alt="MightyLabs">
+            </div>
+            <h1 class="about-name">MightyLabs</h1>
+            <p class="about-tagline">Where Winds Meet • OCE/SEA Region</p>
+            <div class="social-links">
+                <a href="https://discordapp.com/users/91448874530504704" target="_blank" class="social-btn">
+                    <svg width="20" height="20" viewBox="0 0 71 55" fill="none">
+                        <g clip-path="url(#clip0)">
+                            <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z" fill="currentColor"/>
+                        </g>
+                    </svg>
+                    Discord
+                </a>
+                <a href="https://www.youtube.com/@mightylabs" target="_blank" class="social-btn youtube">
+                    <svg width="20" height="14" viewBox="0 0 24 17" fill="none">
+                        <path d="M23.498 2.665c-.276-1.039-1.089-1.858-2.122-2.136C19.505 0 12 0 12 0S4.495 0 2.624.529C1.591.807.778 1.626.502 2.665 0 4.548 0 8.5 0 8.5s0 3.952.502 5.835c.276 1.039 1.089 1.858 2.122 2.136C4.495 17 12 17 12 17s7.505 0 9.376-.529c1.033-.278 1.846-1.097 2.122-2.136C24 12.452 24 8.5 24 8.5s0-3.952-.502-5.835zM9.545 12.133V4.867L15.818 8.5l-6.273 3.633z" fill="currentColor"/>
+                    </svg>
+                    YouTube
+                </a>
+            </div>
+        </div>
+
+        <div class="about-content">
+            <!-- About Me -->
+            <div class="about-section">
+                <h2 class="section-title">👋 About Me</h2>
+                <p class="description-text">G'day! I'm MightyLabs, a player in Where Winds Meet from OCE region. I'm mostly into competitive PvP or anything that requires some level of strategic gameplay, mainly focusing on Guild vs Guild wars these days.</p>
+                <p class="description-text">I also enjoy creating tools and resources for the community, like this GvG strategy map.</p>
+            </div>
+
+            <!-- Playstyle -->
+            <div class="about-section">
+                <h2 class="section-title">⚔️ Playstyle</h2>
+                <div class="skills-grid">
+                    <div class="skill-item">
+                        <div class="skill-title">PvP Focus</div>
+                        <div class="skill-desc">Guild vs Guild wars, Group Strategy, Perception Forest; Hybrid Support DPS (Nameless Sword + Vernal Umbrella or Nameless Sword + Inkwell Fan)</div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-title">Community Contributor</div>
+                        <div class="skill-desc">Creating resources, organizing events, and helping players improve.</div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-title">Strategy & Tools</div>
+                        <div class="skill-desc">Developing battle plans, roster management, creating guides and resources to aid competitive play.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Projects -->
+            <div class="about-section">
+                <h2 class="section-title">🛠️ Projects</h2>
+                <p class="description-text"><strong>GvG Strategy Map</strong> : An interactive battle planning tool for Where Winds Meet guild wars. Built with the community in mind.</p>
+                <p class="description-text">Built with HTML5 Canvas, drag-and-drop functionality, and an ink-and-gold wuxia design. Available for the community to use freely.</p>
+                <p class="description-text">*This tool is primarily based on the vcross interactive gvg tool but enhanced with community feedback and current gameplay insights on global server.</p>
+            </div>
+
+            <!-- Get in Touch -->
+            <div class="about-section">
+                <h2 class="section-title">📬 Get in Touch</h2>
+                <p class="description-text">Feel free to reach out via Discord if you have any suggestions on further improvement of the tool or want to discuss GvG strategies, collaborate on community projects, or just chat about the game.</p>
+                <p class="description-text">Always happy to discuss anything WWM, particularly GvG related. I'm no expert, but I'm always eager to learn and share knowledge.</p>
+                <p class="description-text">Happy to create a custom version of the tool for your own guild or community or discuss other possible resources that may be of interest.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

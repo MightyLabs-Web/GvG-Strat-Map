@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GvG Strategy Maker</title>
+    
+    <!-- Copyright & Security Meta Tags -->
+    <meta name="author" content="MightyLabs">
+    <meta name="copyright" content="© 2026 MightyLabs. All rights reserved.">
+    <meta name="description" content="Guild War Strategy Tool for Where Winds Meet - Created by MightyLabs">
+    <meta name="robots" content="noarchive">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta name="referrer" content="same-origin">
+    
+    <link rel="icon" type="image/png" href="images/guild_logo.png">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 10px;">
+                <img src="images/guild_logo.png" alt="WWM Logo" style="width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(255, 207, 52, 0.5));">
+                <h1 style="margin: 0;">WWM - Guild War Strategy</h1>
+            </div>
+            <p class="subtitle">Guild vs Guild Battle Map • Created by <a href="https://discordapp.com/users/91448874530504704" target="_blank" class="mightylabs-link">MIGHTYLABS</a></p>
+            
+            <!-- Navigation Bar -->
+            <nav class="header-nav">
+                <button id="guildPageBtn" class="nav-btn">
+                    <span class="nav-icon">💎</span>
+                    <span class="nav-text">About Me</span>
+                </button>
+                <button id="exportBtn" class="nav-btn">
+                    <span class="nav-icon">📥</span>
+                    <span class="nav-text">Export</span>
+                </button>
+                <div class="nav-import-wrapper" id="importWrapper">
+                    <button id="importBtn" class="nav-btn" title="Import options">
+                        <span class="nav-icon">📤</span>
+                        <span class="nav-text">Import</span>
+                    </button>
+                    <div class="import-dropdown" id="importDropdown">
+                        <button class="import-option-btn" id="importStrategyBtn">
+                            <span>📋</span> Strategy File (.json)
+                            <small>Restores full strategy including positions & markers</small>
+                        </button>
+                        <button class="import-option-btn" id="importPlayersBtn">
+                            <span>👥</span> Player Roster (.csv / .xlsx)
+                            <small>Import player names, roles, weapons & teams</small>
+                        </button>
+                    </div>
+                </div>
+                <button id="hotKeyBtn" class="nav-btn">
+                    <span class="nav-icon">⌨️</span>
+                    <span class="nav-text">Hot Keys</span>
+                </button>
+                <button id="knownIssuesBtn" class="nav-btn">
+                    <span class="nav-icon">⚠️</span>
+                    <span class="nav-text">Known Issues</span>
+                </button>
+                <button id="howToBtn" class="nav-btn">
+                    <span class="nav-icon">📖</span>
+                    <span class="nav-text">How To Use</span>
+                </button>
+                <button id="changelogBtn" class="nav-btn">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">v2.0.1</span>
+                </button>
+            </nav>
+            
+            <input type="file" id="importFileInput" accept=".json,.csv,.xlsx,.xls" style="display: none;">
+            <input type="file" id="importPlayersFileInput" accept=".csv,.xlsx,.xls" style="display: none;">
+        </header>
+        
+        <div class="main-content">
+            <!-- Member List Panel -->
+            <div class="member-panel" id="memberPanel">
+                <div class="panel-content">
+                    <h2>Guild Members <span id="playerCount">(0/30)</span>
+                        <button id="managePlayersBtn" class="manage-players-btn" title="Manage Players">⚙️</button>
+                    </h2>
+                <div class="enemy-section">
+                    <button id="addEnemiesBtn" class="add-enemies-btn">
+                        ⚔️ Add 5 Enemies (<span id="enemyCount">0</span>/30)
+                    </button>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search players...">
+                </div>
+                <div class="view-toggle">
+                    <button class="view-toggle-btn active" data-view="grouped">Grouped by Team</button>
+                    <button class="view-toggle-btn" data-view="list">Show Players Only</button>
+                </div>
+                <div class="role-filters">
+                    <button class="role-filter-btn active" data-role="all">All Roles</button>
+                    <button class="role-filter-btn" data-role="Tank">Tank</button>
+                    <button class="role-filter-btn" data-role="DPS">DPS</button>
+                    <button class="role-filter-btn" data-role="Healer">Healer</button>
+                </div>
+                    <div id="memberList" class="member-list"></div>
+                </div>
+            </div>
+            
+            <!-- Map Area -->
+            <div class="map-panel">
+                <h2>Battle Map <span id="placedCount">(0/30 Placed)</span></h2>
+                
+                <div id="mapArea" class="map-area">
+                    <canvas id="drawingCanvas" class="drawing-canvas"></canvas>
+                    <div class="map-placeholder">
+                        <p class="instruction">Drag players from the list to place them on the battle map</p>
+                    </div>
+                </div>
+                
+                <!-- Tools Toolbar at Bottom -->
+                <div class="bottom-toolbar" id="toolsToolbar">
+                    <div class="toolbar-buttons">
+                        <button id="addObjectiveBtn" class="toolbar-btn objective-btn" title="Add Objective Marker">
+                            <span class="btn-icon">🎯</span>
+                        </button>
+                        <button id="addHealerObjectiveBtn" class="toolbar-btn objective-btn" title="Add Healer Marker">
+                            <img src="images/healer.png" alt="Healer" class="btn-icon-img">
+                        </button>
+                        <button id="addTankObjectiveBtn" class="toolbar-btn objective-btn" title="Add Tank Marker">
+                            <img src="images/tank.png" alt="Tank" class="btn-icon-img">
+                        </button>
+                        <button id="addDPSObjectiveBtn" class="toolbar-btn objective-btn" title="Add DPS Marker">
+                            <img src="images/dps.png" alt="DPS" class="btn-icon-img">
+                        </button>
+
+                        <div class="toolbar-divider"></div>
+
+                        <button id="addBossBtn" class="toolbar-btn boss-btn" title="Add Boss Marker">
+                            <img src="images/boss.png" alt="Boss" class="btn-icon-img">
+                        </button>
+                        <button id="addBlueTowerBtn" class="toolbar-btn blue-tower-btn" title="Add Ally Tower (Blue)">
+                            <img src="images/tower_blue.png" alt="Blue Tower" class="btn-icon-img">
+                        </button>
+                        <button id="addRedTowerBtn" class="toolbar-btn red-tower-btn" title="Add Enemy Tower (Red)">
+                            <img src="images/tower_red.png" alt="Red Tower" class="btn-icon-img">
+                        </button>
+                        <button id="addBlueTreeBtn" class="toolbar-btn blue-tree-btn" title="Add Ally Tree (Blue)">
+                            <img src="images/tree_blue.png" alt="Blue Tree" class="btn-icon-img">
+                        </button>
+                        <button id="addRedTreeBtn" class="toolbar-btn red-tree-btn" title="Add Enemy Tree (Red)">
+                            <img src="images/tree_red.png" alt="Red Tree" class="btn-icon-img">
+                        </button>
+                        <button id="addBlueGooseBtn" class="toolbar-btn blue-goose-btn" title="Add Ally Goose (Blue)">
+                            <img src="images/goose_blue.png" alt="Blue Goose" class="btn-icon-img">
+                        </button>
+                        <button id="addRedGooseBtn" class="toolbar-btn red-goose-btn" title="Add Enemy Goose (Red)">
+                            <img src="images/goose_red.png" alt="Red Goose" class="btn-icon-img">
+                        </button>
+                        
+                        <div class="toolbar-divider"></div>
+                        
+                        <button id="drawBtn" class="toolbar-btn draw-btn" title="Toggle Draw Mode">
+                            <span class="btn-icon">✏️</span>
+                        </button>
+                        <button id="arrowBtn" class="toolbar-btn arrow-btn" title="Place Draggable Arrow">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down-right" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M0 4.5A.5.5 0 0 1 .5 4h9a.5.5 0 0 1 0 1H1.707l11.147 11.146a.5.5 0 0 1-.708.708L1 5.707V13.5a.5.5 0 0 1-1 0v-9z"/>
+                            </svg>
+                        </button>
+                        <div class="toolbar-color-picker">
+                            <label for="drawColorPicker" class="color-picker-label" title="Choose Drawing Color">
+                                <input type="color" id="drawColorPicker" value="#ff0000">
+                            </label>
+                        </div>
+                        <button id="undoDrawBtn" class="toolbar-btn undo-btn" title="Undo Drawing" disabled>
+                            <span class="btn-icon">↶</span>
+                        </button>
+                        <button id="redoDrawBtn" class="toolbar-btn redo-btn" title="Redo Drawing" disabled>
+                            <span class="btn-icon">↷</span>
+                        </button>
+                        <button id="clearDrawBtn" class="toolbar-btn clear-draw-btn" title="Clear All Drawings">
+                            <span class="btn-icon">🧹</span>
+                        </button>
+                        <div class="toolbar-toggle-option">
+                            <label class="toggle-label-small" title="Show 20px radius around healer/DPS/tank markers">
+                                <input type="checkbox" id="radiusToggle" />
+                                <span class="toggle-slider-small"></span>
+                                <span class="toggle-text-small">Role radius</span>
+                            </label>
+                        </div>
+                        
+                        <div class="toolbar-divider"></div>
+                        
+                        <button id="clearMapBtn" class="toolbar-btn clear-btn" title="Clear All Placements">
+                            <span class="btn-icon">❌</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Player Management Popup -->
+    <div id="playerManagementModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Manage Players</h2>
+                <button class="modal-close" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-toolbar">
+                    <button id="addNewPlayerBtn" class="btn-primary">+ Add New Player</button>
+                </div>
+                
+                <div class="player-management-list" id="playerManagementList">
+                    <!-- Players will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Player Edit Form Popup -->
+    <div id="playerEditModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="editModalTitle">Add New Player</h2>
+                <button class="modal-close" id="closeEditModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="playerEditForm">
+                    <input type="hidden" id="editPlayerId" value="">
+                    <div class="form-group">
+                        <label for="editPlayerName">Name:</label>
+                        <input type="text" id="editPlayerName" required maxlength="50">
+                    </div>
+                    <div class="form-group">
+                        <label for="editPlayerRole">Role:</label>
+                        <select id="editPlayerRole" required>
+                            <option value="Tank">Tank</option>
+                            <option value="DPS">DPS</option>
+                            <option value="Healer">Healer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPlayerTeam">Team:</label>
+                        <select id="editPlayerTeam">
+                            <!-- Dynamically populated by JavaScript -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPlayerWeapon1">Weapon 1:</label>
+                        <select id="editPlayerWeapon1" required>
+                            <option value="Nameless Sword">Nameless Sword</option>
+                            <option value="Nameless Spear">Nameless Spear</option>
+                            <option value="Stormbreaker Spear">Stormbreaker Spear</option>
+                            <option value="Thundercry Blade">Thundercry Blade</option>
+                            <option value="Infernal Twinblades">Infernal Twinblades</option>
+                            <option value="Mortal Rope Dart">Mortal Rope Dart</option>
+                            <option value="Vernal Umbrella">Vernal Umbrella</option>
+                            <option value="Inkwell Fan">Inkwell Fan</option>
+                            <option value="Panacea Fan">Panacea Fan</option>
+                            <option value="Soulshade Umbrella">Soulshade Umbrella</option>
+                            <option value="Heavenquaker Spear">Heavenquaker Spear</option>
+                            <option value="Strategic Sword">Strategic Sword</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPlayerWeapon2">Weapon 2:</label>
+                        <select id="editPlayerWeapon2" required>
+                            <option value="Nameless Sword">Nameless Sword</option>
+                            <option value="Nameless Spear">Nameless Spear</option>
+                            <option value="Stormbreaker Spear">Stormbreaker Spear</option>
+                            <option value="Thundercry Blade">Thundercry Blade</option>
+                            <option value="Infernal Twinblades">Infernal Twinblades</option>
+                            <option value="Mortal Rope Dart">Mortal Rope Dart</option>
+                            <option value="Vernal Umbrella">Vernal Umbrella</option>
+                            <option value="Inkwell Fan">Inkwell Fan</option>
+                            <option value="Panacea Fan">Panacea Fan</option>
+                            <option value="Soulshade Umbrella">Soulshade Umbrella</option>
+                            <option value="Heavenquaker Spear">Heavenquaker Spear</option>
+                            <option value="Strategic Sword">Strategic Sword</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="cancelEditBtn">Cancel</button>
+                        <button type="submit" class="btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="confirmModalTitle">Confirm Action</h2>
+            </div>
+            <div class="modal-body">
+                <p id="confirmModalMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="confirmCancelBtn">Cancel</button>
+                <button class="btn-danger" id="confirmOkBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Prompt Modal -->
+    <div id="promptModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="promptModalTitle">Input</h2>
+            </div>
+            <div class="modal-body">
+                <p id="promptModalMessage"></p>
+                <input type="text" id="promptModalInput" class="prompt-input" placeholder="Enter value...">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="promptCancelBtn">Cancel</button>
+                <button class="btn-primary" id="promptOkBtn">OK</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hotkey Help Modal -->
+    <div id="hotkeyHelpModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Keyboard Shortcuts</h2>
+                <button class="modal-close" id="closeHotkeyModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="hotkey-list">
+                    <div class="hotkey-item">
+                        <span class="hotkey-key">Shift + ?</span>
+                        <span class="hotkey-desc">Show this help</span>
+                    </div>
+                    <div class="hotkey-item">
+                        <span class="hotkey-key">O</span>
+                        <span class="hotkey-desc">Add Objective</span>
+                    </div>
+                    <div class="hotkey-item">
+                        <span class="hotkey-key">B</span>
+                        <span class="hotkey-desc">Add Boss</span>
+                    </div>
+                    <div class="hotkey-item">
+                        <span class="hotkey-key">1</span>
+                        <span class="hotkey-desc">Add Blue Tower (Ally)</span>
+                    </div>
+                    <div class="hotkey-item">
+                        <span class="hotkey-key">2</span>
+                        <span class="hotkey-desc">Add Red Tower (Enemy)</span>
+                    </div>
+                    <div class="hotkey-item">
+                        <span class="hotkey-key">3</span>
+                        <span class="hotkey-desc">Add Blue Tree (Ally)</span>
+                    </div>
+                    <div class="hotkey-item">
+                        <span class="hotkey-key">4</span>
+                        <span class="hotkey-desc">Add Red Tree (Enemy)</span>
+                    </div>
+                    <div class="hotkey-item">
+                        <span class="hotkey-key">5</span>
+                        <span class="hotkey-desc">Add Blue Goose (Ally)</span>
+                    </div>
+                    <div class="hotkey-item">
+                        <span class="hotkey-key">6</span>
+                        <span class="hotkey-desc">Add Red Goose (Enemy)</span>
+                    </div>
+                    <div class="hotkey-item">
+                        <span class="hotkey-key">D</span>
+                        <span class="hotkey-desc">Toggle Draw Mode</span>
+                    </div>
+                    <div class="hotkey-item">
+                        <span class="hotkey-key">Ctrl + Z</span>
+                        <span class="hotkey-desc">Undo Drawing</span>
+                    </div>
+                    <div class="hotkey-item">
+                        <span class="hotkey-key">Ctrl + Y</span>
+                        <span class="hotkey-desc">Redo Drawing</span>
+                    </div>
+                    <div class="hotkey-item">
+                        <span class="hotkey-key">Esc</span>
+                        <span class="hotkey-desc">Deselect Tool</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Objective Type Selection Modal -->
+    <div id="objectiveTypeModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Select Marker Type</h2>
+            </div>
+            <div class="modal-body">
+                <div class="objective-type-grid">
+                    <button class="objective-type-btn" data-type="enemy-dps">
+                        <span class="type-icon" style="color: #e74c3c; font-size: 32px;">●</span>
+                        <span class="type-label">Enemy DPS/Tank</span>
+                    </button>
+                    <button class="objective-type-btn" data-type="enemy-healer">
+                        <span class="type-icon" style="color: #2ecc71; font-size: 32px;">●</span>
+                        <span class="type-label">Enemy Healer</span>
+                    </button>
+                    <button class="objective-type-btn" data-type="attack">
+                        <span class="type-icon" style="font-size: 32px;">⚔️</span>
+                        <span class="type-label">Attack</span>
+                    </button>
+                    <button class="objective-type-btn" data-type="danger">
+                        <span class="type-icon" style="font-size: 32px;">💀</span>
+                        <span class="type-label">Danger</span>
+                    </button>
+                    <button class="objective-type-btn" data-type="defend">
+                        <span class="type-icon" style="font-size: 32px;">🛡️</span>
+                        <span class="type-label">Defend</span>
+                    </button>
+                    <button class="objective-type-btn" data-type="hold">
+                        <span class="type-icon" style="font-size: 32px;">✋</span>
+                        <span class="type-label">Hold</span>
+                    </button>
+                    <button class="objective-type-btn" data-type="yes">
+                        <span class="type-icon" style="font-size: 32px;">✅</span>
+                        <span class="type-label">Yes</span>
+                    </button>
+                    <button class="objective-type-btn" data-type="no">
+                        <span class="type-icon" style="font-size: 32px;">❌</span>
+                        <span class="type-label">No</span>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="closeObjectiveTypeModal">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Known Issues Modal -->
+    <div id="knownIssuesModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>⚠️ Known Issues & Important Notes</h2>
+                <button class="modal-close" id="closeKnownIssuesModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: left; line-height: 1.8;">
+                    <h3 style="color: var(--gold-bright); margin-top: 0;">🔍 Browser Zoom Limitation</h3>
+                    <p><strong>Issue:</strong> Marker positions shift when using browser zoom (Ctrl+Plus/Minus or Ctrl+MouseWheel).</p>
+                    
+                    <p><strong>Why:</strong> Markers use pixel coordinates that don't scale proportionally with browser zoom.</p>
+                    
+                    <div style="background: rgba(201,162,75,0.12); padding: 15px; border-radius: 4px; border-left: 4px solid var(--gold); margin: 15px 0;">
+                        <p style="margin: 0; font-weight: 600; font-size: 1.1rem;">✅ Best Practice:</p>
+                        <p style="margin: 10px 0 0 0;">Keep browser at <strong>100% zoom</strong> while planning strategy.</p>
+                    </div>
+                    
+                    <p><strong>How to Reset Zoom:</strong></p>
+                    <ul style="margin: 10px 0;">
+                        <li>Press <kbd style="background: var(--ink-void); color: var(--gold-bright); padding: 3px 8px; border-radius: 3px; border: 1px solid var(--gold-deep); font-family: monospace;">Ctrl+0</kbd> (Windows/Linux)</li>
+                        <li>Press <kbd style="background: var(--ink-void); color: var(--gold-bright); padding: 3px 8px; border-radius: 3px; border: 1px solid var(--gold-deep); font-family: monospace;">⌘+0</kbd> (Mac)</li>
+                    </ul>
+                    
+                    <p><strong>Workflow:</strong></p>
+                    <ol style="margin: 10px 0;">
+                        <li>Reset zoom to 100% (Ctrl+0)</li>
+                        <li>Place all markers and create strategy</li>
+                        <li>Export your strategy (save progress)</li>
+                        <li>Now you can zoom for viewing</li>
+                    </ol>
+                    
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
+                    
+                    <h3 style="color: var(--jade-bright);">💡 Tips for Best Results</h3>
+                    <ul style="margin: 10px 0;">
+                        <li>Use desktop/laptop for strategy planning</li>
+                        <li>Export frequently to save progress</li>
+                        <li>Use Import to restore saved strategies</li>
+                        <li>Mobile is great for viewing, not detailed planning</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="closeKnownIssuesModalBtn">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- How To Guide Modal -->
+    <div id="howToModal" class="modal">
+        <div class="modal-content" style="max-width: 780px; max-height: 92vh;">
+            <div class="modal-header">
+                <h2>📖 How To Use: Strategy Map Guide</h2>
+                <button class="modal-close" id="closeHowToModal">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 72vh; overflow-y: auto; text-align: left;">
+
+                <!-- Quick Start -->
+                <div class="howto-section">
+                    <h3 class="howto-title">🚀 Quick Start</h3>
+                    <ol class="howto-list">
+                        <li>Load the page: your guild roster appears automatically in the left panel.</li>
+                        <li>Drag a player from the left panel onto the map to place them.</li>
+                        <li>Use the toolbar at the bottom to add objective markers, boss/tower/tree/goose icons, or draw arrows.</li>
+                        <li>When happy with the strategy, click <strong>📥 Export</strong> to save a JSON file.</li>
+                        <li>Share the JSON with your team: they can <strong>📤 Import</strong> it to see the same setup.</li>
+                    </ol>
+                </div>
+
+                <!-- Navigation Bar -->
+                <div class="howto-section">
+                    <h3 class="howto-title">🔗 Navigation Bar</h3>
+                    <div class="howto-table">
+                        <div class="howto-row"><span class="howto-icon">💎</span><div><strong>About Me</strong> Opens information about MightyLabs, the creator of this tool.</div></div>
+                        <div class="howto-row"><span class="howto-icon">📥</span><div><strong>Export</strong>: Saves your entire current strategy (player positions, markers, drawings) as a <code>.json</code> file. Share this file for others to reload.</div></div>
+                        <div class="howto-row"><span class="howto-icon">📤</span><div><strong>Import</strong>: Two options:<br>
+                            &nbsp;&nbsp;• <em>Strategy File (.json)</em>: restores a previously exported layout.<br>
+                            &nbsp;&nbsp;• <em>Player Roster (.csv / .xlsx)</em>: loads players from a spreadsheet (see CSV section below).</div></div>
+                        <div class="howto-row"><span class="howto-icon">⌨️</span><div><strong>Hot Keys</strong>: Lists all keyboard shortcuts.</div></div>
+                        <div class="howto-row"><span class="howto-icon">⚠️</span><div><strong>Known Issues</strong>: Important notes about browser zoom and best practices.</div></div>
+                        <div class="howto-row"><span class="howto-icon">📖</span><div><strong>How To Use</strong>: This guide!</div></div>
+                        <div class="howto-row"><span class="howto-icon">📋</span><div><strong id="howtoVersionLabel">v2.0.1</strong>: Full version history and changelog.</div></div>
+                    </div>
+                </div>
+
+                <!-- Player Panel -->
+                <div class="howto-section">
+                    <h3 class="howto-title">👥 Left Panel: Player Roster</h3>
+                    <ul class="howto-list">
+                        <li><strong>Search bar</strong>: Filter players by name as you type.</li>
+                        <li><strong>Grouped by Team / All Players</strong>: Toggle between viewing players grouped into their teams or in a flat list.</li>
+                        <li><strong>Role filters</strong>: Click Tank, DPS, Healer, or Support to show only that role.</li>
+                        <li><strong>Drag to place</strong>: Drag any player card onto the map to place them. Their name label appears at the drop point.</li>
+                        <li><strong>Drag teams</strong>: You can drag a whole team group header to place all players together.</li>
+                        <li><strong>Unplace</strong>: Drag a placed marker off the map or click the × remove button to return them to the panel.</li>
+                        <li><strong>⚙️ Manage Players</strong>: Edit, delete, or add players manually. Use the pencil icon to change name, role, team, or weapons.</li>
+                        <li><strong>⚔️ Add Enemies</strong>: Places up to 5 generic enemy markers on the map for reference.</li>
+                    </ul>
+                </div>
+
+                <!-- Bottom Toolbar -->
+                <div class="howto-section">
+                    <h3 class="howto-title">🔧 Bottom Toolbar</h3>
+                    <div class="howto-table">
+                        <div class="howto-row"><span class="howto-icon">🎯</span><div><strong>Objective Marker</strong>: Opens a picker with 8 types: Attack ⚔️, Danger 💀, Defend 🛡️, Hold ✋, Yes ✅, No ❌, and more. Click a type then click the map to place it. Draggable.</div></div>
+                        <div class="howto-row"><span class="howto-icon"><img src="images/boss.png" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;"></span><div><strong>Boss</strong>: Places a boss marker. Click button then click anywhere on the map.</div></div>
+                        <div class="howto-row"><span class="howto-icon" style="display:flex;gap:2px;align-items:center;"><img src="images/tower_blue.png" style="width:18px;height:18px;object-fit:contain;"><img src="images/tower_red.png" style="width:18px;height:18px;object-fit:contain;"></span><div><strong>Towers</strong> (Blue / Red): Places a tower icon for your team (blue) or enemy (red).</div></div>
+                        <div class="howto-row"><span class="howto-icon" style="display:flex;gap:2px;align-items:center;"><img src="images/tree_blue.png" style="width:18px;height:18px;object-fit:contain;"><img src="images/tree_red.png" style="width:18px;height:18px;object-fit:contain;"></span><div><strong>Trees</strong> (Blue / Red): Same as towers but for tree/buff objectives.</div></div>
+                        <div class="howto-row"><span class="howto-icon" style="display:flex;gap:2px;align-items:center;"><img src="images/goose_blue.png" style="width:18px;height:18px;object-fit:contain;"><img src="images/goose_red.png" style="width:18px;height:18px;object-fit:contain;"></span><div><strong>Geese</strong> (Blue / Red): Same pattern, for goose objectives.</div></div>
+                        <div class="howto-row"><span class="howto-icon">✏️</span><div><strong>Draw Mode</strong>: Toggle freehand drawing on the map (useful for arrows and zones). All drawings can be undone.</div></div>
+                        <div class="howto-row"><span class="howto-icon">↩️</span><div><strong>Undo / Redo</strong>: Step back or forward through drawing history.</div></div>
+                        <div class="howto-row"><span class="howto-icon">🧹</span><div><strong>Clear Drawings</strong>: Removes all freehand drawings instantly.</div></div>
+                        <div class="howto-row"><span class="howto-icon">❌</span><div><strong>Clear Map</strong>: Removes all placed players and markers from the map. Does not affect the player roster.</div></div>
+                    </div>
+                </div>
+
+                <!-- CSV Import -->
+                <div class="howto-section">
+                    <h3 class="howto-title">📊 Importing Players from CSV / Excel</h3>
+                    <p style="margin-bottom:12px;">Click <strong>📤 Import → Player Roster (.csv / .xlsx)</strong> and select your file. A preview will appear before you confirm.</p>
+                    <p style="margin-bottom: 10px;"><strong>Required column:</strong> <code>Name</code><br>
+                    <strong>Optional columns:</strong> <code>Role</code>, <code>Team</code>, <code>Weapon1</code>, <code>Weapon2</code></p>
+                    <p style="margin-bottom: 8px;">Column names are flexible: the importer recognises common variations (e.g. <em>Player, IGN, Username</em> for Name; <em>Class, Type</em> for Role; <em>Squad, Group</em> for Team).</p>
+                    <p style="margin-bottom: 8px;"><strong>Valid roles:</strong> Tank, DPS, Healer, Support: anything unrecognised defaults to DPS.</p>
+                    <p style="margin-bottom: 12px;"><strong>New teams:</strong> If your file contains team names that don't exist yet, they will be auto-created when you confirm.</p>
+
+                    <div class="howto-csv-block">
+                        <div class="howto-csv-header">
+                            📄 player_roster_template.csv: example format
+                        </div>
+                        <pre class="howto-csv-pre">Name,Role,Team,Weapon1,Weapon2
+AeLucy,Healer,FLEX,Panacea Fan,Soulshade Umbrella
+Shenyu,DPS,FLEX,Strategic Sword,Heavenquaker Spear
+Arluna (BEST GL),DPS,FLEX,Nameless Sword,Nameless Spear
+Yaoyaoyaoyaoyao,DPS,FLEX,Nameless Sword,Nameless Spear
+YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
+                    </div>
+                    <p style="margin-top: 10px; font-size: 0.88rem; color: #888;">Tip: Build your roster in Excel, save as CSV, then import here. You can re-import anytime to update the roster without losing your strategy layout.</p>
+                </div>
+
+                <!-- Tips -->
+                <div class="howto-section">
+                    <h3 class="howto-title">💡 Tips & Best Practices</h3>
+                    <ul class="howto-list">
+                        <li>Keep your browser at <strong>100% zoom</strong> (Ctrl+0) while placing markers to avoid position drift.</li>
+                        <li><strong>Export before closing</strong> the tab: the map does not auto-save between sessions.</li>
+                        <li>The Export JSON file can be pasted into Discord so guildmates can load the exact same setup.</li>
+                        <li>On mobile the page is best used for <strong>viewing</strong> a shared strategy, not detailed editing.</li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="closeHowToModalBtn">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player Import Preview Modal -->
+    <div id="playerImportModal" class="modal">
+        <div class="modal-content" style="max-width: 750px; max-height: 90vh;">
+            <div class="modal-header">
+                <h2>👥 Import Player Roster</h2>
+                <button class="modal-close" id="closePlayerImportModal">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 65vh; overflow-y: auto;">
+                <div id="importPreviewInfo" class="import-preview-info"></div>
+                <div id="importPreviewTable"></div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between;">
+                <div style="font-size: 0.85rem; color: #999; text-align: left;">
+                    <strong>Required columns:</strong> Name, Role<br>
+                    <strong>Optional:</strong> Team, Weapon1, Weapon2
+                </div>
+                <div style="display:flex; gap: 10px;">
+                    <button class="btn-secondary" id="cancelPlayerImportBtn">Cancel</button>
+                    <button class="btn-primary" id="confirmPlayerImportBtn">✅ Import Players</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Changelog Modal -->
+    <div id="changelogModal" class="modal">
+        <div class="modal-content" style="max-width: 700px; max-height: 90vh;">
+            <div class="modal-header">
+                <h2>📋 Version History & Changelog</h2>
+                <button class="modal-close" id="closeChangelogModal">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto; text-align: left;">
+                <div class="version-current">
+                    <h3>🎯 Current Version: 2.0.1</h3>
+                    <p class="version-date">Released: June 2026</p>
+                </div>
+
+                <div class="changelog-section">
+                    <h4>Version 2.0.1 - Arrow Tool &amp; Toolbar Refinements</h4>
+                    <ul>
+                        <li>➹ <strong>Directional Arrow Tool:</strong> Added a draggable arrow tool. Click the arrow button, then drag on the map to draw a variable length, directional arrow for callouts, pushes, and rotations.</li>
+                        <li>✨ <strong>Map Objectives Back on the Toolbar:</strong> Un-nested the boss, tower, tree, and goose markers from the pop-up menu. They now sit directly on the bottom toolbar for one click placement.</li>
+                        <li>🧹 <strong>Removed Screenshot &amp; Gallery:</strong> Retired the screenshot capture and gallery slideshow features to keep the tool focused and lightweight.</li>
+                        <li>🧹 <strong>Removed Auto-delete Toggle:</strong> Removed the auto-delete drawings option; drawings now persist until cleared or undone.</li>
+                        <li>🐛 <strong>Marker Dot Fix:</strong> Player role markers now render as clean colored dots instead of showing a square background.</li>
+                        <li>🐛 <strong>Draw Color Fix:</strong> The first stroke after picking a new color now uses the chosen color immediately.</li>
+                        <li>🎨 <strong>Layout Polish:</strong> Aligned the roster and map panels so their bottoms line up, and ensured the full map is always visible without cropping.</li>
+                        <li>🔆 <strong>Toolbar Icons:</strong> Brightened the undo/redo icons for better visibility, and enlarged team marker labels for readability.</li>
+                    </ul>
+                </div>
+
+                <div class="changelog-section">
+                    <h4>Version 2.0.0 - "Ink &amp; Cinder" Complete Redesign</h4>
+                    <ul>
+                        <li>🎨 <strong>Full Visual Overhaul:</strong> Rebuilt the entire interface with a wuxia inspired ink and gold theme to match Where Winds Meet, replacing the previous look entirely.</li>
+                        <li>🖼️ <strong>New Layout:</strong> Reorganized into a battle map left, roster right layout with framed map, hanging scroll header, and engraved navigation tablets.</li>
+                        <li>🀄 <strong>Themed Components:</strong> Restyled every element: team pills, role badges, markers, modals, toolbar, and forms in the new imperial palette.</li>
+                        <li>🌄 <strong>Wallpaper Background:</strong> Added a full page themed wallpaper across both the strategy map and About pages.</li>
+                        <li>📝 <strong>About Page Refresh:</strong> Rebuilt the About page to match the new theme, with updated bio, playstyle, and project details.</li>
+                        <li>♻️ <strong>Preserved Functionality:</strong> Kept all existing tools: rosters, drag and drop placement, objective markers, drawing, export/import kept fully intact through the redesign.</li>
+                    </ul>
+                </div>
+
+                <div class="changelog-section">
+                    <h4>Version 1.12.0 - Minor Updates</h4>
+                    <ul>
+                        <li>✨ <strong>Pre-populated Teams:</strong> Added `Team 1`–`Team 6` and placed them at the top of the left panel and team dropdowns.</li>
+                        <li>✨ <strong>View Toggle Rename:</strong> Renamed "All Players" to "Show Players Only" for clearer UI wording.</li>
+                        <li>🔄 <strong>Map Update:</strong> Updated GvG Map to match current global version.</li>
+                    </ul>
+                </div>
+
+                <div class="changelog-section">
+                    <h4>Version 1.11.0 - Major Overhaul: Objective Markers, Rebranding & Bug Fixes</h4>
+                    <ul>
+                        <li>🎯 <strong>Enhanced Objective Markers:</strong> Complete redesign with new marker types and functionality</li>
+                        <li>🎯 <strong>Class Objective Markers:</strong> Added specialized markers for different objective types (Attack, Defend, Hold, Danger, etc.)</li>
+                        <li>🎯 <strong>Radius Toggles:</strong> Added visual radius indicators for objective markers to show area of effect</li>
+                        <li>🎯 <strong>Improved Marker Positioning:</strong> Markers now positioned more accurately and consistently across the map</li>
+                        <li>✨ <strong>Working Modal Buttons:</strong> Fixed How To, Known Issues, Changelog, and Screenshot buttons</li>
+                        <li>📸 <strong>Screenshot Function:</strong> Fully functional screenshot feature with html2canvas integration</li>
+                        <li>🐛 <strong>Critical Bug Fixes:</strong> Resolved drag-and-drop issues caused by DOM loading timing errors</li>
+                        <li>🐛 <strong>Fixed Canvas Context:</strong> Moved canvas context initialization to prevent script crashes</li>
+                        <li>🐛 <strong>Null Check Protection:</strong> Added null checks for all DOM elements to prevent runtime errors</li>
+                        <li>🎨 <strong>Modal Improvements:</strong> Added "click outside to close" functionality for all modals</li>
+                        <li>📝 <strong>About Page Content:</strong> Added vcross attribution and custom commission information</li>
+                        <li>🔧 <strong>Code Optimization:</strong> Restructured initialization to use window.addEventListener('load') for reliability</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.10.0 - How To Guide, Guild Leader &amp; Role Badge Fixes</h4>
+                    <ul>
+                        <li>✨ Added full "How To Use" guide in navigation bar: covers every feature for new users</li>
+                        <li>✨ CSV template shown inline inside the guide for easy reference</li>
+                        <li>✨ Added Guild Leader section to Guild page (Alruna: with Discord button)</li>
+                        <li>🔧 Fixed role badge colours in Manage Players: Tank orange, Support yellow, DPS red, Healer green</li>
+                        <li>🎨 Role badge colours now consistent everywhere</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.9.0 - Gallery Slideshow &amp; UI Polish</h4>
+                    <ul>
+                        <li>✨ Screenshot gallery now shows compact thumbnails (up to 10 visible at once)</li>
+                        <li>✨ Click any thumbnail to open full-screen slideshow lightbox</li>
+                        <li>✨ Slideshow supports left/right arrow buttons and keyboard navigation (← → Esc)</li>
+                        <li>✨ Download button available directly inside the slideshow view</li>
+                        <li>🎨 Restored clean navigation bar: plain text & icons, no bubble backgrounds</li>
+                        <li>🎨 All modals (Known Issues, Changelog, Gallery) now use matching glassmorphism style</li>
+                        <li>🔧 Gallery delete no longer requires a confirmation popup</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.8.0 - Player Roster Import & UI Fixes</h4>
+                    <ul>
+                        <li>✨ Added player roster import from CSV or Excel (.xlsx) files</li>
+                        <li>✨ Import previews players before confirming, with coloured role badges</li>
+                        <li>✨ Auto-generates team groups from any new team names found in the file</li>
+                        <li>🎨 Fixed glassmorphism to correctly match the top banner on all panels</li>
+                        <li>📸 Fixed screenshots: now composites map background + all markers correctly</li>
+                        <li>🔧 Fixed marker drag boundaries: markers now constrained to map area only</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.7.0 - Screenshot Gallery</h4>
+                    <ul>
+                        <li>✨ Added screenshot gallery storing the last 10 captures</li>
+                        <li>✨ Added version history and changelog viewer (this screen!)</li>
+                        <li>📸 Screenshot button added to bottom toolbar</li>
+                        <li>🖼️ Gallery supports individual view, download and delete</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.6.0 - Navigation & Known Issues</h4>
+                    <ul>
+                        <li>✨ Added "Known Issues" help section</li>
+                        <li>🎨 Redesigned navigation bar (clean text style)</li>
+                        <li>🔧 Fixed guild page navigation link</li>
+                        <li>📸 Added screenshot feature with download</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.5.0 - Objective Markers Expansion</h4>
+                    <ul>
+                        <li>✨ Added 4 new objective marker types (Defend, Hold, Yes, No)</li>
+                        <li>🔄 Renamed "EH Marker" to "Attack" and "Enemy" to "Danger"</li>
+                        <li>🎨 Improved objective marker modal layout (4x2 grid)</li>
+                        <li>🔧 Fixed marker positioning issues</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.4.0 - Role Badge Updates</h4>
+                    <ul>
+                        <li>🎨 Changed Tank role color from blue to orange</li>
+                        <li>🎨 Updated all role badges to black text with black borders</li>
+                        <li>🔧 Fixed role colors in Manage Players modal</li>
+                        <li>✨ Consistent role colors across map and UI</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.3.0 - Map Responsiveness</h4>
+                    <ul>
+                        <li>📱 Improved mobile responsiveness</li>
+                        <li>🎨 Fixed map scaling on different resolutions</li>
+                        <li>🔧 Added boundary constraints for markers</li>
+                        <li>✨ Markers can no longer be dragged off screen</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.2.0 - Security & Branding</h4>
+                    <ul>
+                        <li>🔒 Added comprehensive security measures</li>
+                        <li>🔒 Disabled right-click and developer tools</li>
+                        <li>📝 Added copyright protection (MightyLabs)</li>
+                        <li>✨ Updated branding and links</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.1.0 - Guild Page & Import/Export</h4>
+                    <ul>
+                        <li>✨ Added guild information page</li>
+                        <li>📤 Implemented strategy export/import system</li>
+                        <li>🔧 Fixed empty team marker imports</li>
+                        <li>🎨 Professional glassmorphism redesign</li>
+                    </ul>
+                </div>
+                
+                <div class="changelog-section">
+                    <h4>Version 1.0.0 - Initial Release</h4>
+                    <ul>
+                        <li>🎮 Core guild war strategy mapping tool</li>
+                        <li>👥 Player management system (30 players max)</li>
+                        <li>🎯 8 team groups with drag-and-drop</li>
+                        <li>🎯 Objective markers (DPS, Healer, Attack, Danger)</li>
+                        <li>🐉 Boss, Tower, Tree, and Goose markers</li>
+                        <li>✏️ Drawing tools with undo/redo</li>
+                        <li>⌨️ Keyboard shortcuts</li>
+                        <li>🌙 Dark theme</li>
+                    </ul>
+                </div>
+                
+                <div style="margin-top: 30px; padding: 20px; background: rgba(201,162,75,0.10); border-radius: 4px; border-left: 4px solid var(--gold);">
+                    <p style="margin: 0; font-size: 0.9rem; color: #999;">
+                        <strong>Created by:</strong> MightyLabs<br>
+                        <strong>Game:</strong> Where Winds Meet
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="closeChangelogModalBtn">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Security Measures -->
+    <script>
+    // Copyright Protection - MightyLabs 2026
+    
+    // Disable right-click
+    document.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        return false;
+    });
+    
+    // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+    document.addEventListener('keydown', e => {
+        // F12 - Developer Tools
+        if (e.keyCode == 123) {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+Shift+I - Inspect Element
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 73) {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+Shift+J - Console
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 74) {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+U - View Source
+        if (e.ctrlKey && e.keyCode == 85) {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+S - Save Page
+        if (e.ctrlKey && e.keyCode == 83) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    
+    // Disable text selection
+    document.body.style.userSelect = 'none';
+    document.body.style.webkitUserSelect = 'none';
+    document.body.style.mozUserSelect = 'none';
+    document.body.style.msUserSelect = 'none';
+    
+    // Detect DevTools
+    const devtools = /./;
+    devtools.toString = function() {
+        console.log('%c© 2026 MightyLabs - All Rights Reserved', 'font-size: 20px; color: red; font-weight: bold;');
+        console.log('%cUnauthorized copying or distribution is prohibited.', 'font-size: 14px; color: orange;');
+    }
+    console.log('%c', devtools);
+    
+    // Watermark in console
+    console.log('%cGuild War Strategy Tool', 'font-size: 24px; font-weight: bold; color: #667eea;');
+    console.log('%cCreated by MightyLabs', 'font-size: 16px; color: #764ba2;');
+    console.log('%c© 2026 All Rights Reserved', 'font-size: 14px; color: #999;');
+    </script>
+    
+    <!-- SheetJS for Excel/CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
