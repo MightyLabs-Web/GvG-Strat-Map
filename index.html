@@ -23,7 +23,7 @@
                 <img src="images/guild_logo.png" alt="WWM Logo" style="width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(255, 207, 52, 0.5));">
                 <h1 style="margin: 0;">WWM - Guild War Strategy</h1>
             </div>
-            <p class="subtitle">Guild vs Guild Battle Map • Created by <a href="https://discordapp.com/users/91448874530504704" target="_blank" class="mightylabs-link">MIGHTYLABS</a></p>
+            
             
             <!-- Navigation Bar -->
             <nav class="header-nav">
@@ -65,7 +65,7 @@
                 </button>
                 <button id="changelogBtn" class="nav-btn">
                     <span class="nav-icon">📋</span>
-                    <span class="nav-text">v2.0.1</span>
+                    <span class="nav-text">v.2.1</span>
                 </button>
             </nav>
             
@@ -77,14 +77,10 @@
             <!-- Member List Panel -->
             <div class="member-panel" id="memberPanel">
                 <div class="panel-content">
-                    <h2>Guild Members <span id="playerCount">(0/30)</span>
+                    <h2>Guild Members
                         <button id="managePlayersBtn" class="manage-players-btn" title="Manage Players">⚙️</button>
                     </h2>
-                <div class="enemy-section">
-                    <button id="addEnemiesBtn" class="add-enemies-btn">
-                        ⚔️ Add 5 Enemies (<span id="enemyCount">0</span>/30)
-                    </button>
-                </div>
+                <!-- Enemy quick-add removed -->
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="Search players...">
                 </div>
@@ -97,6 +93,7 @@
                     <button class="role-filter-btn" data-role="Tank">Tank</button>
                     <button class="role-filter-btn" data-role="DPS">DPS</button>
                     <button class="role-filter-btn" data-role="Healer">Healer</button>
+                    <button class="role-filter-btn" data-role="ENEMEY">ENEMEY</button>
                 </div>
                     <div id="memberList" class="member-list"></div>
                 </div>
@@ -104,7 +101,7 @@
             
             <!-- Map Area -->
             <div class="map-panel">
-                <h2>Battle Map <span id="placedCount">(0/30 Placed)</span></h2>
+                <h2>Battle Map <span class="map-credit">• Created by <a href="https://discordapp.com/users/91448874530504704" target="_blank" class="mightylabs-link">MIGHTYLABS</a></span></h2>
                 
                 <div id="mapArea" class="map-area">
                     <canvas id="drawingCanvas" class="drawing-canvas"></canvas>
@@ -235,6 +232,7 @@
                             <option value="Tank">Tank</option>
                             <option value="DPS">DPS</option>
                             <option value="Healer">Healer</option>
+                            <option value="ENEMEY">ENEMEY</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -294,6 +292,7 @@
             </div>
             <div class="modal-body">
                 <p id="confirmModalMessage"></p>
+                <div id="confirmModalExtras" style="margin-top:10px;"></div>
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" id="confirmCancelBtn">Cancel</button>
@@ -516,7 +515,7 @@
                         <div class="howto-row"><span class="howto-icon">⌨️</span><div><strong>Hot Keys</strong>: Lists all keyboard shortcuts.</div></div>
                         <div class="howto-row"><span class="howto-icon">⚠️</span><div><strong>Known Issues</strong>: Important notes about browser zoom and best practices.</div></div>
                         <div class="howto-row"><span class="howto-icon">📖</span><div><strong>How To Use</strong>: This guide!</div></div>
-                        <div class="howto-row"><span class="howto-icon">📋</span><div><strong id="howtoVersionLabel">v2.0.1</strong>: Full version history and changelog.</div></div>
+                            <div class="howto-row"><span class="howto-icon">📋</span><div><strong id="howtoVersionLabel">v.2.1</strong>: Full version history and changelog.</div></div>
                     </div>
                 </div>
 
@@ -626,8 +625,22 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto; text-align: left;">
                 <div class="version-current">
-                    <h3>🎯 Current Version: 2.0.1</h3>
-                    <p class="version-date">Released: June 2026</p>
+                    <h3>🎯 Current Version: 2.1</h3>
+                    <p class="version-date">Released: July 2026</p>
+                </div>
+
+                <div class="changelog-section">
+                    <h4>Version 2.1 - Targeted migration &amp; UX tweaks</h4>
+                    <ul>
+                        <li>🧹 <strong>Removed Add Enemies:</strong> Removed the "Add 5 Enemies" button and related auto-enemy placement functionality.</li>
+                        <li>➕ <strong>Team 7:</strong> Added Team 7 to the predefined teams and team dropdowns.</li>
+                        <li>🔢 <strong>Removed counters &amp; limits:</strong> Removed the placed-player counter next to the map and the player limit enforcement so placements are unrestricted.</li>
+                        <li>☑️ <strong>Clear-all confirmation:</strong> Added a "Don't warn me again" checkbox to the Clear All confirmation modal and persist the choice for the session.</li>
+                        <li>🎨 <strong>Created by &amp; heading:</strong> Moved and restored the "Created by MIGHTYLABS" credit inline with the Battle Map header and restored the Discord profile link.</li>
+                        <li>🎭 <strong>Roles &amp; colors:</strong> Changed DPS color to VS Code blue and added an ENEMEY role (red). DPS and ENEMEY badges/text now use black for improved readability.</li>
+                        <li>↩️ <strong>Undo improvements:</strong> Undo now covers placed markers as well as drawings (moves, adds, and removals recorded).</li>
+                        <li>⚙️ <strong>Misc tidy:</strong> Removed the Support role filter/button and removed duplicate player counters in the roster panel.</li>
+                    </ul>
                 </div>
 
                 <div class="changelog-section">

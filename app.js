@@ -37,12 +37,12 @@ let drawingColor = '#ff0000'; // Default red color
 let activeSplitGroupId = null;
 
 // Constants
-const MAX_PLAYERS = 30;
+const MAX_PLAYERS = 30; // kept for display only; limit enforcement removed
 const MAX_ENEMIES = 30;
 const ENEMIES_PER_CLICK = 5;
 const GROUP_MERGE_DISTANCE = 80;
 const AUTO_DELETE_DELAY = 10000;
-const TEAM_ORDER = ['Team 1', 'Team 2', 'Team 3', 'Team 4', 'Team 5', 'Team 6', 'FLEX', 'ATTACK', 'DEFENCE', 'TOP JUNGLE', 'BOT JUNGLE', 'GATE KEEPERS', 'BOSS TEAM', 'ASSASSINS'];
+const TEAM_ORDER = ['Team 1', 'Team 2', 'Team 3', 'Team 4', 'Team 5', 'Team 6', 'Team 7', 'FLEX', 'ATTACK', 'DEFENCE', 'TOP JUNGLE', 'BOT JUNGLE', 'GATE KEEPERS', 'BOSS TEAM', 'ASSASSINS'];
 // Add after TEAM_ORDER constant
 
 // Custom team name mappings
@@ -186,27 +186,46 @@ const closeHotkeyModalBtn = document.getElementById('closeHotkeyModalBtn');
 // ============================================================================
 
 function showConfirm(title, message) {
+    // Backwards-compatible: third parameter options may include { includeDontWarn: true }
     return new Promise((resolve) => {
+        const opts = arguments[2] || {};
         confirmModalTitle.textContent = title;
         confirmModalMessage.textContent = message;
+        // render optional extras container (checkbox)
+        const extras = document.getElementById('confirmModalExtras');
+        if (extras) extras.innerHTML = '';
+        if (opts.includeDontWarn && extras) {
+            const checked = sessionStorage.getItem('dontWarnClearPlacements') === 'true';
+            extras.innerHTML = `
+                <label class="dont-warn-label" style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" id="confirmDontWarnCheckbox" ${checked ? 'checked' : ''} />
+                    <span style="font-weight:700;color:var(--gold-bright);">Don't warn me again</span>
+                </label>
+            `;
+        }
         confirmModal.style.display = 'flex';
-        
+
         const handleOk = () => {
+            // persist checkbox if present
+            const cb = document.getElementById('confirmDontWarnCheckbox');
+            if (cb && cb.checked) {
+                sessionStorage.setItem('dontWarnClearPlacements', 'true');
+            }
             cleanup();
             resolve(true);
         };
-        
+
         const handleCancel = () => {
             cleanup();
             resolve(false);
         };
-        
+
         const cleanup = () => {
             confirmModal.style.display = 'none';
             confirmOkBtn.removeEventListener('click', handleOk);
             confirmCancelBtn.removeEventListener('click', handleCancel);
         };
-        
+
         confirmOkBtn.addEventListener('click', handleOk);
         confirmCancelBtn.addEventListener('click', handleCancel);
     });
@@ -678,7 +697,9 @@ function setupEventListeners() {
     });
     
     // Enemy button
-    addEnemiesBtn.addEventListener('click', addEnemies);
+    if (addEnemiesBtn) {
+        addEnemiesBtn.addEventListener('click', addEnemies);
+    }
     
     // Clear map button
     clearMapBtn.addEventListener('click', clearAllPlacements);
@@ -1010,12 +1031,6 @@ function handleDrop(e) {
             return;
         }
         
-        // Check max players limit
-        if (getTotalPlacedPlayers() >= MAX_PLAYERS) {
-            alert(`Maximum ${MAX_PLAYERS} players allowed on the map!`);
-            return;
-        }
-        
         placeMemberOnMap(member, x, y);
     } else {
         // Legacy support - assume it's a member
@@ -1026,11 +1041,6 @@ function handleDrop(e) {
         
         if (isPlayerPlaced(memberId)) {
             alert(`${member.name} is already placed on the map!`);
-            return;
-        }
-        
-        if (getTotalPlacedPlayers() >= MAX_PLAYERS) {
-            alert(`Maximum ${MAX_PLAYERS} players allowed on the map!`);
             return;
         }
         
@@ -1096,11 +1106,7 @@ function placeTeamGroupOnMap(teamName, x, y) {
     // Allow placing team even if empty or all members are placed
     // If there are no available members, we still create a group marker with the team name
     
-    // Check max players limit only if there are members to add
-    if (teamMembers.length > 0 && getTotalPlacedPlayers() + teamMembers.length > MAX_PLAYERS) {
-        alert(`Cannot place ${teamName}: would exceed maximum ${MAX_PLAYERS} players!`);
-        return;
-    }
+    // No maximum player limit enforced — allow placing full teams
     
     // MERGE DISABLED - Always create new group
     // const nearbyGroup = findNearbyGroup(x, y);
@@ -1139,7 +1145,9 @@ function createNewGroup(teamName, teamMembers, x, y) {
         x: x,
         y: y
     };
-    
+    // Save previous state for undo
+    pushActionHistory();
+
     placedGroups.push(group);
     renderGroupMarker(group);
     savePositions();
@@ -1214,6 +1222,8 @@ function countRoles(memberIds) {
 
 // Handle group marker drag
 function handleGroupMarkerDragStart(e) {
+    // record pre-drag state for undo
+    pushActionHistory();
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', e.currentTarget.dataset.groupId);
     e.dataTransfer.setData('type', 'group-marker');
@@ -1288,6 +1298,9 @@ function checkAndMergeNearbyGroups(movedGroup) {
 
 // Remove group marker
 function removeGroupMarker(groupId) {
+    // Save previous state for undo
+    pushActionHistory();
+
     const marker = mapArea.querySelector(`[data-group-id="${groupId}"]`);
     if (marker) {
         marker.remove();
@@ -1622,13 +1635,15 @@ function placeObjectiveMarker(x, y, type = 'enemy-dps') {
     
     marker.addEventListener('dragstart', handleObjectiveDragStart);
     marker.addEventListener('dragend', handleObjectiveDragEnd);
-    
+    // Save previous state for undo
+    pushActionHistory();
+
     mapArea.appendChild(marker);
-    
+
     // Save the centered coordinates (same as marker position)
     const centeredX = x - 13;
     const centeredY = y - 13;
-    
+
     placedObjectives.push({
         id: objectiveId,
         x: centeredX,
@@ -1659,20 +1674,25 @@ function placeBossMarker(x, y) {
     marker.addEventListener('dragstart', handleBossDragStart);
     marker.addEventListener('dragend', handleBossDragEnd);
     
+    // Save previous state for undo
+    pushActionHistory();
+
     mapArea.appendChild(marker);
-    
+
     placedBosses.push({
         id: bossId,
         x: x,
         y: y
     });
-    
+
     savePositions();
     updatePlaceholder();
 }
 
 // Handle objective drag
 function handleObjectiveDragStart(e) {
+    // record pre-drag state for undo
+    pushActionHistory();
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', e.currentTarget.dataset.objectiveId);
     e.dataTransfer.setData('type', 'objective-marker');
@@ -1705,6 +1725,8 @@ function handleObjectiveDragEnd(e) {
 
 // Handle boss drag
 function handleBossDragStart(e) {
+    // record pre-drag state for undo
+    pushActionHistory();
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', e.currentTarget.dataset.bossId);
     e.dataTransfer.setData('type', 'boss-marker');
@@ -1734,6 +1756,9 @@ function handleBossDragEnd(e) {
 
 // Remove objective marker
 function removeObjectiveMarker(objectiveId) {
+    // Save previous state for undo
+    pushActionHistory();
+
     const marker = mapArea.querySelector(`[data-objective-id="${objectiveId}"]`);
     if (marker) {
         marker.remove();
@@ -1745,6 +1770,9 @@ function removeObjectiveMarker(objectiveId) {
 
 // Remove boss marker
 function removeBossMarker(bossId) {
+    // Save previous state for undo
+    pushActionHistory();
+
     const marker = mapArea.querySelector(`[data-boss-id="${bossId}"]`);
     if (marker) {
         marker.remove();
@@ -1774,20 +1802,25 @@ function placeBlueTowerMarker(x, y) {
     marker.addEventListener('dragstart', handleBlueTowerDragStart);
     marker.addEventListener('dragend', handleBlueTowerDragEnd);
     
+    // Save previous state for undo
+    pushActionHistory();
+
     mapArea.appendChild(marker);
-    
+
     placedBlueTowers.push({
         id: towerId,
         x: x,
         y: y
     });
-    
+
     savePositions();
     updatePlaceholder();
 }
 
 // Handle blue tower drag
 function handleBlueTowerDragStart(e) {
+    // record pre-drag state for undo
+    pushActionHistory();
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', e.currentTarget.dataset.towerId);
     e.dataTransfer.setData('type', 'blue-tower-marker');
@@ -1817,6 +1850,9 @@ function handleBlueTowerDragEnd(e) {
 
 // Remove blue tower marker
 function removeBlueTowerMarker(towerId) {
+    // Save previous state for undo
+    pushActionHistory();
+
     const marker = mapArea.querySelector(`[data-tower-id="${towerId}"]`);
     if (marker) {
         marker.remove();
@@ -1846,20 +1882,25 @@ function placeRedTowerMarker(x, y) {
     marker.addEventListener('dragstart', handleRedTowerDragStart);
     marker.addEventListener('dragend', handleRedTowerDragEnd);
     
+    // Save previous state for undo
+    pushActionHistory();
+
     mapArea.appendChild(marker);
-    
+
     placedRedTowers.push({
         id: towerId,
         x: x,
         y: y
     });
-    
+
     savePositions();
     updatePlaceholder();
 }
 
 // Handle red tower drag
 function handleRedTowerDragStart(e) {
+    // record pre-drag state for undo
+    pushActionHistory();
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', e.currentTarget.dataset.towerId);
     e.dataTransfer.setData('type', 'red-tower-marker');
@@ -1889,6 +1930,9 @@ function handleRedTowerDragEnd(e) {
 
 // Remove red tower marker
 function removeRedTowerMarker(towerId) {
+    // Save previous state for undo
+    pushActionHistory();
+
     const marker = mapArea.querySelector(`[data-tower-id="${towerId}"]`);
     if (marker) {
         marker.remove();
@@ -1919,20 +1963,25 @@ function placeBlueTreeMarker(x, y) {
     marker.addEventListener('dragstart', handleBlueTreeDragStart);
     marker.addEventListener('dragend', handleBlueTreeDragEnd);
     
+    // Save previous state for undo
+    pushActionHistory();
+
     mapArea.appendChild(marker);
-    
+
     placedBlueTrees.push({
         id: treeId,
         x: x,
         y: y
     });
-    
+
     savePositions();
     updatePlaceholder();
 }
 
 // Handle blue tree drag
 function handleBlueTreeDragStart(e) {
+    // record pre-drag state for undo
+    pushActionHistory();
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', e.currentTarget.dataset.treeId);
     e.dataTransfer.setData('type', 'blue-tree-marker');
@@ -1962,6 +2011,9 @@ function handleBlueTreeDragEnd(e) {
 
 // Remove blue tree marker
 function removeBlueTreeMarker(treeId) {
+    // Save previous state for undo
+    pushActionHistory();
+
     const marker = mapArea.querySelector(`[data-tree-id="${treeId}"]`);
     if (marker) {
         marker.remove();
@@ -1991,20 +2043,25 @@ function placeRedTreeMarker(x, y) {
     marker.addEventListener('dragstart', handleRedTreeDragStart);
     marker.addEventListener('dragend', handleRedTreeDragEnd);
     
+    // Save previous state for undo
+    pushActionHistory();
+
     mapArea.appendChild(marker);
-    
+
     placedRedTrees.push({
         id: treeId,
         x: x,
         y: y
     });
-    
+
     savePositions();
     updatePlaceholder();
 }
 
 // Handle red tree drag
 function handleRedTreeDragStart(e) {
+    // record pre-drag state for undo
+    pushActionHistory();
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', e.currentTarget.dataset.treeId);
     e.dataTransfer.setData('type', 'red-tree-marker');
@@ -2034,6 +2091,9 @@ function handleRedTreeDragEnd(e) {
 
 // Remove red tree marker
 function removeRedTreeMarker(treeId) {
+    // Save previous state for undo
+    pushActionHistory();
+
     const marker = mapArea.querySelector(`[data-tree-id="${treeId}"]`);
     if (marker) {
         marker.remove();
@@ -2119,19 +2179,24 @@ function placeBlueGooseMarker(x, y) {
     marker.addEventListener('dragstart', handleBlueGooseDragStart);
     marker.addEventListener('dragend', handleBlueGooseDragEnd);
     
+    // Save previous state for undo
+    pushActionHistory();
+
     mapArea.appendChild(marker);
-    
+
     placedBlueGeese.push({
         id: gooseId,
         x: x,
         y: y
     });
-    
+
     savePositions();
     updatePlaceholder();
 }
 
 function handleBlueGooseDragStart(e) {
+    // record pre-drag state for undo
+    pushActionHistory();
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', e.currentTarget.dataset.gooseId);
     e.dataTransfer.setData('type', 'blue-goose-marker');
@@ -2157,6 +2222,9 @@ function handleBlueGooseDragEnd(e) {
 }
 
 function removeBlueGooseMarker(gooseId) {
+    // Save previous state for undo
+    pushActionHistory();
+
     const marker = mapArea.querySelector(`[data-goose-id="${gooseId}"]`);
     if (marker) {
         marker.remove();
@@ -2186,19 +2254,24 @@ function placeRedGooseMarker(x, y) {
     marker.addEventListener('dragstart', handleRedGooseDragStart);
     marker.addEventListener('dragend', handleRedGooseDragEnd);
     
+    // Save previous state for undo
+    pushActionHistory();
+
     mapArea.appendChild(marker);
-    
+
     placedRedGeese.push({
         id: gooseId,
         x: x,
         y: y
     });
-    
+
     savePositions();
     updatePlaceholder();
 }
 
 function handleRedGooseDragStart(e) {
+    // record pre-drag state for undo
+    pushActionHistory();
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', e.currentTarget.dataset.gooseId);
     e.dataTransfer.setData('type', 'red-goose-marker');
@@ -2224,6 +2297,9 @@ function handleRedGooseDragEnd(e) {
 }
 
 function removeRedGooseMarker(gooseId) {
+    // Save previous state for undo
+    pushActionHistory();
+
     const marker = mapArea.querySelector(`[data-goose-id="${gooseId}"]`);
     if (marker) {
         marker.remove();
@@ -2275,15 +2351,18 @@ function placeEnemyGroup(x, y) {
     marker.addEventListener('dragstart', handleEnemyGroupDragStart);
     marker.addEventListener('dragend', handleEnemyGroupDragEnd);
     
+    // Save previous state for undo
+    pushActionHistory();
+
     mapArea.appendChild(marker);
-    
+
     placedEnemies.push({
         id: enemyGroupId,
         x: x,
         y: y,
         count: ENEMIES_PER_CLICK
     });
-    
+
     savePositions();
     updatePlaceholder();
 }
@@ -2322,6 +2401,9 @@ function handleEnemyGroupDragEnd(e) {
 
 // Remove enemy group
 function removeEnemyGroup(enemyGroupId) {
+    // Save previous state for undo
+    pushActionHistory();
+
     const marker = mapArea.querySelector(`[data-enemy-group-id="${enemyGroupId}"]`);
     if (marker) {
         marker.remove();
@@ -2334,14 +2416,12 @@ function removeEnemyGroup(enemyGroupId) {
 
 // Update enemy count display
 function updateEnemyCount() {
+    if (!enemyCount) return;
     const totalEnemies = placedEnemies.length * ENEMIES_PER_CLICK;
     enemyCount.textContent = totalEnemies;
-    
-    // Disable button if max reached
-    if (placedEnemies.length >= MAX_ENEMIES / ENEMIES_PER_CLICK) {
-        addEnemiesBtn.disabled = true;
-    } else {
-        addEnemiesBtn.disabled = false;
+    // Disable button if max reached (only if button exists)
+    if (addEnemiesBtn) {
+        addEnemiesBtn.disabled = (placedEnemies.length >= MAX_ENEMIES / ENEMIES_PER_CLICK);
     }
 }
 
@@ -2642,21 +2722,49 @@ function getCurrentVisualState() {
             x2: arrow.x2,
             y2: arrow.y2,
             color: arrow.color
-        }))
+        })),
+        placedMembers: placedMembers.map(p => ({ ...p })),
+        placedGroups: placedGroups.map(g => ({ ...g })),
+        placedObjectives: placedObjectives.map(o => ({ ...o })),
+        placedBosses: placedBosses.map(b => ({ ...b })),
+        placedBlueTowers: placedBlueTowers.map(t => ({ ...t })),
+        placedRedTowers: placedRedTowers.map(t => ({ ...t })),
+        placedBlueTrees: placedBlueTrees.map(t => ({ ...t })),
+        placedRedTrees: placedRedTrees.map(t => ({ ...t })),
+        placedBlueGeese: placedBlueGeese.map(g => ({ ...g })),
+        placedRedGeese: placedRedGeese.map(g => ({ ...g })),
+        placedEnemies: placedEnemies.map(e => ({ ...e }))
     };
 }
 
 function restoreVisualState(state) {
-    drawingPaths = state.drawingPaths.map(path => ({
+    drawingPaths = (state.drawingPaths || []).map(path => ({
         points: path.points.map(point => ({ x: point.x, y: point.y })),
         timestamp: path.timestamp,
         color: path.color,
         width: path.width
     }));
-    placedArrows = state.placedArrows.map(arrow => ({ ...arrow }));
+    placedArrows = (state.placedArrows || []).map(arrow => ({ ...arrow }));
+
+    // Restore placements
+    placedMembers = (state.placedMembers || []).map(p => ({ ...p }));
+    placedGroups = (state.placedGroups || []).map(g => ({ ...g }));
+    placedObjectives = (state.placedObjectives || []).map(o => ({ ...o }));
+    placedBosses = (state.placedBosses || []).map(b => ({ ...b }));
+    placedBlueTowers = (state.placedBlueTowers || []).map(t => ({ ...t }));
+    placedRedTowers = (state.placedRedTowers || []).map(t => ({ ...t }));
+    placedBlueTrees = (state.placedBlueTrees || []).map(t => ({ ...t }));
+    placedRedTrees = (state.placedRedTrees || []).map(t => ({ ...t }));
+    placedBlueGeese = (state.placedBlueGeese || []).map(g => ({ ...g }));
+    placedRedGeese = (state.placedRedGeese || []).map(g => ({ ...g }));
+    placedEnemies = (state.placedEnemies || []).map(e => ({ ...e }));
+
     redrawAllPaths();
     refreshArrowMarkers();
+    renderMap();
     updatePlaceholder();
+    updateCounts();
+    updateEnemyCount();
 }
 
 function refreshArrowMarkers() {
@@ -2890,6 +2998,14 @@ function updateUndoRedoButtons() {
     }
 }
 
+// Push the current full visual state onto the history stack (placements + drawings)
+function pushActionHistory() {
+    if (autoDeleteDrawings) return;
+    drawingHistory.push(getCurrentVisualState());
+    drawingRedoStack = [];
+    updateUndoRedoButtons();
+}
+
 // Handle auto-delete toggle
 function handleAutoDeleteToggle(e) {
     autoDeleteDrawings = e.target.checked;
@@ -3076,6 +3192,9 @@ function splitGroup(groupId) {
 
 // Place member marker on map
 function placeMemberOnMap(member, x, y) {
+    // Save previous state for undo
+    pushActionHistory();
+
     const marker = document.createElement('div');
     marker.className = `member-marker role-${member.role}`;
     marker.dataset.memberId = member.id;
@@ -3118,6 +3237,8 @@ function placeMemberOnMap(member, x, y) {
 
 // Handle marker drag
 function handleMarkerDragStart(e) {
+    // record pre-drag state for undo
+    pushActionHistory();
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', e.currentTarget.dataset.memberId);
     e.currentTarget.style.opacity = '0.5';
@@ -3147,6 +3268,9 @@ function handleMarkerDragEnd(e) {
 
 // Remove member marker
 function removeMemberMarker(memberId) {
+    // Save previous state for undo
+    pushActionHistory();
+
     const marker = mapArea.querySelector(`[data-member-id="${memberId}"]`);
     if (marker) {
         marker.remove();
@@ -3204,10 +3328,16 @@ async function clearAllPlacements() {
     const totalMarkers = placedObjectives.length + placedBosses.length + placedBlueTowers.length + placedRedTowers.length + placedBlueTrees.length + placedRedTrees.length + placedBlueGeese.length + placedRedGeese.length + placedEnemies.length + placedArrows.length;
     if (totalPlaced === 0 && totalMarkers === 0 && drawingPaths.length === 0) return;
     
-    const confirmed = await showConfirm(
-        'Clear All Placements',
-        'Are you sure you want to remove all players and markers from the map?'
-    );
+    let confirmed = false;
+    if (sessionStorage.getItem('dontWarnClearPlacements') === 'true') {
+        confirmed = true;
+    } else {
+        confirmed = await showConfirm(
+            'Clear All Placements',
+            'Are you sure you want to remove all players and markers from the map?',
+            { includeDontWarn: true }
+        );
+    }
     
     if (confirmed) {
         const markers = mapArea.querySelectorAll('.member-marker, .group-marker, .objective-marker, .boss-marker, .tower-marker, .tree-marker, .goose-marker, .enemy-marker, .arrow-marker');
@@ -3241,9 +3371,9 @@ async function clearAllPlacements() {
 
 // Update player counts
 function updateCounts() {
-    playerCount.textContent = `(${members.length}/${MAX_PLAYERS})`;
+    if (playerCount) playerCount.textContent = `(${members.length}/${MAX_PLAYERS})`;
     const totalPlaced = getTotalPlacedPlayers();
-    placedCount.textContent = `(${totalPlaced}/${MAX_PLAYERS} Placed)`;
+    if (placedCount) placedCount.textContent = `(${totalPlaced}/${MAX_PLAYERS} Placed)`;
 }
 
 // Update placeholder visibility
