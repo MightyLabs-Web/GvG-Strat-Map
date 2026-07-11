@@ -31,7 +31,8 @@
 
     /* Role colors (kept legible, reskinned to theme) */
     --role-tank:     #d98a3d;
-    --role-dps:      #cf4b3a;
+    --role-dps:      #0078d4;
+    --role-enemy:    #cf4b3a;
     --role-healer:   #6fb585;
     --role-support:  #d8b24a;
 
@@ -337,6 +338,20 @@ header img[alt="WWM Logo"] {
     width: 64px; height: 2px;
     background: linear-gradient(90deg, var(--vermilion-br), transparent);
 }
+.map-panel h2 .map-credit {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    font-family: var(--font-display);
+    font-size: 1.18rem;
+    font-weight: 700;
+    color: var(--silk-dim);
+    gap: 6px;
+}
+.map-panel h2 .map-credit a {
+    color: var(--vermilion-br);
+    text-decoration: none;
+}
 #playerCount, #placedCount {
     font-family: var(--font-body);
     font-size: 0.95rem;
@@ -617,7 +632,9 @@ header img[alt="WWM Logo"] {
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
 }
 .role-badge.Tank,   .role-badge-small.role-Tank   { background: var(--role-tank); }
-.role-badge.DPS,    .role-badge-small.role-DPS     { background: var(--role-dps); color:#fff; }
+.role-badge.DPS,    .role-badge-small.role-DPS     { background: var(--role-dps); color:#000; }
+.role-badge.Enemy,  .role-badge-small.role-Enemy   { background: var(--role-enemy); color:#000; }
+.role-badge.ENEMEY, .role-badge-small.role-ENEMEY  { background: var(--role-enemy); color:#000; }
 .role-badge.Healer, .role-badge-small.role-Healer  { background: var(--role-healer); }
 .role-badge.Support,.role-badge-small.role-Support { background: var(--role-support); }
 
@@ -729,6 +746,8 @@ header img[alt="WWM Logo"] {
 }
 .member-marker.role-Tank::after   { background: var(--role-tank); }
 .member-marker.role-DPS::after    { background: var(--role-dps); }
+.member-marker.role-Enemy::after  { background: var(--role-enemy); }
+.member-marker.role-ENEMEY::after { background: var(--role-enemy); }
 .member-marker.role-Healer::after { background: var(--role-healer); }
 .member-marker.role-Support::after{ background: var(--role-support); }
 
@@ -752,12 +771,14 @@ header img[alt="WWM Logo"] {
 }
 /* member role colors */
 .map-area.show-role-radius .member-marker.role-Tank .role-radius   { background: rgba(217,138,61,0.34); box-shadow: inset 0 0 0 2px rgba(217,138,61,0.8); }
-.map-area.show-role-radius .member-marker.role-DPS .role-radius    { background: rgba(207,75,58,0.34);  box-shadow: inset 0 0 0 2px rgba(207,75,58,0.8); }
+.map-area.show-role-radius .member-marker.role-DPS .role-radius    { background: rgba(0,120,212,0.34);  box-shadow: inset 0 0 0 2px rgba(0,120,212,0.8); }
+.map-area.show-role-radius .member-marker.role-Enemy .role-radius  { background: rgba(207,75,58,0.34);  box-shadow: inset 0 0 0 2px rgba(207,75,58,0.8); }
+.map-area.show-role-radius .member-marker.role-ENEMEY .role-radius { background: rgba(207,75,58,0.34);  box-shadow: inset 0 0 0 2px rgba(207,75,58,0.8); }
 .map-area.show-role-radius .member-marker.role-Healer .role-radius { background: rgba(111,181,133,0.34);box-shadow: inset 0 0 0 2px rgba(111,181,133,0.85); }
 .map-area.show-role-radius .member-marker.role-Support .role-radius{ background: rgba(216,178,74,0.34); box-shadow: inset 0 0 0 2px rgba(216,178,74,0.85); }
 /* objective role-image markers */
 .map-area.show-role-radius .objective-marker.objective-tank .role-radius   { background: rgba(217,138,61,0.34);  box-shadow: inset 0 0 0 2px rgba(217,138,61,0.8); }
-.map-area.show-role-radius .objective-marker.objective-dps .role-radius    { background: rgba(207,75,58,0.34);   box-shadow: inset 0 0 0 2px rgba(207,75,58,0.8); }
+.map-area.show-role-radius .objective-marker.objective-dps .role-radius    { background: rgba(0,120,212,0.34);   box-shadow: inset 0 0 0 2px rgba(0,120,212,0.8); }
 .map-area.show-role-radius .objective-marker.objective-healer .role-radius { background: rgba(111,181,133,0.34); box-shadow: inset 0 0 0 2px rgba(111,181,133,0.85); }
 .map-area.show-role-radius .objective-marker .role-radius                  { background: rgba(201,162,75,0.30);  box-shadow: inset 0 0 0 2px rgba(201,162,75,0.8); }
 
@@ -980,6 +1001,7 @@ header img[alt="WWM Logo"] {
 .role-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 .role-dot.role-Tank { background: var(--role-tank); }
 .role-dot.role-DPS { background: var(--role-dps); }
+.role-dot.role-Enemy { background: var(--role-enemy); }
 .role-dot.role-Healer { background: var(--role-healer); }
 .role-dot.role-Support { background: var(--role-support); }
 
