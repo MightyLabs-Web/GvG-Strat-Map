@@ -31,10 +31,9 @@
 
     /* Role colors (kept legible, reskinned to theme) */
     --role-tank:     #d98a3d;
-    --role-dps:      #007acc; /* VS Code blue */
+    --role-dps:      #cf4b3a;
     --role-healer:   #6fb585;
     --role-support:  #d8b24a;
-    --role-enemey:   #cf4b3a; /* legacy DPS red mapped to ENEMEY */
 
     /* Functional */
     --danger:        #c0392b;
@@ -59,9 +58,9 @@ body {
     color: var(--silk);
     min-height: 100vh;
     background:
-        radial-gradient(ellipse 120% 80% at 50% -10%, rgba(201,162,75,0.10), transparent 60%),
-        radial-gradient(ellipse 90% 70% at 80% 110%, rgba(182,64,46,0.10), transparent 55%),
-        linear-gradient(160deg, rgba(13,11,9,0.86) 0%, rgba(21,17,13,0.82) 45%, rgba(11,10,8,0.90) 100%),
+        radial-gradient(ellipse 120% 80% at 50% -10%, rgba(201,162,75,0.06), transparent 60%),
+        radial-gradient(ellipse 90% 70% at 80% 110%, rgba(182,64,46,0.06), transparent 55%),
+        linear-gradient(160deg, rgba(13,11,9,0.60) 0%, rgba(21,17,13,0.50) 45%, rgba(11,10,8,0.70) 100%),
         url('images/wallpaper.png') no-repeat center center fixed;
     background-size: cover, cover, cover, cover;
     background-attachment: fixed;
@@ -80,7 +79,7 @@ body::before {
     pointer-events: none;
     z-index: 9998;
     mix-blend-mode: overlay;
-    opacity: 0.6;
+    opacity: 0.25;
 }
 body::after {
     content: '';
@@ -88,7 +87,7 @@ body::after {
     inset: 0;
     pointer-events: none;
     z-index: 1;
-    box-shadow: inset 0 0 220px 40px rgba(0,0,0,0.65);
+    box-shadow: inset 0 0 220px 40px rgba(0,0,0,0.35);
 }
 
 ::selection { background: rgba(201,162,75,0.35); color: #fff; }
@@ -184,9 +183,6 @@ header img[alt="WWM Logo"] {
     transition: color .2s, border-color .2s;
 }
 .mightylabs-link:hover { color: var(--gold-bright); border-color: var(--gold); }
-
-/* Inline map credit aligned to the right of the map header */
-.map-credit { margin-left: auto; color: var(--silk-dim); font-size: 0.95rem; display: inline-flex; align-items: center; gap: 6px; }
 
 /* ----- NAVIGATION : engraved tablet buttons ----- */
 .header-nav {
@@ -621,11 +617,9 @@ header img[alt="WWM Logo"] {
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
 }
 .role-badge.Tank,   .role-badge-small.role-Tank   { background: var(--role-tank); }
-.role-badge.DPS,    .role-badge-small.role-DPS     { background: var(--role-dps); color: #000; }
+.role-badge.DPS,    .role-badge-small.role-DPS     { background: var(--role-dps); color:#fff; }
 .role-badge.Healer, .role-badge-small.role-Healer  { background: var(--role-healer); }
 .role-badge.Support,.role-badge-small.role-Support { background: var(--role-support); }
-/* New ENEMEY role uses previous DPS red and black text for readability */
-.role-badge.ENEMEY, .role-badge-small.role-ENEMEY { background: var(--role-enemey); color: #000; }
 
 .no-players {
     text-align: center;
@@ -737,7 +731,6 @@ header img[alt="WWM Logo"] {
 .member-marker.role-DPS::after    { background: var(--role-dps); }
 .member-marker.role-Healer::after { background: var(--role-healer); }
 .member-marker.role-Support::after{ background: var(--role-support); }
-.member-marker.role-ENEMEY::after { background: var(--role-enemey); }
 
 /* Role radius ring (toggled via .map-area.show-role-radius) */
 .role-radius { display: none; }
@@ -759,11 +752,9 @@ header img[alt="WWM Logo"] {
 }
 /* member role colors */
 .map-area.show-role-radius .member-marker.role-Tank .role-radius   { background: rgba(217,138,61,0.34); box-shadow: inset 0 0 0 2px rgba(217,138,61,0.8); }
-.map-area.show-role-radius .member-marker.role-DPS .role-radius    { background: rgba(0,122,204,0.34);  box-shadow: inset 0 0 0 2px rgba(0,122,204,0.8); }
+.map-area.show-role-radius .member-marker.role-DPS .role-radius    { background: rgba(207,75,58,0.34);  box-shadow: inset 0 0 0 2px rgba(207,75,58,0.8); }
 .map-area.show-role-radius .member-marker.role-Healer .role-radius { background: rgba(111,181,133,0.34);box-shadow: inset 0 0 0 2px rgba(111,181,133,0.85); }
 .map-area.show-role-radius .member-marker.role-Support .role-radius{ background: rgba(216,178,74,0.34); box-shadow: inset 0 0 0 2px rgba(216,178,74,0.85); }
-/* ENEMEY radius uses legacy DPS red */
-.map-area.show-role-radius .member-marker.role-ENEMEY .role-radius { background: rgba(207,75,58,0.34); box-shadow: inset 0 0 0 2px rgba(207,75,58,0.8); }
 /* objective role-image markers */
 .map-area.show-role-radius .objective-marker.objective-tank .role-radius   { background: rgba(217,138,61,0.34);  box-shadow: inset 0 0 0 2px rgba(217,138,61,0.8); }
 .map-area.show-role-radius .objective-marker.objective-dps .role-radius    { background: rgba(207,75,58,0.34);   box-shadow: inset 0 0 0 2px rgba(207,75,58,0.8); }
@@ -991,7 +982,6 @@ header img[alt="WWM Logo"] {
 .role-dot.role-DPS { background: var(--role-dps); }
 .role-dot.role-Healer { background: var(--role-healer); }
 .role-dot.role-Support { background: var(--role-support); }
-.role-dot.role-ENEMEY { background: var(--role-enemey); }
 
 /* =====================================================================
    BOTTOM TOOLBAR — armoury rack
