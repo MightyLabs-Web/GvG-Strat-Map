@@ -65,7 +65,7 @@
                 </button>
                 <button id="changelogBtn" class="nav-btn">
                     <span class="nav-icon">📋</span>
-                    <span class="nav-text">v.2.1</span>
+                    <span class="nav-text">v.2.2</span>
                 </button>
             </nav>
             
@@ -101,7 +101,18 @@
             
             <!-- Map Area -->
             <div class="map-panel">
-                <h2>Battle Map <span class="map-credit">• Created by <a href="https://discordapp.com/users/91448874530504704" target="_blank" class="mightylabs-link">MIGHTYLABS</a></span></h2>
+                <div class="map-header-wrapper" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <h2>Battle Map <span class="map-credit">• Created by <a href="https://discordapp.com/users/91448874530504704" target="_blank" class="mightylabs-link">MIGHTYLABS</a></span></h2>
+                    <div class="map-toggle-container">
+                        <span class="toggle-label-main">Objective Markers</span>
+                        <label class="toggle-switch" title="Switch objective markers ON/OFF">
+                            <input type="checkbox" id="mapToggle" class="toggle-checkbox">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">ON</span>
+                            <span class="toggle-label-2">OFF</span>
+                        </label>
+                    </div>
+                </div>
                 
                 <div id="mapArea" class="map-area">
                     <canvas id="drawingCanvas" class="drawing-canvas"></canvas>
@@ -515,7 +526,7 @@
                         <div class="howto-row"><span class="howto-icon">⌨️</span><div><strong>Hot Keys</strong>: Lists all keyboard shortcuts.</div></div>
                         <div class="howto-row"><span class="howto-icon">⚠️</span><div><strong>Known Issues</strong>: Important notes about browser zoom and best practices.</div></div>
                         <div class="howto-row"><span class="howto-icon">📖</span><div><strong>How To Use</strong>: This guide!</div></div>
-                            <div class="howto-row"><span class="howto-icon">📋</span><div><strong id="howtoVersionLabel">v.2.1</strong>: Full version history and changelog.</div></div>
+                            <div class="howto-row"><span class="howto-icon">📋</span><div><strong id="howtoVersionLabel">v.2.2</strong>: Full version history and changelog.</div></div>
                     </div>
                 </div>
 
@@ -625,8 +636,22 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto; text-align: left;">
                 <div class="version-current">
-                    <h3>🎯 Current Version: 2.1</h3>
+                    <h3>🎯 Current Version: 2.2</h3>
                     <p class="version-date">Released: July 2026</p>
+                </div>
+
+                <div class="changelog-section">
+                    <h4>Version 2.2 - Map Variants & Objective Markers Toggle</h4>
+                    <ul>
+                        <li>🗺️ <strong>Map Toggle Switch:</strong> Added "Objective Markers" toggle switch in the Battle Map header to switch between 2 map variants.</li>
+                        <li>💾 <strong>Toggle Persistence:</strong> Map preference is saved to localStorage and restored on page load.</li>
+                        <li>🎨 <strong>Styling Refinements:</strong> New themed toggle switch with golden slider indicator and ON/OFF labels that match the interface design.</li>
+                        <li>✨ <strong>Header Layout:</strong> Updated Battle Map header to accommodate the new toggle while maintaining vertical alignment with the red streak underline.</li>
+                    </ul>
+                </div>
+
+                <div class="version-current">
+                    <h3>Previous Version: 2.1</h3>
                 </div>
 
                 <div class="changelog-section">
@@ -645,6 +670,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
 
                 <div class="changelog-section">
                     <h4>Version 2.0.1 - Arrow Tool &amp; Toolbar Refinements</h4>
+                    <p class="version-date">Released: May 2026</p>
                     <ul>
                         <li>➹ <strong>Directional Arrow Tool:</strong> Added a draggable arrow tool. Click the arrow button, then drag on the map to draw a variable length, directional arrow for callouts, pushes, and rotations.</li>
                         <li>✨ <strong>Map Objectives Back on the Toolbar:</strong> Un-nested the boss, tower, tree, and goose markers from the pop-up menu. They now sit directly on the bottom toolbar for one click placement.</li>
@@ -659,6 +685,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
 
                 <div class="changelog-section">
                     <h4>Version 2.0.0 - "Ink &amp; Cinder" Complete Redesign</h4>
+                    <p class="version-date">Released: April 2026</p>
                     <ul>
                         <li>🎨 <strong>Full Visual Overhaul:</strong> Rebuilt the entire interface with a wuxia inspired ink and gold theme to match Where Winds Meet, replacing the previous look entirely.</li>
                         <li>🖼️ <strong>New Layout:</strong> Reorganized into a battle map left, roster right layout with framed map, hanging scroll header, and engraved navigation tablets.</li>
@@ -671,6 +698,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
 
                 <div class="changelog-section">
                     <h4>Version 1.12.0 - Minor Updates</h4>
+                    <p class="version-date">Released: March 2026</p>
                     <ul>
                         <li>✨ <strong>Pre-populated Teams:</strong> Added `Team 1`–`Team 6` and placed them at the top of the left panel and team dropdowns.</li>
                         <li>✨ <strong>View Toggle Rename:</strong> Renamed "All Players" to "Show Players Only" for clearer UI wording.</li>
@@ -680,6 +708,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
 
                 <div class="changelog-section">
                     <h4>Version 1.11.0 - Major Overhaul: Objective Markers, Rebranding & Bug Fixes</h4>
+                    <p class="version-date">Released: February 2026</p>
                     <ul>
                         <li>🎯 <strong>Enhanced Objective Markers:</strong> Complete redesign with new marker types and functionality</li>
                         <li>🎯 <strong>Class Objective Markers:</strong> Added specialized markers for different objective types (Attack, Defend, Hold, Danger, etc.)</li>
@@ -698,6 +727,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 
                 <div class="changelog-section">
                     <h4>Version 1.10.0 - How To Guide, Guild Leader &amp; Role Badge Fixes</h4>
+                    <p class="version-date">Released: January 2026</p>
                     <ul>
                         <li>✨ Added full "How To Use" guide in navigation bar: covers every feature for new users</li>
                         <li>✨ CSV template shown inline inside the guide for easy reference</li>
@@ -709,6 +739,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 
                 <div class="changelog-section">
                     <h4>Version 1.9.0 - Gallery Slideshow &amp; UI Polish</h4>
+                    <p class="version-date">Released: December 2025</p>
                     <ul>
                         <li>✨ Screenshot gallery now shows compact thumbnails (up to 10 visible at once)</li>
                         <li>✨ Click any thumbnail to open full-screen slideshow lightbox</li>
@@ -722,6 +753,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 
                 <div class="changelog-section">
                     <h4>Version 1.8.0 - Player Roster Import & UI Fixes</h4>
+                    <p class="version-date">Released: November 2025</p>
                     <ul>
                         <li>✨ Added player roster import from CSV or Excel (.xlsx) files</li>
                         <li>✨ Import previews players before confirming, with coloured role badges</li>
@@ -734,6 +766,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 
                 <div class="changelog-section">
                     <h4>Version 1.7.0 - Screenshot Gallery</h4>
+                    <p class="version-date">Released: October 2025</p>
                     <ul>
                         <li>✨ Added screenshot gallery storing the last 10 captures</li>
                         <li>✨ Added version history and changelog viewer (this screen!)</li>

@@ -654,6 +654,24 @@ function setupEventListeners() {
     mapArea.addEventListener('mouseup', handleMapMouseUp);
     mapArea.addEventListener('mouseleave', handleMapMouseLeave);
     
+    // Map toggle functionality
+    const mapToggle = document.getElementById('mapToggle');
+    if (mapToggle) {
+        mapToggle.addEventListener('change', function() {
+            const mapImage = this.checked ? 'images/map2.png' : 'images/map.png';
+            mapArea.style.backgroundImage = `url('${mapImage}')`;
+            // Save preference to localStorage
+            localStorage.setItem('mightylabs-gvg-map-preference', this.checked ? 'map2' : 'map1');
+        });
+        
+        // Load saved preference
+        const savedMapPreference = localStorage.getItem('mightylabs-gvg-map-preference');
+        if (savedMapPreference === 'map2') {
+            mapToggle.checked = true;
+            mapArea.style.backgroundImage = "url('images/map2.png')";
+        }
+    }
+    
     // Search functionality
     searchInput.addEventListener('input', handleSearch);
     
