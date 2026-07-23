@@ -23,6 +23,9 @@ let currentRoleFilter = 'all';
 let currentView = 'grouped'; // 'grouped' or 'list'
 let placingMode = null; // 'enemy-dps' or 'enemy-healer' or 'eh-marker' or 'enemy-marker' or 'boss' or 'blue-tower' or 'red-tower' or 'blue-tree' or 'red-tree' or 'blue-goose' or 'red-goose' or null
 let selectedObjectiveType = null; // Stores the selected objective marker type
+let isCreatingArrow = false;
+let currentArrowData = null;
+let currentArrowMarker = null;
 
 // Drawing State
 let drawingMode = false;
@@ -150,7 +153,13 @@ const autoDeleteToggle = document.getElementById('autoDeleteToggle');
 const radiusToggle = document.getElementById('radiusToggle');
 const drawColorPicker = document.getElementById('drawColorPicker');
 const drawingCanvas = document.getElementById('drawingCanvas');
+const timerOverlay = document.getElementById('timerOverlay');
+const timerDisplay = document.getElementById('timerDisplay');
+const timerIncrementBtn = document.getElementById('timerIncrementBtn');
+const timerDecrementBtn = document.getElementById('timerDecrementBtn');
+const timerSteps = [0, 5, 10, 15, 20, 25];
 let ctx; // Initialize in init() after DOM loads
+let timerValue = 0;
 const addEnemiesBtn = document.getElementById('addEnemiesBtn');
 const enemyCount = document.getElementById('enemyCount');
 const managePlayersBtn = document.getElementById('managePlayersBtn');
@@ -656,6 +665,15 @@ function setupEventListeners() {
     
     // Map toggle functionality
     const mapToggle = document.getElementById('mapToggle');
+    const mapAssets = {
+        map1: new Image(),
+        map2: new Image()
+    };
+    mapAssets.map1.src = 'images/map.png';
+    mapAssets.map2.src = 'images/map2.png';
+    mapAssets.map1.decoding = 'async';
+    mapAssets.map2.decoding = 'async';
+    
     if (mapToggle) {
         mapToggle.addEventListener('change', function() {
             const mapImage = this.checked ? 'images/map2.png' : 'images/map.png';
@@ -672,6 +690,12 @@ function setupEventListeners() {
         }
     }
     
+    const savedTimerValue = Number(localStorage.getItem('mightylabs-gvg-timer-value'));
+    if (timerSteps.includes(savedTimerValue)) {
+        timerValue = savedTimerValue;
+    }
+    updateTimerUI();
+
     // Search functionality
     searchInput.addEventListener('input', handleSearch);
     
@@ -685,18 +709,19 @@ function setupEventListeners() {
         btn.addEventListener('click', handleRoleFilter);
     });
     
-    // Objective and Boss buttons
+    // Objective buttons
     addObjectiveBtn.addEventListener('click', toggleObjectiveMode);
     addHealerObjectiveBtn.addEventListener('click', () => toggleRoleObjectiveMode('healer', addHealerObjectiveBtn));
     addTankObjectiveBtn.addEventListener('click', () => toggleRoleObjectiveMode('tank', addTankObjectiveBtn));
     addDPSObjectiveBtn.addEventListener('click', () => toggleRoleObjectiveMode('dps', addDPSObjectiveBtn));
-    addBossBtn.addEventListener('click', toggleBossMode);
-    addBlueTowerBtn.addEventListener('click', toggleBlueTowerMode);
-    addRedTowerBtn.addEventListener('click', toggleRedTowerMode);
-    addBlueTreeBtn.addEventListener('click', toggleBlueTreeMode);
-    addRedTreeBtn.addEventListener('click', toggleRedTreeMode);
-    addBlueGooseBtn.addEventListener('click', toggleBlueGooseMode);
-    addRedGooseBtn.addEventListener('click', toggleRedGooseMode);
+    
+    // Timer buttons
+    if (timerIncrementBtn) {
+        timerIncrementBtn.addEventListener('click', incrementTimer);
+    }
+    if (timerDecrementBtn) {
+        timerDecrementBtn.addEventListener('click', decrementTimer);
+    }
     
     // Drawing buttons
     drawBtn.addEventListener('click', toggleDrawingMode);
@@ -874,34 +899,6 @@ function handleKeyboardShortcut(e) {
             e.preventDefault();
             toggleObjectiveMode();
             break;
-        case 'b':
-            e.preventDefault();
-            toggleBossMode();
-            break;
-        case '1':
-            e.preventDefault();
-            toggleBlueTowerMode();
-            break;
-        case '2':
-            e.preventDefault();
-            toggleRedTowerMode();
-            break;
-        case '3':
-            e.preventDefault();
-            toggleBlueTreeMode();
-            break;
-        case '4':
-            e.preventDefault();
-            toggleRedTreeMode();
-            break;
-        case '5':
-            e.preventDefault();
-            toggleBlueGooseMode();
-            break;
-        case '6':
-            e.preventDefault();
-            toggleRedGooseMode();
-            break;
         case 'd':
             e.preventDefault();
             toggleDrawingMode();
@@ -948,18 +945,13 @@ if (objectiveTypeModal) {
             
             // Activate placing mode
             drawingMode = false;
-            addObjectiveBtn.classList.add('active');
-            addBossBtn.classList.remove('active');
-            addBlueTowerBtn.classList.remove('active');
-            addRedTowerBtn.classList.remove('active');
-            addBlueTreeBtn.classList.remove('active');
-            addRedTreeBtn.classList.remove('active');
-            addBlueGooseBtn.classList.remove('active');
-            addRedGooseBtn.classList.remove('active');
-            drawBtn.classList.remove('active');
+            if (addObjectiveBtn) addObjectiveBtn.classList.add('active');
+            clearLegacyToolButtons();
+            if (drawBtn) drawBtn.classList.remove('active');
             mapArea.classList.remove('placing-mode', 'drawing-mode');
             mapArea.classList.add('placing-mode');
             drawingCanvas.classList.remove('active');
+            mapArea.style.cursor = 'crosshair';
         });
     });
 }
@@ -968,14 +960,8 @@ if (objectiveTypeModal) {
 function deactivatePlacingMode() {
     placingMode = null;
     selectedObjectiveType = null;
-    addObjectiveBtn.classList.remove('active');
-    addBossBtn.classList.remove('active');
-    addBlueTowerBtn.classList.remove('active');
-    addRedTowerBtn.classList.remove('active');
-    addBlueTreeBtn.classList.remove('active');
-    addRedTreeBtn.classList.remove('active');
-    addBlueGooseBtn.classList.remove('active');
-    addRedGooseBtn.classList.remove('active');
+    if (addObjectiveBtn) addObjectiveBtn.classList.remove('active');
+    clearLegacyToolButtons();
     mapArea.style.cursor = 'default';
 }
 
@@ -1356,17 +1342,75 @@ function updateGroupsAfterMemberPlacement(memberId) {
 
 // Toggle objective placing mode
 function resetRoleObjectiveButtons() {
-    addHealerObjectiveBtn.classList.remove('active');
-    addTankObjectiveBtn.classList.remove('active');
-    addDPSObjectiveBtn.classList.remove('active');
+    if (addHealerObjectiveBtn) addHealerObjectiveBtn.classList.remove('active');
+    if (addTankObjectiveBtn) addTankObjectiveBtn.classList.remove('active');
+    if (addDPSObjectiveBtn) addDPSObjectiveBtn.classList.remove('active');
+}
+
+function clearLegacyToolButtons() {
+    const legacyButtons = [
+        addBossBtn,
+        addBlueTowerBtn,
+        addRedTowerBtn,
+        addBlueTreeBtn,
+        addRedTreeBtn,
+        addBlueGooseBtn,
+        addRedGooseBtn
+    ];
+
+    legacyButtons.forEach((button) => {
+        if (button) button.classList.remove('active');
+    });
 }
 
 function deactivateObjectivePlacement() {
     placingMode = null;
     selectedObjectiveType = null;
-    addObjectiveBtn.classList.remove('active');
+    if (addObjectiveBtn) addObjectiveBtn.classList.remove('active');
     resetRoleObjectiveButtons();
+    clearLegacyToolButtons();
     mapArea.classList.remove('placing-mode');
+    mapArea.style.cursor = 'default';
+}
+
+function updateTimerUI() {
+    if (timerDisplay) {
+        timerDisplay.textContent = String(timerValue);
+    }
+
+    if (timerOverlay) {
+        if (timerValue > 0) {
+            timerOverlay.src = `images/${timerValue} minutes.png`;
+            timerOverlay.style.display = 'block';
+        } else {
+            timerOverlay.removeAttribute('src');
+            timerOverlay.style.display = 'none';
+        }
+    }
+
+    localStorage.setItem('mightylabs-gvg-timer-value', String(timerValue));
+}
+
+function incrementTimer() {
+    if (timerValue === 0) {
+        timerValue = 5;
+    } else if (timerValue < 25) {
+        timerValue += 5;
+    } else {
+        timerValue = 0;
+    }
+    updateTimerUI();
+}
+
+function decrementTimer() {
+    if (timerValue === 0) {
+        timerValue = 25;
+    } else if (timerValue > 5) {
+        timerValue -= 5;
+    } else {
+        timerValue = 0;
+    }
+    updateTimerUI();
 }
 
 function toggleObjectiveMode() {
@@ -1382,26 +1426,21 @@ function toggleObjectiveMode() {
 function toggleRoleObjectiveMode(type, button) {
     if (placingMode === `objective-${type}`) {
         deactivateObjectivePlacement();
-        button.classList.remove('active');
+        if (button) button.classList.remove('active');
         return;
     }
 
     placingMode = `objective-${type}`;
     selectedObjectiveType = type;
-    addObjectiveBtn.classList.remove('active');
-    addBossBtn.classList.remove('active');
-    addBlueTowerBtn.classList.remove('active');
-    addRedTowerBtn.classList.remove('active');
-    addBlueTreeBtn.classList.remove('active');
-    addRedTreeBtn.classList.remove('active');
-    addBlueGooseBtn.classList.remove('active');
-    addRedGooseBtn.classList.remove('active');
-    drawBtn.classList.remove('active');
+    if (addObjectiveBtn) addObjectiveBtn.classList.remove('active');
+    clearLegacyToolButtons();
+    if (drawBtn) drawBtn.classList.remove('active');
     resetRoleObjectiveButtons();
-    button.classList.add('active');
+    if (button) button.classList.add('active');
     mapArea.classList.remove('drawing-mode');
     mapArea.classList.add('placing-mode');
     drawingCanvas.classList.remove('active');
+    mapArea.style.cursor = 'crosshair';
 }
 
 // Toggle boss placing mode
@@ -2646,14 +2685,7 @@ function toggleDrawingMode() {
         drawBtn.classList.add('active');
         arrowBtn.classList.remove('active');
         addObjectiveBtn.classList.remove('active');
-        addBossBtn.classList.remove('active');
         resetRoleObjectiveButtons();
-        addBlueTowerBtn.classList.remove('active');
-        addRedTowerBtn.classList.remove('active');
-        addBlueTreeBtn.classList.remove('active');
-        addRedTreeBtn.classList.remove('active');
-    addBlueGooseBtn.classList.remove('active');
-    addRedGooseBtn.classList.remove('active');
         mapArea.classList.remove('placing-mode');
         mapArea.classList.add('drawing-mode');
         drawingCanvas.classList.add('active');
@@ -2671,14 +2703,7 @@ function toggleArrowMode() {
         arrowBtn.classList.add('active');
         drawBtn.classList.remove('active');
         addObjectiveBtn.classList.remove('active');
-        addBossBtn.classList.remove('active');
         resetRoleObjectiveButtons();
-        addBlueTowerBtn.classList.remove('active');
-        addRedTowerBtn.classList.remove('active');
-        addBlueTreeBtn.classList.remove('active');
-        addRedTreeBtn.classList.remove('active');
-        addBlueGooseBtn.classList.remove('active');
-        addRedGooseBtn.classList.remove('active');
         mapArea.classList.remove('drawing-mode');
         mapArea.classList.add('placing-mode');
         drawingCanvas.classList.remove('active');

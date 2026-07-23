@@ -14,6 +14,8 @@
     <meta name="referrer" content="same-origin">
     
     <link rel="icon" type="image/png" href="images/guild_logo.png">
+    <link rel="preload" as="image" href="images/map.png" fetchpriority="high">
+    <link rel="preload" as="image" href="images/map2.png" fetchpriority="high">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -116,6 +118,7 @@
                 
                 <div id="mapArea" class="map-area">
                     <canvas id="drawingCanvas" class="drawing-canvas"></canvas>
+                    <img id="timerOverlay" class="timer-overlay" alt="Timer overlay" style="display: none;">
                     <div class="map-placeholder">
                         <p class="instruction">Drag players from the list to place them on the battle map</p>
                     </div>
@@ -139,27 +142,12 @@
 
                         <div class="toolbar-divider"></div>
 
-                        <button id="addBossBtn" class="toolbar-btn boss-btn" title="Add Boss Marker">
-                            <img src="images/boss.png" alt="Boss" class="btn-icon-img">
-                        </button>
-                        <button id="addBlueTowerBtn" class="toolbar-btn blue-tower-btn" title="Add Ally Tower (Blue)">
-                            <img src="images/tower_blue.png" alt="Blue Tower" class="btn-icon-img">
-                        </button>
-                        <button id="addRedTowerBtn" class="toolbar-btn red-tower-btn" title="Add Enemy Tower (Red)">
-                            <img src="images/tower_red.png" alt="Red Tower" class="btn-icon-img">
-                        </button>
-                        <button id="addBlueTreeBtn" class="toolbar-btn blue-tree-btn" title="Add Ally Tree (Blue)">
-                            <img src="images/tree_blue.png" alt="Blue Tree" class="btn-icon-img">
-                        </button>
-                        <button id="addRedTreeBtn" class="toolbar-btn red-tree-btn" title="Add Enemy Tree (Red)">
-                            <img src="images/tree_red.png" alt="Red Tree" class="btn-icon-img">
-                        </button>
-                        <button id="addBlueGooseBtn" class="toolbar-btn blue-goose-btn" title="Add Ally Goose (Blue)">
-                            <img src="images/goose_blue.png" alt="Blue Goose" class="btn-icon-img">
-                        </button>
-                        <button id="addRedGooseBtn" class="toolbar-btn red-goose-btn" title="Add Enemy Goose (Red)">
-                            <img src="images/goose_red.png" alt="Red Goose" class="btn-icon-img">
-                        </button>
+                        <div class="timer-control" aria-label="Timer Controls">
+                            <span class="timer-control-label">Timer</span>
+                            <button id="timerDecrementBtn" class="toolbar-btn timer-btn" title="Decrease timer">−</button>
+                            <span id="timerDisplay" class="timer-display">0</span>
+                            <button id="timerIncrementBtn" class="toolbar-btn timer-btn" title="Increase timer">+</button>
+                        </div>
                         
                         <div class="toolbar-divider"></div>
                         
