@@ -15,6 +15,7 @@ let placedBlueGeese = [];
 let placedRedGeese = [];
 let placedEnemies = [];
 let placedArrows = [];
+let placedNotes = [];
 
 // UI State
 let filteredMembers = [...members];
@@ -26,6 +27,8 @@ let selectedObjectiveType = null; // Stores the selected objective marker type
 let isCreatingArrow = false;
 let currentArrowData = null;
 let currentArrowMarker = null;
+let noteDragState = null;
+let noteInteractionWasDragged = false;
 
 // Drawing State
 let drawingMode = false;
@@ -136,6 +139,7 @@ const addObjectiveBtn = document.getElementById('addObjectiveBtn');
 const addHealerObjectiveBtn = document.getElementById('addHealerObjectiveBtn');
 const addTankObjectiveBtn = document.getElementById('addTankObjectiveBtn');
 const addDPSObjectiveBtn = document.getElementById('addDPSObjectiveBtn');
+const addNoteBtn = document.getElementById('addNoteBtn');
 const addMapObjectiveBtn = document.getElementById('addMapObjectiveBtn');
 const addBossBtn = document.getElementById('addBossBtn');
 const addBlueTowerBtn = document.getElementById('addBlueTowerBtn');
@@ -264,7 +268,14 @@ function showPrompt(title, message, defaultValue = '') {
             resolve(null);
         };
         
-        const handleEnter = (e) => {
+        const handleInputKeydown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+                e.preventDefault();
+                e.stopPropagation();
+                promptModalInput.select();
+                return;
+            }
+
             if (e.key === 'Enter') {
                 handleOk();
             } else if (e.key === 'Escape') {
@@ -276,12 +287,12 @@ function showPrompt(title, message, defaultValue = '') {
             promptModal.style.display = 'none';
             promptOkBtn.removeEventListener('click', handleOk);
             promptCancelBtn.removeEventListener('click', handleCancel);
-            promptModalInput.removeEventListener('keydown', handleEnter);
+            promptModalInput.removeEventListener('keydown', handleInputKeydown);
         };
         
         promptOkBtn.addEventListener('click', handleOk);
         promptCancelBtn.addEventListener('click', handleCancel);
-        promptModalInput.addEventListener('keydown', handleEnter);
+        promptModalInput.addEventListener('keydown', handleInputKeydown);
     });
 }
 
@@ -714,6 +725,9 @@ function setupEventListeners() {
     addHealerObjectiveBtn.addEventListener('click', () => toggleRoleObjectiveMode('healer', addHealerObjectiveBtn));
     addTankObjectiveBtn.addEventListener('click', () => toggleRoleObjectiveMode('tank', addTankObjectiveBtn));
     addDPSObjectiveBtn.addEventListener('click', () => toggleRoleObjectiveMode('dps', addDPSObjectiveBtn));
+    if (addNoteBtn) {
+        addNoteBtn.addEventListener('click', toggleNoteMode);
+    }
     
     // Timer buttons
     if (timerIncrementBtn) {
@@ -1367,10 +1381,45 @@ function deactivateObjectivePlacement() {
     placingMode = null;
     selectedObjectiveType = null;
     if (addObjectiveBtn) addObjectiveBtn.classList.remove('active');
+    if (addNoteBtn) addNoteBtn.classList.remove('active');
     resetRoleObjectiveButtons();
     clearLegacyToolButtons();
     mapArea.classList.remove('placing-mode');
     mapArea.style.cursor = 'default';
+}
+
+function deactivateNotePlacement() {
+    placingMode = null;
+    if (addNoteBtn) addNoteBtn.classList.remove('active');
+    mapArea.classList.remove('placing-mode');
+    mapArea.style.cursor = 'default';
+}
+
+function toggleNoteMode() {
+    if (placingMode === 'note') {
+        deactivateNotePlacement();
+        return;
+    }
+
+    placingMode = 'note';
+    drawingMode = false;
+    selectedObjectiveType = null;
+    if (addObjectiveBtn) addObjectiveBtn.classList.remove('active');
+    if (drawBtn) drawBtn.classList.remove('active');
+    if (arrowBtn) arrowBtn.classList.remove('active');
+    resetRoleObjectiveButtons();
+    clearLegacyToolButtons();
+    if (addNoteBtn) addNoteBtn.classList.add('active');
+    mapArea.classList.remove('drawing-mode');
+    mapArea.classList.add('placing-mode');
+    drawingCanvas.classList.remove('active');
+    mapArea.style.cursor = 'crosshair';
+
+    const rect = mapArea.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    placeNoteMarker(centerX, centerY);
+    deactivateNotePlacement();
 }
 
 function updateTimerUI() {
@@ -1433,6 +1482,7 @@ function toggleRoleObjectiveMode(type, button) {
     placingMode = `objective-${type}`;
     selectedObjectiveType = type;
     if (addObjectiveBtn) addObjectiveBtn.classList.remove('active');
+    if (addNoteBtn) addNoteBtn.classList.remove('active');
     clearLegacyToolButtons();
     if (drawBtn) drawBtn.classList.remove('active');
     resetRoleObjectiveButtons();
@@ -1616,6 +1666,8 @@ function handleMapClick(e) {
     } else if (placingMode === 'arrow') {
         // Arrow placement is handled by drag events, not click
         return;
+    } else if (placingMode === 'note') {
+        placeNoteMarker(x, y);
     }
 }
 
@@ -1708,6 +1760,170 @@ function placeObjectiveMarker(x, y, type = 'enemy-dps') {
         type: type
     });
     
+    savePositions();
+    updatePlaceholder();
+}
+
+function escapeHtml(value = '') {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function renderNoteMarker(marker, note) {
+    marker.className = 'note-marker expanded';
+    marker.dataset.noteId = note.id;
+    marker.style.left = `${note.x}px`;
+    marker.style.top = `${note.y}px`;
+    marker.innerHTML = `
+        <div class="note-card">
+            <div class="note-card-text">${escapeHtml(note.text || 'New note')}</div>
+            <div class="note-actions">
+                <button type="button" class="note-action-btn note-edit-btn" title="Edit note">✎</button>
+                <button type="button" class="note-action-btn note-delete-btn" title="Delete note">🗑</button>
+            </div>
+        </div>
+    `;
+
+    marker.onpointerdown = handleNotePointerDown;
+    marker.onpointermove = handleNotePointerMove;
+    marker.onpointerup = handleNotePointerUp;
+    marker.onpointercancel = handleNotePointerUp;
+    marker.onclick = handleNoteClick;
+}
+
+function handleNotePointerDown(e) {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const marker = e.currentTarget;
+    const noteId = marker.dataset.noteId;
+    if (!noteId || e.target.closest('.note-action-btn')) return;
+
+    const note = placedNotes.find(item => item.id === noteId);
+    if (!note) return;
+
+    noteInteractionWasDragged = false;
+    noteDragState = {
+        noteId,
+        startX: e.clientX,
+        startY: e.clientY,
+        originX: note.x,
+        originY: note.y
+    };
+    marker.setPointerCapture?.(e.pointerId);
+    marker.style.cursor = 'grabbing';
+}
+
+function handleNotePointerMove(e) {
+    if (!noteDragState) return;
+    const marker = e.currentTarget;
+    const note = placedNotes.find(item => item.id === noteDragState.noteId);
+    if (!note) return;
+
+    const dx = e.clientX - noteDragState.startX;
+    const dy = e.clientY - noteDragState.startY;
+    if (Math.abs(dx) + Math.abs(dy) > 3) {
+        noteInteractionWasDragged = true;
+    }
+    const nextX = Math.max(0, Math.min(1800, noteDragState.originX + dx));
+    const nextY = Math.max(0, Math.min(1200, noteDragState.originY + dy));
+    note.x = nextX;
+    note.y = nextY;
+    marker.style.left = `${nextX}px`;
+    marker.style.top = `${nextY}px`;
+}
+
+function handleNotePointerUp(e) {
+    if (!noteDragState) return;
+    const marker = e.currentTarget;
+    const noteId = marker.dataset.noteId;
+    if (!noteId || noteDragState.noteId !== noteId) return;
+
+    const dx = e.clientX - noteDragState.startX;
+    const dy = e.clientY - noteDragState.startY;
+    if (Math.abs(dx) + Math.abs(dy) >= 4) {
+        savePositions();
+    }
+
+    noteDragState = null;
+    marker.style.cursor = 'grab';
+}
+
+function handleNoteClick(e) {
+    if (noteInteractionWasDragged) {
+        noteInteractionWasDragged = false;
+        return;
+    }
+
+    const marker = e.currentTarget;
+    const noteId = marker.dataset.noteId;
+    const note = placedNotes.find(item => item.id === noteId);
+    if (!note) return;
+
+    e.stopPropagation();
+
+    const actionButton = e.target.closest('.note-action-btn');
+    if (actionButton) {
+        if (actionButton.classList.contains('note-edit-btn')) {
+            editNoteMarker(noteId);
+        } else if (actionButton.classList.contains('note-delete-btn')) {
+            removeNoteMarker(noteId);
+        }
+        return;
+    }
+
+    if (e.target.closest('.note-card')) return;
+    savePositions();
+}
+
+function editNoteMarker(noteId) {
+    const note = placedNotes.find(item => item.id === noteId);
+    if (!note) return;
+
+    showPrompt('Edit Note', 'Enter the note text you want to appear on the map:', note.text || '')
+        .then((value) => {
+            if (value !== null) {
+                note.text = value;
+                const marker = mapArea.querySelector(`[data-note-id="${noteId}"]`);
+                if (marker) {
+                    renderNoteMarker(marker, note);
+                }
+                savePositions();
+            }
+        });
+}
+
+function placeNoteMarker(x, y) {
+    const noteId = `note-${Date.now()}`;
+    const noteData = {
+        id: noteId,
+        x,
+        y,
+        text: '',
+        expanded: true
+    };
+
+    const marker = document.createElement('div');
+    marker.className = 'note-marker';
+    marker.dataset.noteId = noteId;
+    renderNoteMarker(marker, noteData);
+    mapArea.appendChild(marker);
+
+    pushActionHistory();
+    placedNotes.push(noteData);
+    savePositions();
+    updatePlaceholder();
+    editNoteMarker(noteData.id);
+}
+
+function removeNoteMarker(noteId) {
+    const marker = mapArea.querySelector(`[data-note-id="${noteId}"]`);
+    if (marker) marker.remove();
+    placedNotes = placedNotes.filter(note => note.id !== noteId);
     savePositions();
     updatePlaceholder();
 }
@@ -2769,6 +2985,7 @@ function getCurrentVisualState() {
         placedMembers: placedMembers.map(p => ({ ...p })),
         placedGroups: placedGroups.map(g => ({ ...g })),
         placedObjectives: placedObjectives.map(o => ({ ...o })),
+        placedNotes: placedNotes.map(n => ({ ...n })),
         placedBosses: placedBosses.map(b => ({ ...b })),
         placedBlueTowers: placedBlueTowers.map(t => ({ ...t })),
         placedRedTowers: placedRedTowers.map(t => ({ ...t })),
@@ -2793,6 +3010,7 @@ function restoreVisualState(state) {
     placedMembers = (state.placedMembers || []).map(p => ({ ...p }));
     placedGroups = (state.placedGroups || []).map(g => ({ ...g }));
     placedObjectives = (state.placedObjectives || []).map(o => ({ ...o }));
+    placedNotes = (state.placedNotes || []).map(n => ({ ...n }));
     placedBosses = (state.placedBosses || []).map(b => ({ ...b }));
     placedBlueTowers = (state.placedBlueTowers || []).map(t => ({ ...t }));
     placedRedTowers = (state.placedRedTowers || []).map(t => ({ ...t }));
@@ -3368,7 +3586,7 @@ function applyFilters(searchTerm = '') {
 // Clear all placements
 async function clearAllPlacements() {
     const totalPlaced = getTotalPlacedPlayers();
-    const totalMarkers = placedObjectives.length + placedBosses.length + placedBlueTowers.length + placedRedTowers.length + placedBlueTrees.length + placedRedTrees.length + placedBlueGeese.length + placedRedGeese.length + placedEnemies.length + placedArrows.length;
+    const totalMarkers = placedObjectives.length + placedBosses.length + placedBlueTowers.length + placedRedTowers.length + placedBlueTrees.length + placedRedTrees.length + placedBlueGeese.length + placedRedGeese.length + placedEnemies.length + placedArrows.length + placedNotes.length;
     if (totalPlaced === 0 && totalMarkers === 0 && drawingPaths.length === 0) return;
     
     let confirmed = false;
@@ -3383,11 +3601,12 @@ async function clearAllPlacements() {
     }
     
     if (confirmed) {
-        const markers = mapArea.querySelectorAll('.member-marker, .group-marker, .objective-marker, .boss-marker, .tower-marker, .tree-marker, .goose-marker, .enemy-marker, .arrow-marker');
+        const markers = mapArea.querySelectorAll('.member-marker, .group-marker, .objective-marker, .note-marker, .boss-marker, .tower-marker, .tree-marker, .goose-marker, .enemy-marker, .arrow-marker');
         markers.forEach(marker => marker.remove());
         placedMembers = [];
         placedGroups = [];
         placedObjectives = [];
+        placedNotes = [];
         placedBosses = [];
         placedBlueTowers = [];
         placedRedTowers = [];
@@ -3424,7 +3643,7 @@ function updatePlaceholder() {
     const placeholder = document.querySelector('.map-placeholder');
     if (placeholder) {
         const hasContent = placedMembers.length > 0 || placedGroups.length > 0 || 
-                          placedObjectives.length > 0 || placedBosses.length > 0 ||
+                          placedObjectives.length > 0 || placedNotes.length > 0 || placedBosses.length > 0 ||
                           placedBlueTowers.length > 0 || placedRedTowers.length > 0 || placedBlueTrees.length > 0 || placedRedTrees.length > 0 || placedBlueGeese.length > 0 || placedRedGeese.length > 0 || placedEnemies.length > 0 || placedArrows.length > 0 || drawingPaths.length > 0;
         placeholder.style.display = hasContent ? 'none' : 'block';
     }
@@ -3577,6 +3796,15 @@ function renderMap() {
         mapArea.appendChild(marker);
     });
     
+    // Render notes
+    placedNotes.forEach(note => {
+        const marker = document.createElement('div');
+        marker.className = 'note-marker';
+        marker.dataset.noteId = note.id;
+        renderNoteMarker(marker, note);
+        mapArea.appendChild(marker);
+    });
+
     // Render bosses
     placedBosses.forEach(boss => {
         const marker = document.createElement('div');
@@ -3932,6 +4160,13 @@ function exportPositions() {
                     y: Math.round(obj.y),
                     type: obj.type || 'enemy-dps'
                 })),
+                notes: placedNotes.map(note => ({
+                    id: note.id,
+                    x: Math.round(note.x),
+                    y: Math.round(note.y),
+                    text: note.text || '',
+                    expanded: Boolean(note.expanded)
+                })),
                 bosses: placedBosses.map(boss => ({
                     id: boss.id,
                     x: Math.round(boss.x),
@@ -4205,6 +4440,7 @@ function handleImportFile(event) {
             placedMembers = [];
             placedGroups = [];
             placedObjectives = [];
+            placedNotes = [];
             placedBosses = [];
             placedBlueTowers = [];
             placedRedTowers = [];
@@ -4257,6 +4493,19 @@ function handleImportFile(event) {
                 });
             }
             
+            // Import notes
+            if (importData.notes && Array.isArray(importData.notes)) {
+                importData.notes.forEach(note => {
+                    placedNotes.push({
+                        id: note.id || `note-${Date.now()}-${Math.random()}`,
+                        x: note.x || 0,
+                        y: note.y || 0,
+                        text: note.text || '',
+                        expanded: Boolean(note.expanded)
+                    });
+                });
+            }
+
             // Import bosses
             if (importData.bosses && Array.isArray(importData.bosses)) {
                 importData.bosses.forEach(boss => {

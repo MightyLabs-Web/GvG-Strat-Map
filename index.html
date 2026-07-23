@@ -67,7 +67,7 @@
                 </button>
                 <button id="changelogBtn" class="nav-btn">
                     <span class="nav-icon">📋</span>
-                    <span class="nav-text">v.2.2</span>
+                    <span class="nav-text">v.2.3</span>
                 </button>
             </nav>
             
@@ -138,6 +138,10 @@
                         </button>
                         <button id="addDPSObjectiveBtn" class="toolbar-btn objective-btn" title="Add DPS Marker">
                             <img src="images/dps.png" alt="DPS" class="btn-icon-img">
+                        </button>
+                        <button id="addNoteBtn" class="toolbar-btn note-btn" title="Add Note Marker">
+                            <span class="btn-icon">📝</span>
+                            <span class="btn-label">Notes</span>
                         </button>
 
                         <div class="toolbar-divider"></div>
@@ -514,7 +518,7 @@
                         <div class="howto-row"><span class="howto-icon">⌨️</span><div><strong>Hot Keys</strong>: Lists all keyboard shortcuts.</div></div>
                         <div class="howto-row"><span class="howto-icon">⚠️</span><div><strong>Known Issues</strong>: Important notes about browser zoom and best practices.</div></div>
                         <div class="howto-row"><span class="howto-icon">📖</span><div><strong>How To Use</strong>: This guide!</div></div>
-                            <div class="howto-row"><span class="howto-icon">📋</span><div><strong id="howtoVersionLabel">v.2.2</strong>: Full version history and changelog.</div></div>
+                            <div class="howto-row"><span class="howto-icon">📋</span><div><strong id="howtoVersionLabel">v.2.3</strong>: Full version history and changelog.</div></div>
                     </div>
                 </div>
 
@@ -624,22 +628,34 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto; text-align: left;">
                 <div class="version-current">
-                    <h3>🎯 Current Version: 2.2</h3>
+                    <h3>🎯 Current Version: 2.3</h3>
                     <p class="version-date">Released: July 2026</p>
                 </div>
 
                 <div class="changelog-section">
-                    <h4>Version 2.2 - Map Variants & Objective Markers Toggle</h4>
+                    <h4>Version 2.3 - Notes Tool Refinement</h4>
                     <ul>
-                        <li>🗺️ <strong>Map Toggle Switch:</strong> Added "Objective Markers" toggle switch in the Battle Map header to switch between 2 map variants.</li>
-                        <li>💾 <strong>Toggle Persistence:</strong> Map preference is saved to localStorage and restored on page load.</li>
-                        <li>🎨 <strong>Styling Refinements:</strong> New themed toggle switch with golden slider indicator and ON/OFF labels that match the interface design.</li>
-                        <li>✨ <strong>Header Layout:</strong> Updated Battle Map header to accommodate the new toggle while maintaining vertical alignment with the red streak underline.</li>
+                        <li>📝 <strong>Instant Notes:</strong> Notes now open immediately from the bottom toolbar with the text-entry prompt.</li>
+                        <li>🧩 <strong>Floating Note Cards:</strong> Notes appear as draggable floating text boxes with edit and delete controls.</li>
+                        <li>⏱️ <strong>Timer Tool:</strong> Added a timer control to the bottom toolbar for quick in-map countdown use.</li>
+                        <li>🗑️ <strong>Clear All Support:</strong> Clear All Placements now removes note markers alongside the rest of the map content.</li>
+                        <li>🧹 <strong>Toolbar Cleanup:</strong> Removed the obsolete objective marker buttons from the bottom panel and kept the interface focused on the active tools.</li>
                     </ul>
                 </div>
 
                 <div class="version-current">
-                    <h3>Previous Version: 2.1</h3>
+                    <h3>Previous Version: 2.2</h3>
+                    <p class="version-date">Released: June 2026</p>
+                </div>
+
+                <div class="changelog-section">
+                    <h4>Version 2.2 - Map Toggle &amp; Toolbar Polish</h4>
+                    <ul>
+                        <li>🔄 <strong>Map Variant Toggle:</strong> Added a simple switch for the alternate map view so teams can quickly compare layouts.</li>
+                        <li>🎯 <strong>Objective Marker Controls:</strong> Refined the objective marker toggle behavior for cleaner placement and easier map management.</li>
+                        <li>🧰 <strong>Toolbar Refinement:</strong> Polished the bottom toolbar layout so the main tools are easier to access during matches.</li>
+                        <li>✨ <strong>Interaction Polish:</strong> Improved marker visibility and overall map interaction consistency across the interface.</li>
+                    </ul>
                 </div>
 
                 <div class="changelog-section">
