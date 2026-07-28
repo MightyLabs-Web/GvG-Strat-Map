@@ -5085,11 +5085,9 @@ function renderPlayerManagementList() {
                 <div class="player-management-name">${member.name}</div>
                 <div class="player-management-details">
                     <span class="role-badge-small role-${member.role}">${member.role}</span>
-                    <span class="team-badge-small">${member.team}</span>
+                    ${member.team ? `<span class="team-badge-small">${member.team}</span>` : ''}
+                    <span class="player-management-weapons-inline">⚔️ ${member.weapon1 || 'N/A'} | ${member.weapon2 || 'N/A'}</span>
                     ${isPlaced ? '<span class="placed-badge">On Map</span>' : ''}
-                </div>
-                <div class="player-management-weapons">
-                    <small>⚔️ ${member.weapon1 || 'N/A'} | ${member.weapon2 || 'N/A'}</small>
                 </div>
             </div>
             <div class="player-management-actions">

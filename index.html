@@ -70,9 +70,13 @@
                     <span class="nav-icon">📖</span>
                     <span class="nav-text">How To Use</span>
                 </button>
+                <a href="roadmap.html" class="nav-btn" title="Product roadmap">
+                    <span class="nav-icon">🧭</span>
+                    <span class="nav-text">Roadmap</span>
+                </a>
                 <button id="changelogBtn" class="nav-btn">
                     <span class="nav-icon">📋</span>
-                    <span class="nav-text">v.2.3</span>
+                    <span class="nav-text">v.2.3.1</span>
                 </button>
             </nav>
             
@@ -234,54 +238,68 @@
                         <label for="editPlayerName">Name:</label>
                         <input type="text" id="editPlayerName" required maxlength="50">
                     </div>
-                    <div class="form-group">
-                        <label for="editPlayerRole">Role:</label>
-                        <select id="editPlayerRole" required>
-                            <option value="Tank">Tank</option>
-                            <option value="DPS">DPS</option>
-                            <option value="Healer">Healer</option>
-                            <option value="ENEMEY">ENEMEY</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="editPlayerTeam">Team:</label>
-                        <select id="editPlayerTeam">
-                            <!-- Dynamically populated by JavaScript -->
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="editPlayerWeapon1">Weapon 1:</label>
-                        <select id="editPlayerWeapon1" required>
-                            <option value="Nameless Sword">Nameless Sword</option>
-                            <option value="Nameless Spear">Nameless Spear</option>
-                            <option value="Stormbreaker Spear">Stormbreaker Spear</option>
-                            <option value="Thundercry Blade">Thundercry Blade</option>
-                            <option value="Infernal Twinblades">Infernal Twinblades</option>
-                            <option value="Mortal Rope Dart">Mortal Rope Dart</option>
-                            <option value="Vernal Umbrella">Vernal Umbrella</option>
-                            <option value="Inkwell Fan">Inkwell Fan</option>
-                            <option value="Panacea Fan">Panacea Fan</option>
-                            <option value="Soulshade Umbrella">Soulshade Umbrella</option>
-                            <option value="Heavenquaker Spear">Heavenquaker Spear</option>
-                            <option value="Strategic Sword">Strategic Sword</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="editPlayerWeapon2">Weapon 2:</label>
-                        <select id="editPlayerWeapon2" required>
-                            <option value="Nameless Sword">Nameless Sword</option>
-                            <option value="Nameless Spear">Nameless Spear</option>
-                            <option value="Stormbreaker Spear">Stormbreaker Spear</option>
-                            <option value="Thundercry Blade">Thundercry Blade</option>
-                            <option value="Infernal Twinblades">Infernal Twinblades</option>
-                            <option value="Mortal Rope Dart">Mortal Rope Dart</option>
-                            <option value="Vernal Umbrella">Vernal Umbrella</option>
-                            <option value="Inkwell Fan">Inkwell Fan</option>
-                            <option value="Panacea Fan">Panacea Fan</option>
-                            <option value="Soulshade Umbrella">Soulshade Umbrella</option>
-                            <option value="Heavenquaker Spear">Heavenquaker Spear</option>
-                            <option value="Strategic Sword">Strategic Sword</option>
-                        </select>
+                    <div class="player-inline-fields">
+                        <div class="form-group">
+                            <label for="editPlayerRole">Role:</label>
+                            <select id="editPlayerRole" required>
+                                <option value="Tank">Tank</option>
+                                <option value="DPS">DPS</option>
+                                <option value="Healer">Healer</option>
+                                <option value="ENEMEY">ENEMEY</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPlayerTeam">Team:</label>
+                            <select id="editPlayerTeam">
+                                <!-- Dynamically populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPlayerWeapon1">Weapon 1:</label>
+                            <select id="editPlayerWeapon1" required>
+                                <option value="Strategic Sword">Strategic Sword</option>
+                                <option value="Nameless Sword">Nameless Sword</option>
+                                <option value="Infernal Twinblades">Infernal Twinblades</option>
+                                <option value="Heavenquaker Spear">Heavenquaker Spear</option>
+                                <option value="Nameless Spear">Nameless Spear</option>
+                                <option value="Stormbreaker Spear">Stormbreaker Spear</option>
+                                <option value="Thundercry Blade">Thundercry Blade</option>
+                                <option value="Phalanxbane Blade">Phalanxbane Blade</option>
+                                <option value="Snowparting Blade">Snowparting Blade</option>
+                                <option value="Mortal Rope Dart">Mortal Rope Dart</option>
+                                <option value="Unfettered Rope Dart">Unfettered Rope Dart</option>
+                                <option value="Skygrasp Rope Dart">Skygrasp Rope Dart</option>
+                                <option value="Vernal Umbrella">Vernal Umbrella</option>
+                                <option value="Soulshade Umbrella">Soulshade Umbrella</option>
+                                <option value="Everspring Umbrella">Everspring Umbrella</option>
+                                <option value="Panacea Fan">Panacea Fan</option>
+                                <option value="Inkwell Fan">Inkwell Fan</option>
+                                <option value="Heavenwill Gauntlets">Heavenwill Gauntlets</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPlayerWeapon2">Weapon 2:</label>
+                            <select id="editPlayerWeapon2" required>
+                                <option value="Strategic Sword">Strategic Sword</option>
+                                <option value="Nameless Sword">Nameless Sword</option>
+                                <option value="Infernal Twinblades">Infernal Twinblades</option>
+                                <option value="Heavenquaker Spear">Heavenquaker Spear</option>
+                                <option value="Nameless Spear">Nameless Spear</option>
+                                <option value="Stormbreaker Spear">Stormbreaker Spear</option>
+                                <option value="Thundercry Blade">Thundercry Blade</option>
+                                <option value="Phalanxbane Blade">Phalanxbane Blade</option>
+                                <option value="Snowparting Blade">Snowparting Blade</option>
+                                <option value="Mortal Rope Dart">Mortal Rope Dart</option>
+                                <option value="Unfettered Rope Dart">Unfettered Rope Dart</option>
+                                <option value="Skygrasp Rope Dart">Skygrasp Rope Dart</option>
+                                <option value="Vernal Umbrella">Vernal Umbrella</option>
+                                <option value="Soulshade Umbrella">Soulshade Umbrella</option>
+                                <option value="Everspring Umbrella">Everspring Umbrella</option>
+                                <option value="Panacea Fan">Panacea Fan</option>
+                                <option value="Inkwell Fan">Inkwell Fan</option>
+                                <option value="Heavenwill Gauntlets">Heavenwill Gauntlets</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-actions">
                         <button type="button" class="btn-secondary" id="cancelEditBtn">Cancel</button>
@@ -336,40 +354,8 @@
             <div class="modal-body">
                 <div class="hotkey-list">
                     <div class="hotkey-item">
-                        <span class="hotkey-key">Shift + ?</span>
-                        <span class="hotkey-desc">Show this help</span>
-                    </div>
-                    <div class="hotkey-item">
                         <span class="hotkey-key">O</span>
                         <span class="hotkey-desc">Add Objective</span>
-                    </div>
-                    <div class="hotkey-item">
-                        <span class="hotkey-key">B</span>
-                        <span class="hotkey-desc">Add Boss</span>
-                    </div>
-                    <div class="hotkey-item">
-                        <span class="hotkey-key">1</span>
-                        <span class="hotkey-desc">Add Blue Tower (Ally)</span>
-                    </div>
-                    <div class="hotkey-item">
-                        <span class="hotkey-key">2</span>
-                        <span class="hotkey-desc">Add Red Tower (Enemy)</span>
-                    </div>
-                    <div class="hotkey-item">
-                        <span class="hotkey-key">3</span>
-                        <span class="hotkey-desc">Add Blue Tree (Ally)</span>
-                    </div>
-                    <div class="hotkey-item">
-                        <span class="hotkey-key">4</span>
-                        <span class="hotkey-desc">Add Red Tree (Enemy)</span>
-                    </div>
-                    <div class="hotkey-item">
-                        <span class="hotkey-key">5</span>
-                        <span class="hotkey-desc">Add Blue Goose (Ally)</span>
-                    </div>
-                    <div class="hotkey-item">
-                        <span class="hotkey-key">6</span>
-                        <span class="hotkey-desc">Add Red Goose (Enemy)</span>
                     </div>
                     <div class="hotkey-item">
                         <span class="hotkey-key">D</span>
@@ -523,7 +509,7 @@
                         <div class="howto-row"><span class="howto-icon">⌨️</span><div><strong>Hot Keys</strong>: Lists all keyboard shortcuts.</div></div>
                         <div class="howto-row"><span class="howto-icon">⚠️</span><div><strong>Known Issues</strong>: Important notes about browser zoom and best practices.</div></div>
                         <div class="howto-row"><span class="howto-icon">📖</span><div><strong>How To Use</strong>: This guide!</div></div>
-                            <div class="howto-row"><span class="howto-icon">📋</span><div><strong id="howtoVersionLabel">v.2.3</strong>: Full version history and changelog.</div></div>
+                            <div class="howto-row"><span class="howto-icon">📋</span><div><strong id="howtoVersionLabel">v.2.3.1</strong>: Full patch history and changelog.</div></div>
                     </div>
                 </div>
 
@@ -628,17 +614,29 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
     <div id="changelogModal" class="modal">
         <div class="modal-content" style="max-width: 700px; max-height: 90vh;">
             <div class="modal-header">
-                <h2>📋 Version History & Changelog</h2>
+                <h2>📋 Patch History & Changelog</h2>
                 <button class="modal-close" id="closeChangelogModal">&times;</button>
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto; text-align: left;">
                 <div class="version-current">
-                    <h3>🎯 Current Version: 2.3</h3>
+                    <h3>🎯 Latest Patch: 2.3.1</h3>
                     <p class="version-date">Released: July 2026</p>
                 </div>
 
                 <div class="changelog-section">
-                    <h4>Version 2.3 - Notes Tool Refinement</h4>
+                    <h4>Patch 2.3.1 - Weapons List Alignment</h4>
+                    <ul>
+                        <li>🗡️ <strong>Weapons List Update:</strong> Updated the player weapons list to match the current global version.</li>
+                    </ul>
+                </div>
+
+                <div class="version-current">
+                    <h3>Previous Patches</h3>
+                </div>
+
+                <div class="changelog-section">
+                    <h4>Patch 2.3 - Notes Tool Refinement</h4>
+                    <p class="version-date">Released: July 2026</p>
                     <ul>
                         <li>📝 <strong>Instant Notes:</strong> Notes now open immediately from the bottom toolbar with the text-entry prompt.</li>
                         <li>🧩 <strong>Floating Note Cards:</strong> Notes appear as draggable floating text boxes with edit and delete controls.</li>
@@ -648,13 +646,9 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                     </ul>
                 </div>
 
-                <div class="version-current">
-                    <h3>Previous Version: 2.2</h3>
-                    <p class="version-date">Released: June 2026</p>
-                </div>
-
                 <div class="changelog-section">
-                    <h4>Version 2.2 - Map Toggle &amp; Toolbar Polish</h4>
+                    <h4>Patch 2.2 - Map Toggle &amp; Toolbar Polish</h4>
+                    <p class="version-date">Released: June 2026</p>
                     <ul>
                         <li>🔄 <strong>Map Variant Toggle:</strong> Added a simple switch for the alternate map view so teams can quickly compare layouts.</li>
                         <li>🎯 <strong>Objective Marker Controls:</strong> Refined the objective marker toggle behavior for cleaner placement and easier map management.</li>
@@ -664,7 +658,8 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 </div>
 
                 <div class="changelog-section">
-                    <h4>Version 2.1 - Targeted migration &amp; UX tweaks</h4>
+                    <h4>Patch 2.1 - Targeted migration &amp; UX tweaks</h4>
+                    <p class="version-date">Released: May 2026</p>
                     <ul>
                         <li>🧹 <strong>Removed Add Enemies:</strong> Removed the "Add 5 Enemies" button and related auto-enemy placement functionality.</li>
                         <li>➕ <strong>Team 7:</strong> Added Team 7 to the predefined teams and team dropdowns.</li>
@@ -678,7 +673,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 </div>
 
                 <div class="changelog-section">
-                    <h4>Version 2.0.1 - Arrow Tool &amp; Toolbar Refinements</h4>
+                    <h4>Patch 2.0.1 - Arrow Tool &amp; Toolbar Refinements</h4>
                     <p class="version-date">Released: May 2026</p>
                     <ul>
                         <li>➹ <strong>Directional Arrow Tool:</strong> Added a draggable arrow tool. Click the arrow button, then drag on the map to draw a variable length, directional arrow for callouts, pushes, and rotations.</li>
@@ -693,7 +688,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 </div>
 
                 <div class="changelog-section">
-                    <h4>Version 2.0.0 - "Ink &amp; Cinder" Complete Redesign</h4>
+                    <h4>Patch 2.0.0 - "Ink &amp; Cinder" Complete Redesign</h4>
                     <p class="version-date">Released: April 2026</p>
                     <ul>
                         <li>🎨 <strong>Full Visual Overhaul:</strong> Rebuilt the entire interface with a wuxia inspired ink and gold theme to match Where Winds Meet, replacing the previous look entirely.</li>
@@ -706,7 +701,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 </div>
 
                 <div class="changelog-section">
-                    <h4>Version 1.12.0 - Minor Updates</h4>
+                    <h4>Patch 1.12.0 - Minor Updates</h4>
                     <p class="version-date">Released: March 2026</p>
                     <ul>
                         <li>✨ <strong>Pre-populated Teams:</strong> Added `Team 1`–`Team 6` and placed them at the top of the left panel and team dropdowns.</li>
@@ -716,7 +711,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 </div>
 
                 <div class="changelog-section">
-                    <h4>Version 1.11.0 - Major Overhaul: Objective Markers, Rebranding & Bug Fixes</h4>
+                    <h4>Patch 1.11.0 - Major Overhaul: Objective Markers, Rebranding & Bug Fixes</h4>
                     <p class="version-date">Released: February 2026</p>
                     <ul>
                         <li>🎯 <strong>Enhanced Objective Markers:</strong> Complete redesign with new marker types and functionality</li>
@@ -735,7 +730,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 </div>
                 
                 <div class="changelog-section">
-                    <h4>Version 1.10.0 - How To Guide, Guild Leader &amp; Role Badge Fixes</h4>
+                    <h4>Patch 1.10.0 - How To Guide, Guild Leader &amp; Role Badge Fixes</h4>
                     <p class="version-date">Released: January 2026</p>
                     <ul>
                         <li>✨ Added full "How To Use" guide in navigation bar: covers every feature for new users</li>
@@ -747,7 +742,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 </div>
                 
                 <div class="changelog-section">
-                    <h4>Version 1.9.0 - Gallery Slideshow &amp; UI Polish</h4>
+                    <h4>Patch 1.9.0 - Gallery Slideshow &amp; UI Polish</h4>
                     <p class="version-date">Released: December 2025</p>
                     <ul>
                         <li>✨ Screenshot gallery now shows compact thumbnails (up to 10 visible at once)</li>
@@ -761,7 +756,7 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 </div>
                 
                 <div class="changelog-section">
-                    <h4>Version 1.8.0 - Player Roster Import & UI Fixes</h4>
+                    <h4>Patch 1.8.0 - Player Roster Import & UI Fixes</h4>
                     <p class="version-date">Released: November 2025</p>
                     <ul>
                         <li>✨ Added player roster import from CSV or Excel (.xlsx) files</li>
@@ -774,18 +769,19 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 </div>
                 
                 <div class="changelog-section">
-                    <h4>Version 1.7.0 - Screenshot Gallery</h4>
+                    <h4>Patch 1.7.0 - Screenshot Gallery</h4>
                     <p class="version-date">Released: October 2025</p>
                     <ul>
                         <li>✨ Added screenshot gallery storing the last 10 captures</li>
-                        <li>✨ Added version history and changelog viewer (this screen!)</li>
+                        <li>✨ Added patch history and changelog viewer (this screen!)</li>
                         <li>📸 Screenshot button added to bottom toolbar</li>
                         <li>🖼️ Gallery supports individual view, download and delete</li>
                     </ul>
                 </div>
                 
                 <div class="changelog-section">
-                    <h4>Version 1.6.0 - Navigation & Known Issues</h4>
+                    <h4>Patch 1.6.0 - Navigation & Known Issues</h4>
+                    <p class="version-date">Released: September 2025</p>
                     <ul>
                         <li>✨ Added "Known Issues" help section</li>
                         <li>🎨 Redesigned navigation bar (clean text style)</li>
@@ -795,7 +791,8 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 </div>
                 
                 <div class="changelog-section">
-                    <h4>Version 1.5.0 - Objective Markers Expansion</h4>
+                    <h4>Patch 1.5.0 - Objective Markers Expansion</h4>
+                    <p class="version-date">Released: August 2025</p>
                     <ul>
                         <li>✨ Added 4 new objective marker types (Defend, Hold, Yes, No)</li>
                         <li>🔄 Renamed "EH Marker" to "Attack" and "Enemy" to "Danger"</li>
@@ -805,7 +802,8 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 </div>
                 
                 <div class="changelog-section">
-                    <h4>Version 1.4.0 - Role Badge Updates</h4>
+                    <h4>Patch 1.4.0 - Role Badge Updates</h4>
+                    <p class="version-date">Released: July 2025</p>
                     <ul>
                         <li>🎨 Changed Tank role color from blue to orange</li>
                         <li>🎨 Updated all role badges to black text with black borders</li>
@@ -815,7 +813,8 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 </div>
                 
                 <div class="changelog-section">
-                    <h4>Version 1.3.0 - Map Responsiveness</h4>
+                    <h4>Patch 1.3.0 - Map Responsiveness</h4>
+                    <p class="version-date">Released: June 2025</p>
                     <ul>
                         <li>📱 Improved mobile responsiveness</li>
                         <li>🎨 Fixed map scaling on different resolutions</li>
@@ -825,7 +824,8 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 </div>
                 
                 <div class="changelog-section">
-                    <h4>Version 1.2.0 - Security & Branding</h4>
+                    <h4>Patch 1.2.0 - Security & Branding</h4>
+                    <p class="version-date">Released: May 2025</p>
                     <ul>
                         <li>🔒 Added comprehensive security measures</li>
                         <li>🔒 Disabled right-click and developer tools</li>
@@ -835,7 +835,8 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 </div>
                 
                 <div class="changelog-section">
-                    <h4>Version 1.1.0 - Guild Page & Import/Export</h4>
+                    <h4>Patch 1.1.0 - Guild Page & Import/Export</h4>
+                    <p class="version-date">Released: April 2025</p>
                     <ul>
                         <li>✨ Added guild information page</li>
                         <li>📤 Implemented strategy export/import system</li>
@@ -845,7 +846,8 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
                 </div>
                 
                 <div class="changelog-section">
-                    <h4>Version 1.0.0 - Initial Release</h4>
+                    <h4>Patch 1.0.0 - Initial Release</h4>
+                    <p class="version-date">Released: March 2025</p>
                     <ul>
                         <li>🎮 Core guild war strategy mapping tool</li>
                         <li>👥 Player management system (30 players max)</li>

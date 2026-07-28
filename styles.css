@@ -210,6 +210,7 @@ header img[alt="WWM Logo"] {
     border: 1px solid var(--ink-line);
     border-radius: 2px;
     cursor: pointer;
+    text-decoration: none;
     transition: all .22s ease;
 }
 .nav-btn::after {
@@ -1490,6 +1491,33 @@ header img[alt="WWM Logo"] {
     margin-top: 22px;
 }
 
+/* Manage Players modal: keep class/team/weapons compact on one row */
+#playerEditModal .modal-content {
+    max-width: 1120px;
+}
+
+#playerEditModal .player-inline-fields {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+#playerEditModal .player-inline-fields .form-group {
+    margin-bottom: 0;
+}
+
+@media (max-width: 1024px) {
+    #playerEditModal .player-inline-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    #playerEditModal .player-inline-fields {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Objective type / map objective grids */
 .objective-type-grid {
     display: grid;
@@ -1553,11 +1581,28 @@ header img[alt="WWM Logo"] {
     margin: 6px 0;
     flex-wrap: wrap;
 }
+#playerManagementModal .player-management-info {
+    flex: 1;
+    min-width: 0;
+}
+#playerManagementModal .player-management-details {
+    flex-wrap: nowrap;
+    gap: 10px;
+}
 .team-badge-small {
     font-family: var(--font-body);
     font-style: italic;
     font-size: 0.8rem;
     color: var(--silk-faint);
+}
+.player-management-weapons-inline {
+    color: var(--jade-bright);
+    opacity: 0.9;
+    font-size: 0.8rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .placed-badge {
     font-family: var(--font-display);
@@ -1584,6 +1629,15 @@ header img[alt="WWM Logo"] {
 }
 .btn-edit:hover { border-color: var(--gold); box-shadow: 0 0 10px rgba(201,162,75,0.25); }
 .btn-delete:hover { border-color: var(--vermilion-br); box-shadow: 0 0 10px rgba(182,64,46,0.3); }
+
+@media (max-width: 820px) {
+    #playerManagementModal .player-management-details {
+        flex-wrap: wrap;
+    }
+    #playerManagementModal .player-management-weapons-inline {
+        white-space: normal;
+    }
+}
 
 /* Hotkey list */
 .hotkey-list { display: flex; flex-direction: column; gap: 8px; }

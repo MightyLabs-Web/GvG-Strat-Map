@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="MightyLabs">
+    <meta name="description" content="Product roadmap for the GvG Strategy Tool.">
+    <link rel="icon" type="image/png" href="images/guild_logo.png">
+    <title>Product Roadmap - GvG Strategy Tool</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .roadmap-page {
+            min-height: 100vh;
+            padding: 30px 20px 50px;
+        }
+
+        .roadmap-container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .roadmap-header {
+            padding: 30px 28px;
+            margin-bottom: 22px;
+            background: linear-gradient(180deg, rgba(36,31,25,0.95), rgba(20,18,16,0.96));
+            border: 1px solid var(--ink-line);
+            border-top: 3px solid var(--gold-deep);
+            border-radius: 4px;
+            box-shadow: 0 18px 50px rgba(0,0,0,0.55), inset 0 1px 0 rgba(232,200,120,0.10);
+        }
+
+        .roadmap-header h1 {
+            font-family: var(--font-display);
+            font-size: clamp(1.4rem, 3vw, 2.2rem);
+            letter-spacing: 0.05em;
+            color: var(--gold-bright);
+            margin-bottom: 8px;
+        }
+
+        .roadmap-header p {
+            font-size: 1.02rem;
+            color: var(--silk-dim);
+            margin: 0;
+        }
+
+        .roadmap-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .roadmap-card {
+            background: linear-gradient(180deg, rgba(31,27,22,0.92), rgba(18,16,13,0.92));
+            border: 1px solid var(--ink-line);
+            border-left: 3px solid var(--gold-deep);
+            border-radius: 4px;
+            padding: 18px 18px 16px;
+        }
+
+        .roadmap-card h2 {
+            font-family: var(--font-display);
+            font-size: 1.02rem;
+            letter-spacing: 0.04em;
+            color: var(--gold-bright);
+            margin: 0 0 10px;
+        }
+
+        .roadmap-card p {
+            margin: 0 0 10px;
+            color: var(--silk);
+        }
+
+        .roadmap-card ul {
+            margin: 0;
+            padding-left: 22px;
+            color: var(--silk-dim);
+        }
+
+        .roadmap-card li {
+            margin-bottom: 7px;
+        }
+
+        .roadmap-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .roadmap-note {
+            margin-top: 18px;
+            padding: 14px 16px;
+            border-left: 3px solid var(--jade-bright);
+            border-radius: 3px;
+            background: rgba(92,138,107,0.10);
+            color: var(--silk-dim);
+        }
+    </style>
+</head>
+<body>
+    <div class="roadmap-page">
+        <div class="roadmap-container">
+            <div class="roadmap-nav">
+                <a class="nav-btn" href="index.html">
+                    <span class="nav-icon">⬅️</span>
+                    <span class="nav-text">Back to Strategy Tool</span>
+                </a>
+                <a class="nav-btn" href="about.html">
+                    <span class="nav-icon">💎</span>
+                    <span class="nav-text">About Me</span>
+                </a>
+            </div>
+
+            <section class="roadmap-header">
+                <h1>Product Roadmap</h1>
+                <p>A patch-first improvement plan focused on quality and usability, without fixed delivery dates.</p>
+            </section>
+
+            <section class="roadmap-grid">
+                <article class="roadmap-card">
+                    <h2>Latest Patch Focus (2.3.1)</h2>
+                    <ul>
+                        <li>Keep weapon lists aligned with the current global game state.</li>
+                        <li>Maintain clean, consistent patch notes language across the site.</li>
+                        <li>Improve clarity in management and changelog UI surfaces.</li>
+                    </ul>
+                </article>
+
+                <article class="roadmap-card">
+                    <h2>Core Reliability and Safety</h2>
+                    <ul>
+                        <li>Silent autosave with robust session recovery prompts.</li>
+                        <li>Stronger validation for imported and persisted data.</li>
+                        <li>Safer destructive actions with restore-friendly workflows.</li>
+                    </ul>
+                </article>
+
+                <article class="roadmap-card">
+                    <h2>Strategy Workflow Enhancements</h2>
+                    <ul>
+                        <li>Named strategy library for managing multiple plans.</li>
+                        <li>Reusable marker presets for recurring map scenarios.</li>
+                        <li>Smarter roster import mapping for ambiguous source files.</li>
+                        <li>Quick filters for role, team, and weapons in Manage Players.</li>
+                    </ul>
+                </article>
+
+                <article class="roadmap-card">
+                    <h2>UX and Accessibility Polish</h2>
+                    <ul>
+                        <li>Cleaner modal hierarchy and more readable long-form content.</li>
+                        <li>Consistent focus styles and keyboard navigation behavior.</li>
+                        <li>Responsive layout tuning for desktop, tablet, and mobile workflows.</li>
+                        <li>Hotkey help that always reflects real, active shortcuts.</li>
+                    </ul>
+                </article>
+
+                <article class="roadmap-card">
+                    <h2>Export, Review, and Communication</h2>
+                    <ul>
+                        <li>Higher quality export options for sharing and review.</li>
+                        <li>Action history improvements for better strategy iteration.</li>
+                        <li>Patch note standards that clearly document what shipped.</li>
+                    </ul>
+                </article>
+            </section>
+
+            <div class="roadmap-note">
+                This roadmap is intentionally commitment-light on dates. Items are prioritized by impact, stability, and community value rather than fixed deadlines.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
