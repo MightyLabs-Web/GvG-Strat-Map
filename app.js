@@ -29,6 +29,8 @@ let currentArrowData = null;
 let currentArrowMarker = null;
 let noteDragState = null;
 let noteInteractionWasDragged = false;
+let memberNameDragState = null;
+let placeholderDismissed = false;
 
 // Drawing State
 let drawingMode = false;
@@ -126,6 +128,11 @@ async function renameTeam(teamName) {
 
 const memberList = document.getElementById('memberList');
 const mapArea = document.getElementById('mapArea');
+const mapViewport = mapArea.parentElement;
+const zoomInBtn = document.getElementById('zoomInBtn');
+const zoomOutBtn = document.getElementById('zoomOutBtn');
+const zoomResetBtn = document.getElementById('zoomResetBtn');
+const zoomLevel = document.getElementById('zoomLevel');
 const searchInput = document.getElementById('searchInput');
 const roleFilterButtons = document.querySelectorAll('.role-filter-btn');
 const viewToggleButtons = document.querySelectorAll('.view-toggle-btn');
@@ -164,6 +171,13 @@ const timerDecrementBtn = document.getElementById('timerDecrementBtn');
 const timerSteps = [0, 5, 10, 15, 20, 25];
 let ctx; // Initialize in init() after DOM loads
 let timerValue = 0;
+let mapZoom = 1;
+let mapPanX = 0;
+let mapPanY = 0;
+let mapPanState = null;
+const MIN_MAP_ZOOM = 1;
+const MAX_MAP_ZOOM = 3;
+const MAP_ZOOM_STEP = 0.25;
 const addEnemiesBtn = document.getElementById('addEnemiesBtn');
 const enemyCount = document.getElementById('enemyCount');
 const managePlayersBtn = document.getElementById('managePlayersBtn');
@@ -193,6 +207,7 @@ const promptOkBtn = document.getElementById('promptOkBtn');
 const promptCancelBtn = document.getElementById('promptCancelBtn');
 const hotkeyHelpModal = document.getElementById('hotkeyHelpModal');
 const closeHotkeyModalBtn = document.getElementById('closeHotkeyModalBtn');
+const closeMapTipBtn = document.getElementById('closeMapTipBtn');
 
 // ============================================================================
 // CUSTOM CONFIRM DIALOG
@@ -419,6 +434,7 @@ function init() {
     loadThemePreference();
     renderMemberList();
     setupEventListeners();
+    updateMapZoom();
     
     // DO NOT load saved positions - start fresh every time
     // Use Export/Import for session management instead
@@ -673,6 +689,23 @@ function setupEventListeners() {
     mapArea.addEventListener('mousemove', handleMapMouseMove);
     mapArea.addEventListener('mouseup', handleMapMouseUp);
     mapArea.addEventListener('mouseleave', handleMapMouseLeave);
+    mapArea.addEventListener('mousedown', handleMapPanStart);
+    mapArea.addEventListener('mousemove', handleMapPanMove);
+    mapArea.addEventListener('mouseup', handleMapPanEnd);
+    mapArea.addEventListener('mouseleave', handleMapPanEnd);
+    mapArea.addEventListener('pointerdown', handleMemberNamePointerDown);
+    document.addEventListener('pointermove', handleMemberNamePointerMove);
+    document.addEventListener('pointerup', handleMemberNamePointerUp);
+    if (closeMapTipBtn) {
+        closeMapTipBtn.addEventListener('click', () => {
+            placeholderDismissed = true;
+            updatePlaceholder();
+        });
+    }
+    mapArea.addEventListener('wheel', handleMapWheel, { passive: false });
+    if (zoomInBtn) zoomInBtn.addEventListener('click', () => zoomMap(MAP_ZOOM_STEP));
+    if (zoomOutBtn) zoomOutBtn.addEventListener('click', () => zoomMap(-MAP_ZOOM_STEP));
+    if (zoomResetBtn) zoomResetBtn.addEventListener('click', resetMapZoom);
     
     // Map toggle functionality
     const mapToggle = document.getElementById('mapToggle');
@@ -860,6 +893,117 @@ function setupEventListeners() {
     document.addEventListener('keydown', handleKeyboardShortcut);
 }
 
+function getMapPoint(clientX, clientY) {
+    const rect = mapArea.getBoundingClientRect();
+    return { x: (clientX - rect.left) / mapZoom, y: (clientY - rect.top) / mapZoom };
+}
+
+function updateMapZoom() {
+    clampMapPan();
+    mapArea.style.transform = `translate(${mapPanX}px, ${mapPanY}px) scale(${mapZoom})`;
+    mapArea.style.setProperty('--player-marker-scale', `${1 / mapZoom}`);
+    mapArea.style.setProperty('--marker-scale', `${1 / mapZoom}`);
+    mapArea.style.setProperty('--map-zoom', `${mapZoom}`);
+    mapArea.classList.toggle('zoomed', mapZoom > MIN_MAP_ZOOM);
+    if (zoomOutBtn) zoomOutBtn.disabled = mapZoom <= MIN_MAP_ZOOM;
+    if (zoomInBtn) zoomInBtn.disabled = mapZoom >= MAX_MAP_ZOOM;
+    if (zoomLevel) zoomLevel.textContent = `${Math.round(mapZoom * 100)}%`;
+}
+
+function zoomMap(delta, clientX = null, clientY = null) {
+    const nextZoom = Math.max(MIN_MAP_ZOOM, Math.min(MAX_MAP_ZOOM, mapZoom + delta));
+    if (nextZoom === mapZoom) return;
+    const rect = mapArea.getBoundingClientRect();
+    const layoutLeft = rect.left - mapPanX;
+    const layoutTop = rect.top - mapPanY;
+    const focusX = clientX ?? rect.left + rect.width / 2;
+    const focusY = clientY ?? rect.top + rect.height / 2;
+    const focus = getMapPoint(focusX, focusY);
+    mapZoom = nextZoom;
+    mapPanX = focusX - layoutLeft - focus.x * mapZoom;
+    mapPanY = focusY - layoutTop - focus.y * mapZoom;
+    updateMapZoom();
+}
+
+function resetMapZoom() {
+    mapZoom = 1;
+    mapPanX = 0;
+    mapPanY = 0;
+    updateMapZoom();
+}
+
+function handleMapWheel(e) {
+    e.preventDefault();
+    zoomMap(e.deltaY < 0 ? MAP_ZOOM_STEP : -MAP_ZOOM_STEP, e.clientX, e.clientY);
+}
+
+function clampMapPan() {
+    const scaledWidth = mapArea.offsetWidth * mapZoom;
+    const scaledHeight = mapArea.offsetHeight * mapZoom;
+    mapPanX = Math.min(0, Math.max(mapViewport.clientWidth - scaledWidth, mapPanX));
+    mapPanY = Math.min(0, Math.max(mapViewport.clientHeight - scaledHeight, mapPanY));
+}
+
+function handleMapPanStart(e) {
+    const leftPan = e.button === 0 && e.target === mapArea && !placingMode && !drawingMode && !isCreatingArrow;
+    if (!(leftPan || e.button === 1)) return;
+    e.preventDefault();
+    mapPanState = { startX: e.clientX, startY: e.clientY, originX: mapPanX, originY: mapPanY };
+    mapArea.classList.add('panning');
+}
+
+function handleMapPanMove(e) {
+    if (!mapPanState) return;
+    mapPanX = mapPanState.originX + e.clientX - mapPanState.startX;
+    mapPanY = mapPanState.originY + e.clientY - mapPanState.startY;
+    updateMapZoom();
+}
+
+function handleMapPanEnd() {
+    if (!mapPanState) return;
+    mapPanState = null;
+    mapArea.classList.remove('panning');
+}
+
+function handleMemberNamePointerDown(e) {
+    if (e.button !== 0) return;
+    const nameElement = e.target.closest('.member-name');
+    if (!nameElement) return;
+    const marker = nameElement.closest('.member-marker');
+    const memberId = Number(marker?.dataset.memberId);
+    const placement = placedMembers.find(item => item.memberId === memberId);
+    if (!marker || !placement) return;
+    e.preventDefault();
+    e.stopPropagation();
+    memberNameDragState = { memberId, startX: e.clientX, startY: e.clientY, originX: placement.x, originY: placement.y, marker, moved: false };
+    nameElement.setPointerCapture?.(e.pointerId);
+    nameElement.style.cursor = 'grabbing';
+}
+
+function handleMemberNamePointerMove(e) {
+    if (!memberNameDragState) return;
+    const deltaX = (e.clientX - memberNameDragState.startX) / mapZoom;
+    const deltaY = (e.clientY - memberNameDragState.startY) / mapZoom;
+    if (Math.abs(deltaX) + Math.abs(deltaY) < 2) return;
+    memberNameDragState.moved = true;
+    const placement = placedMembers.find(item => item.memberId === memberNameDragState.memberId);
+    if (!placement) return;
+    const constrained = constrainToMapBounds(memberNameDragState.originX + deltaX, memberNameDragState.originY + deltaY, 60);
+    placement.x = constrained.x;
+    placement.y = constrained.y;
+    memberNameDragState.marker.style.left = `${constrained.x - 12}px`;
+    memberNameDragState.marker.style.top = `${constrained.y - 12}px`;
+}
+
+function handleMemberNamePointerUp() {
+    if (!memberNameDragState) return;
+    const placement = placedMembers.find(item => item.memberId === memberNameDragState.memberId);
+    if (placement && memberNameDragState.moved) savePositions();
+    const nameElement = memberNameDragState.marker.querySelector('.member-name');
+    if (nameElement) nameElement.style.cursor = 'grab';
+    memberNameDragState = null;
+}
+
 // ============================================================================
 // KEYBOARD SHORTCUTS
 // ============================================================================
@@ -950,6 +1094,13 @@ objectiveTypeModal.addEventListener('click', (e) => {
 if (objectiveTypeModal) {
     objectiveTypeModal.querySelectorAll('.objective-type-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+            const mode = btn.dataset.mode;
+            if (mode === 'blue-tree' || mode === 'red-tree') {
+                objectiveTypeModal.style.display = 'none';
+                if (mode === 'blue-tree') toggleBlueTreeMode();
+                else toggleRedTreeMode();
+                return;
+            }
             const type = btn.dataset.type;
             selectedObjectiveType = type;
             placingMode = `objective-${type}`;
@@ -1027,9 +1178,9 @@ function handleDrop(e) {
     const type = e.dataTransfer.getData('type');
     const data = e.dataTransfer.getData('text/plain');
     
-    const rect = mapArea.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const point = getMapPoint(e.clientX, e.clientY);
+    const x = point.x;
+    const y = point.y;
     
     if (type === 'team') {
         // Dropping a team group
@@ -1086,9 +1237,8 @@ function isPlayerPlaced(memberId) {
 
 // Constrain position within map boundaries
 function constrainToMapBounds(x, y, markerSize = 32) {
-    const mapRect = mapArea.getBoundingClientRect();
-    const mapWidth = mapRect.width;
-    const mapHeight = mapRect.height;
+    const mapWidth = mapArea.clientWidth;
+    const mapHeight = mapArea.clientHeight;
     
     // Add padding to keep markers fully visible
     const padding = markerSize / 2;
@@ -1258,9 +1408,9 @@ function handleGroupMarkerDragEnd(e) {
     e.currentTarget.style.opacity = '1';
     
     const groupId = e.currentTarget.dataset.groupId;
-    const rect = mapArea.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const point = getMapPoint(e.clientX, e.clientY);
+    const x = point.x;
+    const y = point.y;
     
     // Constrain position within map bounds
     const constrained = constrainToMapBounds(x, y, 32);
@@ -1415,9 +1565,8 @@ function toggleNoteMode() {
     drawingCanvas.classList.remove('active');
     mapArea.style.cursor = 'crosshair';
 
-    const rect = mapArea.getBoundingClientRect();
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
+    const centerX = mapArea.clientWidth / 2;
+    const centerY = mapArea.clientHeight / 2;
     placeNoteMarker(centerX, centerY);
     deactivateNotePlacement();
 }
@@ -1643,9 +1792,9 @@ function handleMapClick(e) {
         return;
     }
     
-    const rect = mapArea.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const point = getMapPoint(e.clientX, e.clientY);
+    const x = point.x;
+    const y = point.y;
     
     if (placingMode && placingMode.startsWith('objective-')) {
         placeObjectiveMarker(x, y, selectedObjectiveType);
@@ -1824,13 +1973,13 @@ function handleNotePointerMove(e) {
     const note = placedNotes.find(item => item.id === noteDragState.noteId);
     if (!note) return;
 
-    const dx = e.clientX - noteDragState.startX;
-    const dy = e.clientY - noteDragState.startY;
+    const dx = (e.clientX - noteDragState.startX) / mapZoom;
+    const dy = (e.clientY - noteDragState.startY) / mapZoom;
     if (Math.abs(dx) + Math.abs(dy) > 3) {
         noteInteractionWasDragged = true;
     }
-    const nextX = Math.max(0, Math.min(1800, noteDragState.originX + dx));
-    const nextY = Math.max(0, Math.min(1200, noteDragState.originY + dy));
+    const nextX = Math.max(0, Math.min(mapArea.clientWidth, noteDragState.originX + dx));
+    const nextY = Math.max(0, Math.min(mapArea.clientHeight, noteDragState.originY + dy));
     note.x = nextX;
     note.y = nextY;
     marker.style.left = `${nextX}px`;
@@ -1843,8 +1992,8 @@ function handleNotePointerUp(e) {
     const noteId = marker.dataset.noteId;
     if (!noteId || noteDragState.noteId !== noteId) return;
 
-    const dx = e.clientX - noteDragState.startX;
-    const dy = e.clientY - noteDragState.startY;
+    const dx = (e.clientX - noteDragState.startX) / mapZoom;
+    const dy = (e.clientY - noteDragState.startY) / mapZoom;
     if (Math.abs(dx) + Math.abs(dy) >= 4) {
         savePositions();
     }
@@ -1976,9 +2125,9 @@ function handleObjectiveDragEnd(e) {
     e.currentTarget.style.opacity = '1';
     
     const objectiveId = e.currentTarget.dataset.objectiveId;
-    const rect = mapArea.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const point = getMapPoint(e.clientX, e.clientY);
+    const x = point.x;
+    const y = point.y;
     
     // Constrain position within map bounds
     const constrained = constrainToMapBounds(x, y, 26);
@@ -2010,9 +2159,9 @@ function handleBossDragEnd(e) {
     e.currentTarget.style.opacity = '1';
     
     const bossId = e.currentTarget.dataset.bossId;
-    const rect = mapArea.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const point = getMapPoint(e.clientX, e.clientY);
+    const x = point.x;
+    const y = point.y;
     
     // Constrain position within map bounds
     const constrained = constrainToMapBounds(x, y, 56);
@@ -2104,9 +2253,9 @@ function handleBlueTowerDragEnd(e) {
     e.currentTarget.style.opacity = '1';
     
     const towerId = e.currentTarget.dataset.towerId;
-    const rect = mapArea.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const point = getMapPoint(e.clientX, e.clientY);
+    const x = point.x;
+    const y = point.y;
     
     // Constrain position within map bounds
     const constrained = constrainToMapBounds(x, y, 56);
@@ -2184,9 +2333,9 @@ function handleRedTowerDragEnd(e) {
     e.currentTarget.style.opacity = '1';
     
     const towerId = e.currentTarget.dataset.towerId;
-    const rect = mapArea.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const point = getMapPoint(e.clientX, e.clientY);
+    const x = point.x;
+    const y = point.y;
     
     // Constrain position within map bounds
     const constrained = constrainToMapBounds(x, y, 56);
@@ -2265,9 +2414,9 @@ function handleBlueTreeDragEnd(e) {
     e.currentTarget.style.opacity = '1';
     
     const treeId = e.currentTarget.dataset.treeId;
-    const rect = mapArea.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const point = getMapPoint(e.clientX, e.clientY);
+    const x = point.x;
+    const y = point.y;
     
     // Constrain position within map bounds
     const constrained = constrainToMapBounds(x, y, 56);
@@ -2345,9 +2494,9 @@ function handleRedTreeDragEnd(e) {
     e.currentTarget.style.opacity = '1';
     
     const treeId = e.currentTarget.dataset.treeId;
-    const rect = mapArea.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const point = getMapPoint(e.clientX, e.clientY);
+    const x = point.x;
+    const y = point.y;
     
     // Constrain position within map bounds
     const constrained = constrainToMapBounds(x, y, 56);
@@ -2480,9 +2629,9 @@ function handleBlueGooseDragEnd(e) {
     e.currentTarget.style.opacity = '1';
     
     const gooseId = e.currentTarget.dataset.gooseId;
-    const rect = mapArea.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const point = getMapPoint(e.clientX, e.clientY);
+    const x = point.x;
+    const y = point.y;
     
     const goose = placedBlueGeese.find(g => g.id === gooseId);
     if (goose) {
@@ -2555,9 +2704,9 @@ function handleRedGooseDragEnd(e) {
     e.currentTarget.style.opacity = '1';
     
     const gooseId = e.currentTarget.dataset.gooseId;
-    const rect = mapArea.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const point = getMapPoint(e.clientX, e.clientY);
+    const x = point.x;
+    const y = point.y;
     
     const goose = placedRedGeese.find(g => g.id === gooseId);
     if (goose) {
@@ -2658,9 +2807,9 @@ function handleEnemyGroupDragEnd(e) {
     e.currentTarget.style.opacity = '1';
     
     const enemyGroupId = e.currentTarget.dataset.enemyGroupId;
-    const rect = mapArea.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const point = getMapPoint(e.clientX, e.clientY);
+    const x = point.x;
+    const y = point.y;
     
     const enemyGroup = placedEnemies.find(eg => eg.id === enemyGroupId);
     if (enemyGroup) {
@@ -2710,9 +2859,9 @@ function initializeCanvas() {
         e.preventDefault();
         
         isDrawing = true;
-        const rect = drawingCanvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const point = getMapPoint(e.clientX, e.clientY);
+        const x = point.x;
+        const y = point.y;
         
         currentPath = [{ x, y }];
         
@@ -2729,9 +2878,9 @@ function initializeCanvas() {
         if (!drawingMode || !isDrawing) return;
         e.preventDefault();
         
-        const rect = drawingCanvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const point = getMapPoint(e.clientX, e.clientY);
+        const x = point.x;
+        const y = point.y;
         
         currentPath.push({ x, y });
         
@@ -2785,9 +2934,9 @@ function initializeCanvas() {
         e.preventDefault();
         
         const touch = e.touches[0];
-        const rect = drawingCanvas.getBoundingClientRect();
-        const x = touch.clientX - rect.left;
-        const y = touch.clientY - rect.top;
+        const point = getMapPoint(touch.clientX, touch.clientY);
+        const x = point.x;
+        const y = point.y;
         
         isDrawing = true;
         currentPath = [{ x, y }];
@@ -2805,9 +2954,9 @@ function initializeCanvas() {
         e.preventDefault();
         
         const touch = e.touches[0];
-        const rect = drawingCanvas.getBoundingClientRect();
-        const x = touch.clientX - rect.left;
-        const y = touch.clientY - rect.top;
+        const point = getMapPoint(touch.clientX, touch.clientY);
+        const x = point.x;
+        const y = point.y;
         
         currentPath.push({ x, y });
         ctx.lineTo(x, y);
@@ -2848,9 +2997,8 @@ function initializeCanvas() {
 
 // Resize canvas to match map area
 function resizeCanvas() {
-    const rect = mapArea.getBoundingClientRect();
-    drawingCanvas.width = rect.width;
-    drawingCanvas.height = rect.height;
+    drawingCanvas.width = mapArea.clientWidth;
+    drawingCanvas.height = mapArea.clientHeight;
     redrawAllPaths();
 }
 
@@ -3065,8 +3213,8 @@ function handleArrowDragEnd(e) {
     const arrowId = e.currentTarget.dataset.arrowId;
     const startX = Number(e.currentTarget.dataset.dragStartX || 0);
     const startY = Number(e.currentTarget.dataset.dragStartY || 0);
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
+    const dx = (e.clientX - startX) / mapZoom;
+    const dy = (e.clientY - startY) / mapZoom;
     const arrowIndex = placedArrows.findIndex(a => a.id === arrowId);
     if (arrowIndex !== -1) {
         placedArrows[arrowIndex].x1 += dx;
@@ -3091,9 +3239,9 @@ function handleMapMouseDown(e) {
     if (e.target !== mapArea && !e.target.classList.contains('map-placeholder')) return;
     e.preventDefault();
 
-    const rect = mapArea.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const point = getMapPoint(e.clientX, e.clientY);
+    const x = point.x;
+    const y = point.y;
 
     isCreatingArrow = true;
     currentArrowData = {
@@ -3117,9 +3265,9 @@ function handleMapMouseDown(e) {
 
 function handleMapMouseMove(e) {
     if (!isCreatingArrow || !currentArrowMarker) return;
-    const rect = mapArea.getBoundingClientRect();
-    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
-    const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+    const point = getMapPoint(e.clientX, e.clientY);
+    const x = Math.max(0, Math.min(mapArea.clientWidth, point.x));
+    const y = Math.max(0, Math.min(mapArea.clientHeight, point.y));
     currentArrowData.x2 = x;
     currentArrowData.y2 = y;
     updateArrowElement(currentArrowMarker, currentArrowData);
@@ -3509,9 +3657,9 @@ function handleMarkerDragEnd(e) {
     e.currentTarget.style.opacity = '1';
     
     const memberId = parseInt(e.currentTarget.dataset.memberId);
-    const rect = mapArea.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const point = getMapPoint(e.clientX, e.clientY);
+    const x = point.x;
+    const y = point.y;
     
     // Constrain position within map bounds (member markers are smaller, ~60px width for names)
     const constrained = constrainToMapBounds(x, y, 60);
@@ -3645,7 +3793,7 @@ function updatePlaceholder() {
         const hasContent = placedMembers.length > 0 || placedGroups.length > 0 || 
                           placedObjectives.length > 0 || placedNotes.length > 0 || placedBosses.length > 0 ||
                           placedBlueTowers.length > 0 || placedRedTowers.length > 0 || placedBlueTrees.length > 0 || placedRedTrees.length > 0 || placedBlueGeese.length > 0 || placedRedGeese.length > 0 || placedEnemies.length > 0 || placedArrows.length > 0 || drawingPaths.length > 0;
-        placeholder.style.display = hasContent ? 'none' : 'block';
+        placeholder.style.display = hasContent || placeholderDismissed ? 'none' : 'block';
     }
 }
 
@@ -3695,9 +3843,9 @@ function renderMap() {
         
         marker.addEventListener('dragend', (e) => {
             e.currentTarget.style.opacity = '1';
-            const rect = mapArea.getBoundingClientRect();
-            const x = e.clientX - rect.left + 12;
-            const y = e.clientY - rect.top + 12;
+            const point = getMapPoint(e.clientX, e.clientY);
+            const x = point.x + 12;
+            const y = point.y + 12;
             const placementIndex = placedMembers.findIndex(p => p.memberId === placement.memberId);
             if (placementIndex !== -1) {
                 placedMembers[placementIndex].x = x;
@@ -3780,9 +3928,9 @@ function renderMap() {
         
         marker.addEventListener('dragend', (e) => {
             e.currentTarget.style.opacity = '1';
-            const rect = mapArea.getBoundingClientRect();
-            const x = e.clientX - rect.left + 12;
-            const y = e.clientY - rect.top + 12;
+            const point = getMapPoint(e.clientX, e.clientY);
+            const x = point.x + 12;
+            const y = point.y + 12;
             const objIndex = placedObjectives.findIndex(o => o.id === obj.id);
             if (objIndex !== -1) {
                 placedObjectives[objIndex].x = x;
@@ -3824,9 +3972,9 @@ function renderMap() {
         
         marker.addEventListener('dragend', (e) => {
             e.currentTarget.style.opacity = '1';
-            const rect = mapArea.getBoundingClientRect();
-            const x = e.clientX - rect.left + 28;
-            const y = e.clientY - rect.top + 28;
+            const point = getMapPoint(e.clientX, e.clientY);
+            const x = point.x + 28;
+            const y = point.y + 28;
             const bossIndex = placedBosses.findIndex(b => b.id === boss.id);
             if (bossIndex !== -1) {
                 placedBosses[bossIndex].x = x;
@@ -3863,9 +4011,9 @@ function renderMap() {
         
         marker.addEventListener('dragend', (e) => {
             e.currentTarget.style.opacity = '1';
-            const rect = mapArea.getBoundingClientRect();
-            const x = e.clientX - rect.left + 28;
-            const y = e.clientY - rect.top + 28;
+            const point = getMapPoint(e.clientX, e.clientY);
+            const x = point.x + 28;
+            const y = point.y + 28;
             const towerIndex = placedBlueTowers.findIndex(t => t.id === tower.id);
             if (towerIndex !== -1) {
                 placedBlueTowers[towerIndex].x = x;
@@ -3902,9 +4050,9 @@ function renderMap() {
         
         marker.addEventListener('dragend', (e) => {
             e.currentTarget.style.opacity = '1';
-            const rect = mapArea.getBoundingClientRect();
-            const x = e.clientX - rect.left + 28;
-            const y = e.clientY - rect.top + 28;
+            const point = getMapPoint(e.clientX, e.clientY);
+            const x = point.x + 28;
+            const y = point.y + 28;
             const towerIndex = placedRedTowers.findIndex(t => t.id === tower.id);
             if (towerIndex !== -1) {
                 placedRedTowers[towerIndex].x = x;
@@ -3937,9 +4085,9 @@ function renderMap() {
         
         marker.addEventListener('dragend', (e) => {
             e.currentTarget.style.opacity = '1';
-            const rect = mapArea.getBoundingClientRect();
-            const x = e.clientX - rect.left + 20;
-            const y = e.clientY - rect.top + 20;
+            const point = getMapPoint(e.clientX, e.clientY);
+            const x = point.x + 20;
+            const y = point.y + 20;
             const treeIndex = placedBlueTrees.findIndex(t => t.id === tree.id);
             if (treeIndex !== -1) {
                 placedBlueTrees[treeIndex].x = x;
@@ -3972,9 +4120,9 @@ function renderMap() {
         
         marker.addEventListener('dragend', (e) => {
             e.currentTarget.style.opacity = '1';
-            const rect = mapArea.getBoundingClientRect();
-            const x = e.clientX - rect.left + 20;
-            const y = e.clientY - rect.top + 20;
+            const point = getMapPoint(e.clientX, e.clientY);
+            const x = point.x + 20;
+            const y = point.y + 20;
             const treeIndex = placedRedTrees.findIndex(t => t.id === tree.id);
             if (treeIndex !== -1) {
                 placedRedTrees[treeIndex].x = x;
@@ -4012,9 +4160,9 @@ function renderMap() {
         
         marker.addEventListener('dragend', (e) => {
             e.currentTarget.style.opacity = '1';
-            const rect = mapArea.getBoundingClientRect();
-            const x = e.clientX - rect.left + 28;
-            const y = e.clientY - rect.top + 28;
+            const point = getMapPoint(e.clientX, e.clientY);
+            const x = point.x + 28;
+            const y = point.y + 28;
             const gooseIndex = placedBlueGeese.findIndex(g => g.id === goose.id);
             if (gooseIndex !== -1) {
                 placedBlueGeese[gooseIndex].x = x;
@@ -4051,9 +4199,9 @@ function renderMap() {
         
         marker.addEventListener('dragend', (e) => {
             e.currentTarget.style.opacity = '1';
-            const rect = mapArea.getBoundingClientRect();
-            const x = e.clientX - rect.left + 28;
-            const y = e.clientY - rect.top + 28;
+            const point = getMapPoint(e.clientX, e.clientY);
+            const x = point.x + 28;
+            const y = point.y + 28;
             const gooseIndex = placedRedGeese.findIndex(g => g.id === goose.id);
             if (gooseIndex !== -1) {
                 placedRedGeese[gooseIndex].x = x;
@@ -4101,9 +4249,9 @@ function renderMap() {
         
         marker.addEventListener('dragend', (e) => {
             e.currentTarget.style.opacity = '1';
-            const rect = mapArea.getBoundingClientRect();
-            const x = e.clientX - rect.left + 16;
-            const y = e.clientY - rect.top + 16;
+            const point = getMapPoint(e.clientX, e.clientY);
+            const x = point.x + 16;
+            const y = point.y + 16;
             const enemyIndex = placedEnemies.findIndex(en => en.id === enemy.id);
             if (enemyIndex !== -1) {
                 placedEnemies[enemyIndex].x = x;

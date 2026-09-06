@@ -76,7 +76,7 @@
                 </a>
                 <button id="changelogBtn" class="nav-btn">
                     <span class="nav-icon">📋</span>
-                    <span class="nav-text">v.2.3.1</span>
+                    <span class="nav-text">v2.4</span>
                 </button>
             </nav>
             
@@ -125,12 +125,21 @@
                     </div>
                 </div>
                 
+                <div class="map-viewport" title="Drag an empty area of the map to pan">
                 <div id="mapArea" class="map-area">
                     <canvas id="drawingCanvas" class="drawing-canvas"></canvas>
                     <img id="timerOverlay" class="timer-overlay" alt="Timer overlay" style="display: none;">
                     <div class="map-placeholder">
                         <p class="instruction">Drag players from the list to place them on the battle map</p>
+                        <button id="closeMapTipBtn" class="placeholder-close" type="button" title="Close map tip" aria-label="Close map tip">×</button>
                     </div>
+                </div>
+                <div class="map-zoom-controls" aria-label="Map zoom controls">
+                    <button id="zoomOutBtn" class="zoom-btn" type="button" title="Zoom out">−</button>
+                    <span id="zoomLevel" class="zoom-level">100%</span>
+                    <button id="zoomInBtn" class="zoom-btn" type="button" title="Zoom in">+</button>
+                    <button id="zoomResetBtn" class="zoom-reset-btn" type="button" title="Reset map zoom">Reset</button>
+                </div>
                 </div>
                 
                 <!-- Tools Toolbar at Bottom -->
@@ -418,6 +427,14 @@
                         <span class="type-icon" style="font-size: 32px;">❌</span>
                         <span class="type-label">No</span>
                     </button>
+                    <button class="objective-type-btn" data-mode="blue-tree">
+                        <img class="type-icon-img" src="images/tree_blue.png" alt="Blue Tree">
+                        <span class="type-label">Blue Tree</span>
+                    </button>
+                    <button class="objective-type-btn" data-mode="red-tree">
+                        <img class="type-icon-img" src="images/tree_red.png" alt="Red Tree">
+                        <span class="type-label">Red Tree</span>
+                    </button>
                 </div>
             </div>
             <div class="modal-footer">
@@ -509,7 +526,7 @@
                         <div class="howto-row"><span class="howto-icon">⌨️</span><div><strong>Hot Keys</strong>: Lists all keyboard shortcuts.</div></div>
                         <div class="howto-row"><span class="howto-icon">⚠️</span><div><strong>Known Issues</strong>: Important notes about browser zoom and best practices.</div></div>
                         <div class="howto-row"><span class="howto-icon">📖</span><div><strong>How To Use</strong>: This guide!</div></div>
-                            <div class="howto-row"><span class="howto-icon">📋</span><div><strong id="howtoVersionLabel">v.2.3.1</strong>: Full patch history and changelog.</div></div>
+                            <div class="howto-row"><span class="howto-icon">📋</span><div><strong id="howtoVersionLabel">v2.4</strong>: Full patch history and changelog.</div></div>
                     </div>
                 </div>
 
@@ -619,8 +636,20 @@ YanZiniang,DPS,FLEX,Nameless Sword,Nameless Spear</pre>
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto; text-align: left;">
                 <div class="version-current">
-                    <h3>🎯 Latest Patch: 2.3.1</h3>
-                    <p class="version-date">Released: July 2026</p>
+                    <h3>🎯 Latest Patch: 2.4</h3>
+                    <p class="version-date">Released: September 2026</p>
+                </div>
+
+                <div class="changelog-section">
+                    <h4>Patch 2.4 - Map Strategy &amp; Interaction Improvements</h4>
+                    <ul>
+                        <li>🔍 <strong>Map Zoom &amp; Pan:</strong> Added cursor-focused zoom up to 300% with drag-to-pan support for detailed phase planning.</li>
+                        <li>🎯 <strong>Stable Marker Presentation:</strong> Player, team, objective, and utility markers remain readable and correctly centered while zooming.</li>
+                        <li>🖱️ <strong>Improved Player Movement:</strong> Player names can now be dragged directly, making marker repositioning easier than targeting the small role dot.</li>
+                        <li>📏 <strong>Adaptive Role Radius:</strong> Role-radius indicators now scale consistently with the map zoom for clearer range planning.</li>
+                        <li>🌳 <strong>Expanded Objective Picker:</strong> Added Blue Tree and Red Tree markers to the nested Objective Markers menu.</li>
+                        <li>🧰 <strong>Zoom Controls &amp; Guidance:</strong> Added map-overlay zoom controls, limit-state feedback, pan guidance, mobile-friendly Reset behavior, and a dismissible empty-map tip.</li>
+                    </ul>
                 </div>
 
                 <div class="changelog-section">

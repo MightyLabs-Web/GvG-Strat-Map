@@ -689,8 +689,65 @@ header img[alt="WWM Logo"] {
         0 0 0 4px var(--ink-void),
         0 0 0 5px var(--ink-line);
 }
+.map-viewport {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    width: 100%;
+    aspect-ratio: 1430 / 1100;
+    touch-action: none;
+}
+.map-viewport .map-area {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    transform-origin: 0 0;
+    transition: transform .16s ease;
+}
+.map-zoom-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px;
+    border: 1px solid rgba(201,162,75,0.45);
+    border-radius: 4px;
+    background: rgba(11,10,8,0.78);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.45);
+    backdrop-filter: blur(3px);
+}
+.zoom-btn,
+.zoom-reset-btn {
+    height: 30px;
+    border: 1px solid var(--gold-deep);
+    border-radius: 3px;
+    background: var(--ink-panel);
+    color: var(--silk);
+    cursor: pointer;
+    font-family: var(--font-display);
+}
+.zoom-btn { width: 30px; font-size: 1.15rem; line-height: 1; }
+.zoom-reset-btn { padding: 0 8px; font-size: .72rem; }
+.zoom-btn:hover,
+.zoom-reset-btn:hover { border-color: var(--gold-bright); color: var(--gold-bright); }
+.zoom-btn:disabled { opacity: .35; cursor: not-allowed; border-color: var(--ink-line); }
+.zoom-btn:disabled:hover { border-color: var(--ink-line); color: var(--silk); }
+.zoom-level { min-width: 42px; color: var(--gold-bright); font-family: var(--font-display); font-size: .72rem; text-align: center; }
+@media (max-width: 600px) {
+    .map-zoom-controls { top: 6px; right: 6px; }
+    .zoom-reset-btn { width: 30px; padding: 0; font-size: 0; }
+    .zoom-reset-btn::before { content: '↺'; font-size: 1rem; }
+}
 .map-area.placing-mode { cursor: crosshair; }
 .map-area.drawing-mode { cursor: crosshair; }
+.map-area.zoomed { cursor: grab; }
+.map-area.zoomed.placing-mode,
+.map-area.zoomed.drawing-mode { cursor: crosshair; }
+.map-area.panning { cursor: grabbing; }
 .map-area.drag-over {
     box-shadow:
         inset 0 0 0 2px var(--gold),
@@ -741,6 +798,25 @@ header img[alt="WWM Logo"] {
     letter-spacing: 0.03em;
     backdrop-filter: blur(3px);
 }
+.placeholder-close {
+    position: absolute;
+    top: -9px;
+    right: -9px;
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--gold-deep);
+    border-radius: 50%;
+    background: var(--ink-panel);
+    color: var(--silk);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    pointer-events: auto;
+}
+.placeholder-close:hover { border-color: var(--gold-bright); color: var(--gold-bright); }
 
 /* ---------- MARKERS (positioning logic untouched by app.js) ---------- */
 
@@ -751,6 +827,8 @@ header img[alt="WWM Logo"] {
     z-index: 20;
     cursor: grab;
     background: transparent;
+    transform: scale(var(--player-marker-scale, 1));
+    transform-origin: center center;
 }
 .member-marker .member-name {
     position: absolute;
@@ -766,7 +844,9 @@ header img[alt="WWM Logo"] {
     padding: 2px 7px;
     border-radius: 2px;
     border: 1px solid var(--ink-line);
-    pointer-events: none;
+    pointer-events: auto;
+    cursor: grab;
+    user-select: none;
 }
 /* the dot itself, colored per role */
 .member-marker::after {
@@ -794,13 +874,19 @@ header img[alt="WWM Logo"] {
     display: block !important;
     position: absolute;
     top: 50%; left: 50%;
-    width: 130px; height: 130px;
+    width: 46.333px; height: 46.333px;
     transform: translate(-50%, -50%);
     border-radius: 50%;
     z-index: -1;
     pointer-events: none;
     opacity: 0.85;
     box-shadow: inset 0 0 0 2px rgba(255,255,255,0.45);
+}
+.map-area.show-role-radius .member-marker .role-radius {
+    transform: translate(-50%, -50%) scale(var(--map-zoom, 1));
+}
+.map-area.show-role-radius .objective-marker .role-radius {
+    transform: translate(-50%, -50%) scale(var(--map-zoom, 1));
 }
 /* member role colors */
 .map-area.show-role-radius .member-marker.role-Tank .role-radius   { background: rgba(217,138,61,0.34); box-shadow: inset 0 0 0 2px rgba(217,138,61,0.8); }
@@ -832,13 +918,26 @@ header img[alt="WWM Logo"] {
     border: 2px solid rgba(11,10,8,0.9);
     box-shadow: 0 3px 10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.3);
     transition: transform .2s, box-shadow .2s;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(var(--marker-scale, 1));
+    transform-origin: 50% 50%;
 }
 .group-marker:hover {
-    transform: translate(-50%, -50%) scale(1.08);
+    transform: translate(-50%, -50%) scale(calc(var(--marker-scale, 1) * 1.08));
     z-index: 100;
     box-shadow: 0 5px 16px rgba(0,0,0,0.7), 0 0 14px rgba(201,162,75,0.4);
 }
+
+.enemy-marker,
+.objective-marker,
+.boss-marker,
+.tower-marker,
+.tree-marker,
+.goose-marker,
+.arrow-marker,
+.note-marker {
+    scale: var(--marker-scale, 1);
+}
+
 .group-marker .group-number {
     font-family: var(--font-display);
     font-size: 0.92rem;
@@ -1543,6 +1642,11 @@ header img[alt="WWM Logo"] {
     box-shadow: 0 8px 18px rgba(0,0,0,0.5);
 }
 .type-icon { line-height: 1; }
+.type-icon-img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
 .type-label {
     font-family: var(--font-display);
     font-size: 0.72rem;
