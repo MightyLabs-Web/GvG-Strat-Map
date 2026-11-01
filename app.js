@@ -155,6 +155,11 @@ const addBlueTreeBtn = document.getElementById('addBlueTreeBtn');
 const addRedTreeBtn = document.getElementById('addRedTreeBtn');
 const addBlueGooseBtn = document.getElementById('addBlueGooseBtn');
 const addRedGooseBtn = document.getElementById('addRedGooseBtn');
+const markerRadialMenu = document.getElementById('markerRadialMenu');
+const markerRadialRoot = document.getElementById('markerRadialRoot');
+const markerRadialSubmenu = document.getElementById('markerRadialSubmenu');
+const markerRadialCenter = document.getElementById('markerRadialCenter');
+const markerRadialTitle = document.getElementById('markerRadialTitle');
 const drawBtn = document.getElementById('drawBtn');
 const arrowBtn = document.getElementById('arrowBtn');
 const clearDrawBtn = document.getElementById('clearDrawBtn');
@@ -174,6 +179,8 @@ let mapZoom = 1;
 let mapPanX = 0;
 let mapPanY = 0;
 let mapPanState = null;
+let markerRadialOrigin = null;
+let markerRadialCloseTimer = null;
 const MIN_MAP_ZOOM = 1;
 const MAX_MAP_ZOOM = 3;
 const MAP_ZOOM_STEP = 0.25;
@@ -495,7 +502,7 @@ function renderGroupedView() {
         
         // Always show team headers, even if empty
         const groupDiv = document.createElement('div');
-        groupDiv.className = 'team-group';
+        groupDiv.className = teamMembers.length ? 'team-group' : 'team-group collapsed';
         
         const headerDiv = document.createElement('div');
         headerDiv.className = 'team-group-header';
@@ -684,6 +691,7 @@ function setupEventListeners() {
     mapArea.addEventListener('dragleave', handleDragLeave);
     mapArea.addEventListener('drop', handleDrop);
     mapArea.addEventListener('click', handleMapClick);
+    mapArea.addEventListener('contextmenu', handleMarkerRadialContextMenu);
     mapArea.addEventListener('mousedown', handleMapMouseDown);
     mapArea.addEventListener('mousemove', handleMapMouseMove);
     mapArea.addEventListener('mouseup', handleMapMouseUp);
@@ -695,6 +703,8 @@ function setupEventListeners() {
     mapArea.addEventListener('pointerdown', handleMemberNamePointerDown);
     document.addEventListener('pointermove', handleMemberNamePointerMove);
     document.addEventListener('pointerup', handleMemberNamePointerUp);
+    document.addEventListener('pointerdown', handleMarkerRadialOutsidePointerDown);
+    document.addEventListener('keydown', handleMarkerRadialKeydown, true);
     if (closeMapTipBtn) {
         closeMapTipBtn.addEventListener('click', () => {
             placeholderDismissed = true;
@@ -753,17 +763,26 @@ function setupEventListeners() {
     });
     
     // Objective buttons
-    addObjectiveBtn.addEventListener('click', toggleObjectiveMode);
-    addHealerObjectiveBtn.addEventListener('click', () => toggleRoleObjectiveMode('healer', addHealerObjectiveBtn));
-    addTankObjectiveBtn.addEventListener('click', () => toggleRoleObjectiveMode('tank', addTankObjectiveBtn));
-    addDPSObjectiveBtn.addEventListener('click', () => toggleRoleObjectiveMode('dps', addDPSObjectiveBtn));
-    addBlueTreeBtn.addEventListener('click', toggleBlueTreeMode);
-    addRedTreeBtn.addEventListener('click', toggleRedTreeMode);
-    addBlueGooseBtn.addEventListener('click', toggleBlueGooseMode);
-    addRedGooseBtn.addEventListener('click', toggleRedGooseMode);
-    if (addNoteBtn) {
-        addNoteBtn.addEventListener('click', toggleNoteMode);
-    }
+    addObjectiveBtn.addEventListener('click', openObjectiveRadialSubmenu);
+    addHealerObjectiveBtn.addEventListener('click', () => placeRadialMarker('healer'));
+    addTankObjectiveBtn.addEventListener('click', () => placeRadialMarker('tank'));
+    addDPSObjectiveBtn.addEventListener('click', () => placeRadialMarker('dps'));
+    addBlueTreeBtn.addEventListener('click', () => placeRadialMarker('blue-tree'));
+    addRedTreeBtn.addEventListener('click', () => placeRadialMarker('red-tree'));
+    addBlueGooseBtn.addEventListener('click', () => placeRadialMarker('blue-goose'));
+    addRedGooseBtn.addEventListener('click', () => placeRadialMarker('red-goose'));
+    addNoteBtn.addEventListener('click', () => placeRadialMarker('note'));
+    markerRadialCenter.addEventListener('click', () => {
+        if (markerRadialSubmenu.hidden) {
+            closeMarkerRadialMenu();
+        } else {
+            showMarkerRadialRoot();
+        }
+    });
+    markerRadialRoot.querySelectorAll('.radial-wheel-item').forEach((button) => {
+        button.addEventListener('pointerenter', () => { markerRadialTitle.textContent = button.title.toUpperCase(); });
+        button.addEventListener('focus', () => { markerRadialTitle.textContent = button.title.toUpperCase(); });
+    });
     
     // Timer buttons
     if (timerIncrementBtn) {
@@ -899,6 +918,134 @@ function setupEventListeners() {
 function getMapPoint(clientX, clientY) {
     const rect = mapArea.getBoundingClientRect();
     return { x: (clientX - rect.left) / mapZoom, y: (clientY - rect.top) / mapZoom };
+}
+
+const objectiveRadialOptions = [
+    { label: 'Enemy DPS / Tank', type: 'enemy-dps', icon: '●', color: 'var(--role-enemy)' },
+    { label: 'Enemy Healer', type: 'enemy-healer', icon: '●', color: 'var(--role-healer)' },
+    { label: 'Attack', type: 'attack', icon: '⚔️' },
+    { label: 'Danger', type: 'danger', icon: '💀' },
+    { label: 'Defend', type: 'defend', icon: '🛡️' },
+    { label: 'Hold', type: 'hold', icon: '✋' },
+    { label: 'Yes', type: 'yes', icon: '✅' },
+    { label: 'No', type: 'no', icon: '❌' }
+];
+
+function layoutRadialItems(items) {
+    const center = 160;
+    const radius = 112;
+    items.forEach((item, index) => {
+        const angle = (-Math.PI / 2) + (index * (2 * Math.PI / items.length));
+        item.style.left = `${center + Math.cos(angle) * radius}px`;
+        item.style.top = `${center + Math.sin(angle) * radius}px`;
+        item.style.setProperty('--item-delay', `${index * 24}ms`);
+    });
+}
+
+function showMarkerRadialRoot() {
+    markerRadialSubmenu.hidden = true;
+    markerRadialRoot.hidden = false;
+    markerRadialTitle.textContent = 'MARKERS';
+    markerRadialCenter.setAttribute('aria-label', 'Close marker wheel');
+    markerRadialMenu.classList.remove('is-open');
+    layoutRadialItems(markerRadialRoot.querySelectorAll('.radial-wheel-item'));
+    markerRadialMenu.getBoundingClientRect();
+    markerRadialMenu.classList.add('is-open');
+}
+
+function openObjectiveRadialSubmenu() {
+    markerRadialRoot.hidden = true;
+    markerRadialSubmenu.hidden = false;
+    markerRadialTitle.textContent = 'OBJECTIVES';
+    markerRadialCenter.setAttribute('aria-label', 'Back to marker wheel');
+    markerRadialSubmenu.replaceChildren();
+
+    objectiveRadialOptions.forEach((option) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'radial-wheel-item';
+        button.title = option.label;
+        button.setAttribute('aria-label', option.label);
+        const icon = document.createElement('span');
+        icon.className = 'radial-wheel-icon';
+        icon.textContent = option.icon;
+        if (option.color) icon.style.color = option.color;
+        button.appendChild(icon);
+        button.addEventListener('pointerenter', () => { markerRadialTitle.textContent = option.label.toUpperCase(); });
+        button.addEventListener('focus', () => { markerRadialTitle.textContent = option.label.toUpperCase(); });
+        button.addEventListener('click', () => placeRadialMarker(option.type));
+        markerRadialSubmenu.appendChild(button);
+    });
+
+    markerRadialMenu.classList.remove('is-open');
+    layoutRadialItems(markerRadialSubmenu.querySelectorAll('.radial-wheel-item'));
+    markerRadialMenu.getBoundingClientRect();
+    markerRadialMenu.classList.add('is-open');
+    markerRadialSubmenu.querySelector('.radial-wheel-item')?.focus();
+}
+
+function openMarkerRadialMenu(e) {
+    if (markerRadialCloseTimer) clearTimeout(markerRadialCloseTimer);
+    markerRadialOrigin = { clientX: e.clientX, clientY: e.clientY };
+
+    const viewportRect = mapViewport.getBoundingClientRect();
+    const edge = 164;
+    const x = Math.max(edge, Math.min(mapViewport.clientWidth - edge, e.clientX - viewportRect.left));
+    const y = Math.max(edge, Math.min(mapViewport.clientHeight - edge, e.clientY - viewportRect.top));
+    markerRadialMenu.style.left = `${x}px`;
+    markerRadialMenu.style.top = `${y}px`;
+    markerRadialMenu.hidden = false;
+    showMarkerRadialRoot();
+    markerRadialRoot.querySelector('.radial-wheel-item')?.focus();
+}
+
+function handleMarkerRadialContextMenu(e) {
+    if (e.target !== mapArea && !e.target.closest('.map-placeholder')) return;
+    if (e.target.closest('.placeholder-close')) return;
+    e.preventDefault();
+    openMarkerRadialMenu(e);
+}
+
+function closeMarkerRadialMenu() {
+    markerRadialMenu.classList.remove('is-open');
+    markerRadialOrigin = null;
+    markerRadialCloseTimer = setTimeout(() => {
+        markerRadialMenu.hidden = true;
+    }, 180);
+}
+
+function handleMarkerRadialOutsidePointerDown(e) {
+    if (!markerRadialMenu.hidden && !markerRadialMenu.contains(e.target)) {
+        closeMarkerRadialMenu();
+    }
+}
+
+function handleMarkerRadialKeydown(e) {
+    if (!markerRadialMenu.hidden && e.key === 'Escape') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        closeMarkerRadialMenu();
+    }
+}
+
+function placeRadialMarker(type) {
+    if (!markerRadialOrigin) return;
+    const point = getMapPoint(markerRadialOrigin.clientX, markerRadialOrigin.clientY);
+    deactivateObjectivePlacement();
+    drawingMode = false;
+    drawBtn.classList.remove('active');
+    arrowBtn.classList.remove('active');
+    mapArea.classList.remove('drawing-mode');
+    drawingCanvas.classList.remove('active');
+
+    if (type === 'blue-tree') placeBlueTreeMarker(point.x, point.y);
+    else if (type === 'red-tree') placeRedTreeMarker(point.x, point.y);
+    else if (type === 'blue-goose') placeBlueGooseMarker(point.x, point.y);
+    else if (type === 'red-goose') placeRedGooseMarker(point.x, point.y);
+    else if (type === 'note') placeNoteMarker(point.x, point.y);
+    else placeObjectiveMarker(point.x, point.y, type);
+
+    closeMarkerRadialMenu();
 }
 
 function updateMapZoom() {

@@ -4,7 +4,7 @@
    Complete visual rebuild. All structural hooks preserved for app.js.
    ===================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Ma+Shan+Zheng&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@400;500;600;700&family=Ma+Shan+Zheng&display=swap');
 
 :root {
     /* Ink & paper base */
@@ -44,7 +44,7 @@
 
     --font-display: 'Cinzel', 'Ma Shan Zheng', serif;
     --font-brush:   'Ma Shan Zheng', 'Cinzel', serif;
-    --font-body:    'Cormorant Garamond', Georgia, serif;
+    --font-body:    'DM Sans', 'Segoe UI', sans-serif;
 
     --edge: 2px;
 }
@@ -55,7 +55,7 @@ html { scroll-behavior: smooth; }
 
 body {
     font-family: var(--font-body);
-    font-size: 17px;
+    font-size: 16px;
     color: var(--silk);
     min-height: 100vh;
     background:
@@ -109,7 +109,7 @@ body::after {
 .container {
     position: relative;
     z-index: 2;
-    max-width: 1680px;
+    max-width: 1880px;
     margin: 0 auto;
     padding: 22px 26px 40px;
 }
@@ -118,16 +118,17 @@ body::after {
 header {
     position: relative;
     text-align: center;
-    padding: 26px 30px 22px;
-    margin-bottom: 22px;
+    padding: 18px 26px 16px;
+    margin-bottom: 18px;
     background:
-        linear-gradient(180deg, rgba(36,31,25,0.95), rgba(20,18,16,0.96));
+        linear-gradient(180deg, rgba(36,31,25,0.91), rgba(20,18,16,0.93));
     border: 1px solid var(--ink-line);
     border-top: 3px solid var(--gold-deep);
     border-radius: 4px;
     box-shadow:
         0 18px 50px rgba(0,0,0,0.55),
         inset 0 1px 0 rgba(232,200,120,0.10);
+    backdrop-filter: blur(5px);
 }
 /* corner seal flourishes */
 header::before,
@@ -296,12 +297,13 @@ header img[alt="WWM Logo"] {
 .member-panel,
 .map-panel {
     background:
-        linear-gradient(180deg, rgba(27,24,20,0.97), rgba(18,16,13,0.98));
+        linear-gradient(180deg, rgba(27,24,20,0.92), rgba(18,16,13,0.94));
     border: 1px solid var(--ink-line);
     border-radius: 4px;
     box-shadow: 0 16px 44px rgba(0,0,0,0.5), inset 0 1px 0 rgba(232,200,120,0.06);
     position: relative;
 }
+.member-panel { backdrop-filter: blur(5px); }
 .member-panel {
     order: 2;
     display: flex;
@@ -720,6 +722,105 @@ header img[alt="WWM Logo"] {
     box-shadow: 0 4px 12px rgba(0,0,0,0.45);
     backdrop-filter: blur(3px);
 }
+.marker-radial-menu[hidden] { display: none; }
+.marker-radial-menu {
+    position: absolute;
+    z-index: 1200;
+    width: 320px;
+    height: 320px;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.82);
+    transition: opacity .16s ease, transform .22s cubic-bezier(.2,.8,.2,1), visibility .22s;
+}
+.marker-radial-menu.is-open {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+}
+.radial-wheel-ring {
+    position: absolute;
+    inset: 18px;
+    border: 1px solid rgba(232,200,120,0.55);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(16,14,12,0.92) 0 28%, rgba(19,16,13,0.78) 29% 100%);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6), inset 0 0 28px rgba(201,162,75,0.10);
+    backdrop-filter: blur(5px);
+}
+.radial-wheel-ring::before {
+    content: '';
+    position: absolute;
+    inset: 15px;
+    border: 1px dashed rgba(232,200,120,0.25);
+    border-radius: 50%;
+}
+.radial-wheel-level { position: absolute; inset: 0; }
+.radial-wheel-level[hidden] { display: none; }
+.radial-wheel-item {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    padding: 0;
+    border: 1px solid rgba(201,162,75,0.72);
+    border-radius: 50%;
+    background: linear-gradient(145deg, rgba(43,36,26,0.98), rgba(17,15,12,0.98));
+    color: var(--silk);
+    box-shadow: 0 5px 16px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.10);
+    cursor: pointer;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.55);
+    transition: transform .2s cubic-bezier(.2,.8,.2,1), opacity .14s ease, border-color .16s ease, box-shadow .16s ease;
+}
+.marker-radial-menu.is-open .radial-wheel-item {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    transition-delay: var(--item-delay, 0ms);
+}
+.marker-radial-menu.is-open .radial-wheel-item:hover,
+.marker-radial-menu.is-open .radial-wheel-item:focus-visible {
+    z-index: 2;
+    border-color: var(--gold-bright);
+    box-shadow: 0 0 0 3px rgba(232,200,120,0.18), 0 8px 22px rgba(0,0,0,0.65);
+    transform: translate(-50%, -50%) scale(1.13);
+    outline: none;
+}
+.radial-wheel-icon { font-size: 1.35rem; line-height: 1; }
+.radial-wheel-image { width: 29px; height: 29px; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5)); }
+.radial-wheel-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: flex;
+    width: 88px;
+    height: 88px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 8px;
+    border: 1px solid rgba(232,200,120,0.68);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 25%, #322819, #100e0b 76%);
+    color: var(--gold-bright);
+    box-shadow: 0 0 24px rgba(201,162,75,0.18), inset 0 0 0 3px rgba(201,162,75,0.07);
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+}
+.radial-wheel-title {
+    max-width: 72px;
+    font-family: var(--font-display);
+    font-size: 0.58rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+.radial-wheel-center:hover,
+.radial-wheel-center:focus-visible { border-color: var(--gold-bright); outline: none; }
 .zoom-btn,
 .zoom-reset-btn {
     height: 30px;
@@ -1938,6 +2039,8 @@ header img[alt="WWM Logo"] {
 .loading { color: var(--silk-faint); font-style: italic; }
 .help-text { color: var(--silk-faint); font-size: 0.85rem; font-style: italic; }
 
+.desktop-only-notice { display: none; }
+
 /* =====================================================================
    RESPONSIVE
    ===================================================================== */
@@ -1946,6 +2049,29 @@ header img[alt="WWM Logo"] {
     .member-panel { order: 2; }
     .map-panel { order: 1; }
     .member-list { max-height: 460px; }
+}
+@media (max-width: 760px) {
+    body.strategy-app { display: grid; min-height: 100vh; padding: 22px; place-items: center; background-attachment: scroll; }
+    .strategy-app .container { display: none; }
+    .strategy-app .desktop-only-notice {
+        position: relative;
+        z-index: 2;
+        display: block;
+        width: min(520px, 100%);
+        padding: 34px 30px;
+        border: 1px solid var(--ink-line);
+        border-top: 3px solid var(--gold-deep);
+        border-radius: 4px;
+        background: linear-gradient(180deg, rgba(27,24,20,0.94), rgba(18,16,13,0.96));
+        box-shadow: 0 18px 50px rgba(0,0,0,0.5);
+        text-align: center;
+    }
+    .desktop-only-kicker { color: var(--gold); font-family: var(--font-display); font-size: 0.68rem; letter-spacing: 0.12em; }
+    .desktop-only-notice h1 { margin: 12px 0 8px; color: var(--gold-bright); font-family: var(--font-display); font-size: 1.45rem; }
+    .desktop-only-notice p { color: var(--silk-dim); font-size: 0.95rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 @media (max-width: 640px) {
     .container { padding: 14px 12px 30px; }
