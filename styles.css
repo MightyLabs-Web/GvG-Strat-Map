@@ -747,7 +747,7 @@ header img[alt="WWM Logo"] {
 .map-area.zoomed { cursor: grab; }
 .map-area.zoomed.placing-mode,
 .map-area.zoomed.drawing-mode { cursor: crosshair; }
-.map-area.panning { cursor: grabbing; }
+.map-area.panning { cursor: grabbing; transition: none; }
 .map-area.drag-over {
     box-shadow:
         inset 0 0 0 2px var(--gold),
