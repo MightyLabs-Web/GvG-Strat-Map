@@ -734,6 +734,9 @@ header img[alt="WWM Logo"] {
 .zoom-reset-btn { padding: 0 8px; font-size: .72rem; }
 .zoom-btn:hover,
 .zoom-reset-btn:hover { border-color: var(--gold-bright); color: var(--gold-bright); }
+.map-controls-divider { width: 1px; height: 22px; margin: 0 1px; background: var(--ink-line); }
+.map-clear-btn { border-color: rgba(207,75,58,0.65); color: var(--vermilion-br); }
+.map-clear-btn:hover { border-color: var(--vermilion-br); color: var(--vermilion-br); }
 .zoom-btn:disabled { opacity: .35; cursor: not-allowed; border-color: var(--ink-line); }
 .zoom-btn:disabled:hover { border-color: var(--ink-line); color: var(--silk); }
 .zoom-level { min-width: 42px; color: var(--gold-bright); font-family: var(--font-display); font-size: .72rem; text-align: center; }
@@ -1262,13 +1265,11 @@ header img[alt="WWM Logo"] {
 .toolbar-btn.active .btn-icon { color: var(--gold-bright); }
 .arrow-btn svg { fill: #fff; color: #fff; }
 /* undo / redo arrows — ensure strong contrast on dark toolbar */
-.undo-btn .btn-icon,
-.redo-btn .btn-icon { color: var(--gold-bright); font-size: 1.3rem; font-weight: 700; }
-.undo-btn:disabled, .redo-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.undo-btn:disabled .btn-icon,
-.redo-btn:disabled .btn-icon { color: var(--silk-faint); }
+.undo-btn .btn-icon { color: var(--gold-bright); font-size: 1.3rem; font-weight: 700; }
+.undo-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.undo-btn:disabled .btn-icon { color: var(--silk-faint); }
 .btn-icon-img { width: 26px; height: 26px; object-fit: contain; }
-.clear-btn:hover, .clear-draw-btn:hover { border-color: var(--vermilion-br); }
+.clear-draw-btn:hover { border-color: var(--vermilion-br); }
 
 .toolbar-divider {
     width: 1px;

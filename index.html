@@ -134,11 +134,15 @@
                         <button id="closeMapTipBtn" class="placeholder-close" type="button" title="Close map tip" aria-label="Close map tip">×</button>
                     </div>
                 </div>
-                <div class="map-zoom-controls" aria-label="Map zoom controls">
+                <div class="map-zoom-controls" aria-label="Map controls">
                     <button id="zoomOutBtn" class="zoom-btn" type="button" title="Zoom out">−</button>
                     <span id="zoomLevel" class="zoom-level">100%</span>
                     <button id="zoomInBtn" class="zoom-btn" type="button" title="Zoom in">+</button>
                     <button id="zoomResetBtn" class="zoom-reset-btn" type="button" title="Reset map zoom">Reset</button>
+                    <span class="map-controls-divider" aria-hidden="true"></span>
+                    <button id="clearMapBtn" class="zoom-btn map-clear-btn" type="button" title="Clear All Placements" aria-label="Clear All Placements">
+                        <span aria-hidden="true">❌</span>
+                    </button>
                 </div>
                 </div>
                 
@@ -201,9 +205,6 @@
                         <button id="undoDrawBtn" class="toolbar-btn undo-btn" title="Undo Drawing" disabled>
                             <span class="btn-icon">↶</span>
                         </button>
-                        <button id="redoDrawBtn" class="toolbar-btn redo-btn" title="Redo Drawing" disabled>
-                            <span class="btn-icon">↷</span>
-                        </button>
                         <button id="clearDrawBtn" class="toolbar-btn clear-draw-btn" title="Clear All Drawings">
                             <span class="btn-icon">🧹</span>
                         </button>
@@ -217,9 +218,6 @@
                         
                         <div class="toolbar-divider"></div>
                         
-                        <button id="clearMapBtn" class="toolbar-btn clear-btn" title="Clear All Placements">
-                            <span class="btn-icon">❌</span>
-                        </button>
                     </div>
                 </div>
             </div>
